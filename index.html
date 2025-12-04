@@ -1,175 +1,301 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!doctype html>
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Pernambuco Roleplay</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body {
-  margin: 0;
-  background: #0d0d0d;
-  font-family: Arial, sans-serif;
-  color: white;
-  text-align: center;
-}
-
-header {
-  background: #111;
-  padding: 18px;
-  font-size: 22px;
-  font-weight: bold;
-  color: #00ff88;
-}
-
-.menu {
-  display: flex;
-  background: #000;
-}
-
-.menu button {
-  flex: 1;
-  padding: 15px;
-  background: #000;
-  color: white;
-  border: none;
-  font-size: 15px;
-}
-
-.menu .ativo {
-  background: #00ff88;
-  color: black;
-  font-weight: bold;
-}
-
-.tela {
-  display: none;
-  padding: 20px;
-}
-
-.tela.ativa {
-  display: block;
-}
-
-.box {
-  background: #111;
-  padding: 20px;
-  border-radius: 15px;
-  margin: 20px auto;
-  max-width: 360px;
-}
-
-.status {
-  color: #00ff88;
-  font-weight: bold;
-}
-
-button.principal {
-  margin-top: 15px;
-  width: 100%;
-  padding: 15px;
-  font-size: 18px;
-  border: none;
-  border-radius: 10px;
-  background: #00ff88;
-  color: black;
-  font-weight: bold;
-}
-
-input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  margin-top: 10px;
-}
-
-.aviso {
-  margin-top: 10px;
-  color: #ffcc00;
-  font-size: 14px;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jogo de Tiro 3D - HTML5 + three.js</title>
+  <style>
+    html,body{height:100%;margin:0;background:#0b0f14;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial}
+    #overlay{position:fixed;left:12px;top:12px;z-index:10}
+    button{appearance:none;border:none;background:#1f6feb;padding:8px 12px;border-radius:8px;color:#fff;font-weight:600}
+    #hud{position:fixed;right:12px;top:12px;z-index:10;background:rgba(0,0,0,0.35);padding:8px 12px;border-radius:8px}
+    #canvasWrap{width:100%;height:100%;display:block}
+    #touchShoot{position:fixed;right:16px;bottom:16px;width:84px;height:84px;border-radius:50%;background:rgba(255,50,50,0.85);border:none;color:#fff;font-weight:700;z-index:10}
+    #touchPad{position:fixed;left:16px;bottom:16px;width:140px;height:140px;border-radius:12px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;z-index:10}
+    #message{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.6);padding:18px;border-radius:12px;text-align:center}
+    small{opacity:0.8}
+  </style>
 </head>
-
 <body>
-
-<header>PERNAMBUCO ROLEPLAY</header>
-
-<div class="menu">
-  <button class="ativo" onclick="trocar('servidor', this)">Servidor</button>
-  <button onclick="trocar('noticias', this)">Notícias</button>
-  <button onclick="trocar('download', this)">Download</button>
-  <button onclick="trocar('config', this)">Config</button>
-</div>
-
-<!-- SERVIDOR -->
-<div id="servidor" class="tela ativa">
-  <div class="box">
-    <h2>Pernambuco Roleplay</h2>
-    <p>Status: <span class="status">ONLINE ✅</span></p>
-    <p>IP: 51.81.59.76:15792</p>
-
-    <button class="principal" onclick="entrarServidor()">
-      Entrar no Servidor
-    </button>
-
-    <div class="aviso" id="aviso">
-      Se não abrir automático, copie o IP e cole no SA-MP.
-    </div>
+  <div id="overlay">
+    <button id="startBtn">Iniciar Jogo (Clique para prender o cursor)</button>
+    <button id="pauseBtn">Pausar</button>
   </div>
-</div>
-
-<!-- NOTÍCIAS -->
-<div id="noticias" class="tela">
-  <div class="box">
-    <h3>Notícias</h3>
-    <p>✅ Servidor aberto para novos jogadores</p>
-    <p>✅ Atualizações semanais</p>
-    <p>✅ Sistemas novos em breve</p>
+  <div id="hud">
+    Vida: <span id="life">100</span> &nbsp;|&nbsp; Pontos: <span id="score">0</span>
   </div>
-</div>
+  <div id="canvasWrap"></div>
 
-<!-- DOWNLOAD -->
-<div id="download" class="tela">
-  <div class="box">
-    <h3>Baixar o Aplicativo</h3>
-    <p>Baixe o APK oficial do Pernambuco Roleplay.</p>
+  <!-- Touch controls for mobile -->
+  <button id="touchShoot" style="display:none">Atirar</button>
+  <div id="touchPad" style="display:none"><small>➡️ arraste para mirar</small></div>
 
-    <!-- Troque esse link depois pelo link real do seu APK -->
-    <a href="#" style="text-decoration:none;">
-      <button class="principal">Baixar APK</button>
-    </a>
-  </div>
-</div>
+  <div id="message">Use o mouse + WASD ou toque. Clique em "Iniciar Jogo" para começar.</div>
 
-<!-- CONFIG -->
-<div id="config" class="tela">
-  <div class="box">
-    <h3>Configurações</h3>
+  <!-- three.js + PointerLockControls from CDN -->
+  <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.154.0/examples/js/controls/PointerLockControls.js"></script>
 
-    <input type="text" placeholder="Seu Nick">
+  <script>
+    // ---------- Configurações ----------
+    const SPAWN_INTERVAL = 1200; // ms
+    const ENEMY_SPEED_MIN = 10;
+    const ENEMY_SPEED_MAX = 25;
+    const PROJECTILE_SPEED = 200;
+    const PLAYER_LIFE_MAX = 100;
 
-    <button class="principal" onclick="alert('Configurações salvas!')">
-      Salvar
-    </button>
-  </div>
-</div>
+    // ---------- Elementos DOM ----------
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const lifeEl = document.getElementById('life');
+    const scoreEl = document.getElementById('score');
+    const canvasWrap = document.getElementById('canvasWrap');
+    const message = document.getElementById('message');
+    const touchShoot = document.getElementById('touchShoot');
+    const touchPad = document.getElementById('touchPad');
 
-<script>
-function trocar(id, botao) {
-  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-  document.getElementById(id).classList.add('ativa');
+    // ---------- three.js Scene ----------
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b1220);
 
-  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
-  botao.classList.add('ativo');
-}
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 0);
 
-function entrarServidor() {
-  document.getElementById("aviso").style.display = "block";
-  window.location.href = "samp://51.81.59.76:15792";
-}
-</script>
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    canvasWrap.appendChild(renderer.domElement);
 
+    // lights
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+    hemi.position.set(0, 50, 0);
+    scene.add(hemi);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+    dir.position.set(-5,10,5);
+    scene.add(dir);
+
+    // ground
+    const groundGeo = new THREE.PlaneGeometry(200,200);
+    const groundMat = new THREE.MeshStandardMaterial({color:0x223344});
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI/2;
+    ground.position.y = 0;
+    scene.add(ground);
+
+    // player represented by camera and a small collider
+    const player = {
+      life: PLAYER_LIFE_MAX,
+      speed: 25, // movement speed
+      colliderRadius: 0.6
+    };
+
+    // controls (PointerLock)
+    const controls = new THREE.PointerLockControls(camera, document.body);
+    controls.getObject().position.set(0,1.6,5);
+
+    // simple crosshair
+    const cross = document.createElement('div');
+    cross.style.position='fixed'; cross.style.left='50%'; cross.style.top='50%'; cross.style.transform='translate(-50%,-50%)';
+    cross.style.width='8px'; cross.style.height='8px'; cross.style.borderRadius='50%'; cross.style.background='rgba(255,255,255,0.8)'; cross.style.zIndex='9';
+    document.body.appendChild(cross);
+
+    // entities
+    const enemies = []; // {mesh,velocity}
+    const projectiles = []; // {mesh,velocity, ttl}
+    let score = 0;
+
+    // geometries + materials cache
+    const enemyGeo = new THREE.BoxGeometry(1.2,1.2,1.2);
+    const enemyMat = new THREE.MeshStandardMaterial({color:0xcc4444});
+    const projGeo = new THREE.SphereGeometry(0.08,8,8);
+    const projMat = new THREE.MeshStandardMaterial({emissive:0xffffff, emissiveIntensity:1});
+
+    // HUD update
+    function updateHUD(){ lifeEl.textContent = Math.max(0, Math.floor(player.life)); scoreEl.textContent = score; }
+    updateHUD();
+
+    // resize
+    window.addEventListener('resize', ()=>{
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // spawn enemy at random position around player
+    function spawnEnemy(){
+      const angle = Math.random()*Math.PI*2;
+      const dist = 30 + Math.random()*40;
+      const x = Math.cos(angle)*dist + (controls.getObject().position.x || 0);
+      const z = Math.sin(angle)*dist + (controls.getObject().position.z || 0);
+      const mesh = new THREE.Mesh(enemyGeo, enemyMat.clone());
+      mesh.position.set(x, 0.6, z);
+      mesh.castShadow = true;
+      scene.add(mesh);
+      const speed = ENEMY_SPEED_MIN + Math.random()*(ENEMY_SPEED_MAX-ENEMY_SPEED_MIN);
+      enemies.push({mesh, speed, hp: 3});
+    }
+
+    // shoot projectile from camera forward
+    function shoot(){
+      const dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      const start = controls.getObject().position.clone();
+      const mesh = new THREE.Mesh(projGeo, projMat.clone());
+      mesh.position.copy(start).add(dir.clone().multiplyScalar(1.2));
+      scene.add(mesh);
+      const velocity = dir.multiplyScalar(PROJECTILE_SPEED);
+      projectiles.push({mesh, velocity, ttl: 4});
+    }
+
+    // simple movement controls
+    const move = {forward:0, backward:0, left:0, right:0};
+    const velocity = new THREE.Vector3();
+    const onKeyDown = function ( event ) {
+      switch ( event.code ) {
+        case 'ArrowUp': case 'KeyW': move.forward = 1; break;
+        case 'ArrowLeft': case 'KeyA': move.left = 1; break;
+        case 'ArrowDown': case 'KeyS': move.backward = 1; break;
+        case 'ArrowRight': case 'KeyD': move.right = 1; break;
+      }
+    };
+    const onKeyUp = function ( event ) {
+      switch ( event.code ) {
+        case 'ArrowUp': case 'KeyW': move.forward = 0; break;
+        case 'ArrowLeft': case 'KeyA': move.left = 0; break;
+        case 'ArrowDown': case 'KeyS': move.backward = 0; break;
+        case 'ArrowRight': case 'KeyD': move.right = 0; break;
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+
+    // mouse / click to shoot
+    document.addEventListener('mousedown', (e)=>{
+      if(e.button===0){ shoot(); }
+    });
+
+    // mobile touch: show touch controls when touch detected
+    let isTouchDevice = false;
+    window.addEventListener('touchstart', ()=>{ if(!isTouchDevice){ isTouchDevice=true; touchShoot.style.display='block'; touchPad.style.display='flex'; message.style.display='none'; } }, {passive:true});
+    touchShoot.addEventListener('touchstart', (e)=>{ e.preventDefault(); shoot(); });
+
+    // collision helper
+    function sphereDistance(aPos, aR, bPos, bR){ return aPos.distanceTo(bPos) <= (aR + bR); }
+
+    // game loop
+    let lastSpawn = 0; let lastTime = performance.now(); let running = false; let paused = false;
+    function animate(){
+      const now = performance.now();
+      const dt = (now - lastTime) / 1000; // seconds
+      lastTime = now;
+      if(!running || paused){ renderer.render(scene, camera); requestAnimationFrame(animate); return; }
+
+      // movement
+      velocity.set(0,0,0);
+      if(move.forward) velocity.z -= 1;
+      if(move.backward) velocity.z += 1;
+      if(move.left) velocity.x -= 1;
+      if(move.right) velocity.x += 1;
+      velocity.normalize();
+      velocity.applyQuaternion(camera.quaternion);
+      controls.getObject().position.addScaledVector(velocity, player.speed * dt);
+
+      // spawn enemies
+      if(now - lastSpawn > SPAWN_INTERVAL){ spawnEnemy(); lastSpawn = now; }
+
+      // update enemies: move toward player
+      for(let i=enemies.length-1;i>=0;i--){
+        const e = enemies[i];
+        const dir = controls.getObject().position.clone().sub(e.mesh.position).normalize();
+        e.mesh.position.addScaledVector(dir, e.speed * dt);
+
+        // if close to player -> damage
+        if(e.mesh.position.distanceTo(controls.getObject().position) < (1.2 + player.colliderRadius)){
+          player.life -= 12 * dt; // damage over time
+          if(player.life <= 0){ player.life = 0; endGame(); }
+        }
+      }
+
+      // update projectiles
+      for(let i=projectiles.length-1;i>=0;i--){
+        const p = projectiles[i];
+        p.mesh.position.addScaledVector(p.velocity, dt);
+        p.ttl -= dt;
+        if(p.ttl <= 0){ scene.remove(p.mesh); projectiles.splice(i,1); continue; }
+
+        // check collision with enemies
+        for(let j=enemies.length-1;j>=0;j--){
+          const e = enemies[j];
+          if(sphereDistance(p.mesh.position, 0.12, e.mesh.position, 0.6)){
+            // hit
+            e.hp -= 1;
+            scene.remove(p.mesh);
+            projectiles.splice(i,1);
+            if(e.hp <= 0){
+              // explode
+              scene.remove(e.mesh);
+              enemies.splice(j,1);
+              score += 10;
+            } else {
+              score += 3;
+            }
+            break;
+          }
+        }
+      }
+
+      // simple enemy removal if too close to center below ground
+      for(let i=enemies.length-1;i>=0;i--){
+        const e = enemies[i];
+        if(e.mesh.position.y < -10) { scene.remove(e.mesh); enemies.splice(i,1); }
+      }
+
+      updateHUD();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    function startGame(){
+      // reset
+      lastSpawn = performance.now();
+      player.life = PLAYER_LIFE_MAX;
+      score = 0;
+      updateHUD();
+      // clear existing
+      enemies.forEach(x=>scene.remove(x.mesh)); enemies.length = 0;
+      projectiles.forEach(x=>scene.remove(x.mesh)); projectiles.length = 0;
+
+      // lock pointer
+      controls.lock();
+      running = true;
+      paused = false;
+      message.style.display='none';
+    }
+
+    function endGame(){
+      running = false; paused = false;
+      controls.unlock();
+      message.style.display='block';
+      message.innerHTML = `Game Over<br>Pontos: ${score}<br><button id='retry'>Jogar novamente</button>`;
+      document.getElementById('retry').addEventListener('click', ()=>{ message.style.display='none'; startGame(); });
+    }
+
+    startBtn.addEventListener('click', ()=>{ startGame(); });
+    pauseBtn.addEventListener('click', ()=>{ paused = !paused; pauseBtn.textContent = paused? 'Retomar':'Pausar'; });
+
+    // start the animation loop
+    animate();
+
+    // expose controls to scene
+    scene.add(controls.getObject());
+
+    // basic instructions not to crash on older GPUs
+    try{
+      // warm-up
+    }catch(e){ console.warn(e); }
+
+    // friendly touch: keep screen awake (if available)
+    if('wakeLock' in navigator){ let wl; navigator.wakeLock.request('screen').then(lock=>wl=lock).catch(()=>{}); }
+
+  </script>
 </body>
 </html>
