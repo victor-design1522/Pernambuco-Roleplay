@@ -1,664 +1,552 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>FPS Mobile - Versão Top</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>JOGO TOP — BATTLE ROYALE (Prototype)</title>
 <style>
   :root{--accent:#1f6feb;--danger:#ff4b4b}
-  html,body{height:100%;margin:0;background:#06060a;font-family:Inter,Arial,Helvetica,sans-serif;overflow:hidden}
-  #canvasWrap{position:fixed;inset:0;display:block;touch-action:none}
-  #hud{position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:999;color:#fff;background:rgba(0,0,0,0.35);padding:8px 14px;border-radius:12px;display:flex;gap:12px;align-items:center;font-weight:600}
-  #hud .life{color:#7fffd4}
-  #hud .score{color:#ffd86b}
-  #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:999;width:18px;height:18px;pointer-events:none}
-  #cross:before,#cross:after{content:'';position:absolute;background:rgba(255,255,255,0.9)}
-  #cross:before{left:50%;top:0;width:2px;height:100%;transform:translateX(-50%)}
-  #cross:after{top:50%;left:0;height:2px;width:100%}
-  #shootBtn{position:fixed;right:12px;bottom:18px;width:92px;height:92px;border-radius:50%;background:linear-gradient(145deg,var(--danger),#b00000);border:none;color:white;font-size:18px;z-index:998;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
-  #joy{position:fixed;left:12px;bottom:12px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,0.04);z-index:998;touch-action:none}
-  #stick{width:60px;height:60px;background:linear-gradient(180deg,#fff,#ddd);border-radius:50%;position:absolute;left:40px;top:40px;opacity:0.95;box-shadow:0 6px 18px rgba(0,0,0,0.4)}
-  #controlsTop{position:fixed;left:12px;top:12px;z-index:999;display:flex;gap:8px}
-  .btnMini{background:rgba(0,0,0,0.35);color:#fff;border:none;padding:8px 10px;border-radius:10px;font-weight:700}
-  #menu{position:fixed;right:12px;top:12px;border-radius:12px;background:rgba(0,0,0,0.45);padding:8px;z-index:999}
-  #panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1000;background:linear-gradient(180deg,#0b0f1b,#08101b);color:#fff;padding:18px;border-radius:12px;max-width:95%;width:760px;display:none}
-  #panel h2{margin:0 0 10px 0}
-  #shop .item{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:8px}
-  #startOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.85));z-index:2000;flex-direction:column;color:#fff}
-  #startOverlay button{padding:14px 22px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-weight:800;font-size:18px}
-  small{opacity:0.75}
-  /* responsive adjustments */
+  html,body{height:100%;margin:0;background:#020617;font-family:Inter,Arial,Helvetica,sans-serif;overflow:hidden}
+  #wrap{position:fixed;inset:0}
+  canvas{display:block}
+  #hud{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:999;color:#fff;background:rgba(0,0,0,0.45);padding:8px 12px;border-radius:10px;font-weight:700;display:flex;gap:10px;align-items:center}
+  #leftHud{position:fixed;left:10px;top:10px;z-index:999;color:#fff}
+  #rightHud{position:fixed;right:10px;top:10px;z-index:999;color:#fff;display:flex;flex-direction:column;gap:8px}
+  #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;z-index:999;pointer-events:none}
+  #cross:after{content:'';position:absolute;left:50%;top:50%;width:2px;height:16px;background:#fff;transform:translate(-50%,-50%)}
+  #cross:before{content:'';position:absolute;left:50%;top:50%;width:16px;height:2px;background:#fff;transform:translate(-50%,-50%)}
+  #shootBtn{position:fixed;right:12px;bottom:16px;width:84px;height:84px;border-radius:50%;background:linear-gradient(145deg,var(--danger),#b00000);border:none;color:#fff;font-size:16px;z-index:999}
+  #joy{position:fixed;left:12px;bottom:12px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,0.04);z-index:999;touch-action:none}
+  #stick{width:60px;height:60px;background:linear-gradient(180deg,#fff,#ddd);border-radius:50%;position:absolute;left:40px;top:40px;opacity:.95}
+  #start{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.75),rgba(0,0,0,0.85));z-index:2000;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff}
+  #start button{padding:14px 28px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-weight:800;font-size:18px}
+  #panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2001;background:rgba(3,7,12,0.95);color:#fff;padding:18px;border-radius:12px;display:none;max-width:92%;width:780px}
+  .btnMini{background:rgba(255,255,255,0.06);border:none;color:#fff;padding:8px 10px;border-radius:10px;font-weight:700}
+  #log{position:fixed;left:12px;bottom:164px;color:#fff;z-index:999;font-size:13px}
   @media (max-width:520px){
     #panel{width:94%}
-    #joy{width:120px;height:120px}
-    #stick{width:52px;height:52px;left:34px;top:34px}
-    #shootBtn{width:80px;height:80px}
+    #joy{width:120px;height:120px} #stick{width:52px;height:52px;left:34px;top:34px}
+    #shootBtn{width:72px;height:72px}
   }
 </style>
 </head>
 <body>
-<div id="canvasWrap"></div>
+<div id="wrap"></div>
 
-<div id="hud">
-  <div class="life">Vida: <span id="life">100</span></div>
-  <div class="score">Pontos: <span id="score">0</span></div>
-  <div id="level">Fase: <span id="fase">1</span></div>
+<div id="start">
+  <h1 style="margin:0 0 10px 0">JOGO TOP — BATTLE ROYALE</h1>
+  <p style="opacity:0.85;max-width:600px;text-align:center">Prototype Battle Royale — toque para iniciar. Joystick à esquerda, atirar à direita. Zona encolhe, loot, bots e armas.</p>
+  <div style="height:12px"></div>
+  <button id="startBtn">INICIAR PARTIDA</button>
+  <div style="height:8px"></div>
+  <small style="opacity:0.7">Protótipo técnico — para publicação, integre servidor multiplayer.</small>
 </div>
 
-<div id="cross"></div>
+<div id="hud">
+  <div>Vida: <span id="life">100</span></div>
+  <div style="width:8px"></div>
+  <div>Pontos: <span id="score">0</span></div>
+  <div style="width:8px"></div>
+  <div>Jogadores: <span id="players">0</span></div>
+  <div style="width:8px"></div>
+  <div>Zona: <span id="zone">100%</span></div>
+</div>
 
-<button id="shootBtn">Atirar</button>
-
-<div id="joy"><div id="stick"></div></div>
-
-<div id="controlsTop">
-  <button id="btnPause" class="btnMini">Pausar</button>
+<div id="leftHud"></div>
+<div id="rightHud">
   <button id="btnShop" class="btnMini">Loja</button>
   <button id="btnRestart" class="btnMini">Reiniciar</button>
 </div>
 
-<div id="menu"></div>
+<div id="cross"></div>
+<button id="shootBtn">TIRO</button>
+<div id="joy"><div id="stick"></div></div>
+<div id="log"></div>
 
-<!-- Main modal panel (shop/menus) -->
-<div id="panel" aria-hidden="true">
-  <h2 id="panelTitle">Loja</h2>
-  <div id="panelBody"></div>
-  <div style="text-align:right"><button id="closePanel" class="btnMini">Fechar</button></div>
-</div>
+<!-- Panel (Loja / Fim) -->
+<div id="panel"><h2 id="panelTitle">Loja</h2><div id="panelBody"></div><div style="text-align:right;margin-top:12px"><button id="closePanel" class="btnMini">Fechar</button></div></div>
 
-<!-- Start overlay -->
-<div id="startOverlay">
-  <h1 style="margin:0 0 10px 0">FPS Mobile — Versão TOP</h1>
-  <small>Toque para iniciar. Use o joystick e o botão de tiro. Aperte Loja para upgrades.</small>
-  <div style="height:18px"></div>
-  <button id="startBtn">INICIAR JOGO</button>
-</div>
-
-<!-- THREE.JS -->
+<!-- three.js -->
 <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.154.0/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
-/*
-  Jogo FPS Mobile - Versão Top
-  - Arma 3D (modelo simples)
-  - Sons via WebAudio
-  - Inimigos com animações
-  - Mapa com prédios
-  - Crosshair, fases, loja, corrida, partículas/explosões
-  - Joystick e toque mobile
-*/
+/* =========================
+   Battle Royale Prototype
+   - Map grande (generativo)
+   - Jogador FP
+   - Bots simulando outros jogadores (configurável)
+   - Loot crates
+   - Zona segura encolhendo (circle)
+   - Joystick + botão de tiro
+   - Texturas opcionais / gráficos escaláveis
+   - Tudo em um arquivo HTML
+   =========================*/
 
-/* -------------------- Config -------------------- */
+/* -------- CONFIG -------- */
 const CONFIG = {
-  PROJECTILE_SPEED: 250,     // units/s
-  ENEMY_BASE_SPEED: 8,      // units/s
-  ENEMY_COUNT_BASE: 4,
-  SPAWN_INTERVAL: 900,      // ms
+  MAX_BOTS: 30,              // padrão; para testes móveis mantenha 10-30; para PC pode aumentar (simula jogadores)
+  MAP_RADIUS: 200,           // raio do mapa em unidades
+  START_SAFE_RADIUS: 150,    // raio inicial da zona
+  SAFE_SHRINK_STEPS: 6,      // quantas vezes a zona vai encolher
+  SAFE_SHRINK_INTERVAL: 20000, // ms entre encolhimentos (20s)
+  SAFE_MIN_RADIUS: 20,
+  BOT_SPAWN_INTERVAL: 1800,
+  PROJECTILE_SPEED: 320,
   PLAYER_MAX_LIFE: 100,
-  PLAYER_SPEED: 12,
+  PLAYER_SPEED: 18,
   PLAYER_SPRINT_MULT: 1.8,
-  PARTICLE_COUNT: 18,
-  MAX_LEVEL: 8
+  PERFORMANCE_MODE: false // se true, reduz qualidade automaticamente
 };
 
-/* -------------------- DOM -------------------- */
-const canvasWrap = document.getElementById('canvasWrap');
+/* allow toggling textures on/off for low-end devices */
+let USE_TEXTURES = true;
+
+/* -------- DOM -------- */
+const wrap = document.getElementById('wrap');
+const startBtn = document.getElementById('startBtn');
 const lifeEl = document.getElementById('life');
 const scoreEl = document.getElementById('score');
-const faseEl = document.getElementById('fase');
+const playersEl = document.getElementById('players');
+const zoneEl = document.getElementById('zone');
 const shootBtn = document.getElementById('shootBtn');
 const joy = document.getElementById('joy');
 const stick = document.getElementById('stick');
-const startOverlay = document.getElementById('startOverlay');
-const startBtn = document.getElementById('startBtn');
+const startOverlay = document.getElementById('start');
+const logEl = document.getElementById('log');
 const panel = document.getElementById('panel');
 const panelTitle = document.getElementById('panelTitle');
 const panelBody = document.getElementById('panelBody');
 const closePanel = document.getElementById('closePanel');
 const btnShop = document.getElementById('btnShop');
-const btnPause = document.getElementById('btnPause');
 const btnRestart = document.getElementById('btnRestart');
 
-/* -------------------- Three.js setup -------------------- */
+/* -------- THREE.js scene -------- */
 let scene, camera, renderer, controls;
 let clock = new THREE.Clock();
-let player = { life: CONFIG.PLAYER_MAX_LIFE, speed: CONFIG.PLAYER_SPEED, sprint:false };
-let score = 0;
-let level = 1;
 let running = false, paused = false;
-let enemies = [], projectiles = [], particles = [];
-let mapObjects = [];
-let lastSpawn = 0;
+let player = { life: CONFIG.PLAYER_MAX_LIFE, speed: CONFIG.PLAYER_SPEED, sprint:false };
+let weaponMesh;
+let projectiles = [], bots = [], crates = [], particles = [];
+let safeZone = { center: new THREE.Vector2(0,0), radius: CONFIG.START_SAFE_RADIUS, targetRadius: CONFIG.START_SAFE_RADIUS };
+let score = 0, totalPlayers = 1;
+let lastBotSpawn = 0;
+let lastShrinkTime = 0;
+let shrinkStep = 0;
 
-/* ---------- audio (WebAudio procedural samples) ---------- */
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioCtx();
+/* performance auto-detect (simple) */
+function detectPerformance(){
+  const mem = navigator.deviceMemory || 2;
+  const cores = navigator.hardwareConcurrency || 2;
+  if(mem <= 2 || cores <= 2) { CONFIG.PERFORMANCE_MODE = true; USE_TEXTURES = false; }
+}
+detectPerformance();
 
-function playShoot(){
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = 'square';
-  o.frequency.value = 900 + Math.random()*200;
-  g.gain.value = 0.02;
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start();
-  o.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.12);
-  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
-  o.stop(audioCtx.currentTime + 0.13);
-}
-function playHit(){
-  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-  o.type='sawtooth'; o.frequency.value = 200 + Math.random()*200;
-  g.gain.value = 0.04; o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.25);
-  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
-  o.stop(audioCtx.currentTime + 0.26);
-}
-function playExplode(){
-  const o1 = audioCtx.createOscillator(), o2 = audioCtx.createOscillator(); const g=audioCtx.createGain();
-  o1.type='triangle'; o2.type='square';
-  o1.frequency.value=400; o2.frequency.value=200;
-  g.gain.value=0.06;
-  o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
-  o1.start(); o2.start();
-  o1.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime+0.5);
-  o2.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime+0.5);
-  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+0.5);
-  o1.stop(audioCtx.currentTime+0.52); o2.stop(audioCtx.currentTime+0.52);
-}
-
-/* -------------------- init Scene -------------------- */
+/* init three */
 function initThree(){
-  scene = new THREE.Scene(); scene.background = new THREE.Color(0x071124);
-  camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
-  renderer = new THREE.WebGLRenderer({antialias:true});
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1220);
+  camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 2000);
+  camera.position.set(0, 1.6, 8);
+  renderer = new THREE.WebGLRenderer({ antialias: !CONFIG.PERFORMANCE_MODE, alpha:false });
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  canvasWrap.appendChild(renderer.domElement);
-
-  // lighting
-  const hemi = new THREE.HemisphereLight(0xeeeeff, 0x222233, 0.7); scene.add(hemi);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.6); dir.position.set(-10,20,10); scene.add(dir);
-
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  wrap.appendChild(renderer.domElement);
+  // lights
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x111122, 0.8); scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6); dir.position.set(-50,80,50); scene.add(dir);
+  // fog for depth
+  scene.fog = new THREE.FogExp2(0x0b1220, 0.0012);
   // ground
-  const groundMat = new THREE.MeshStandardMaterial({color:0x0d1630, roughness:0.9});
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400,400), groundMat);
-  ground.rotation.x = -Math.PI/2; ground.position.y=0; scene.add(ground);
-
-  // camera / player start
-  camera.position.set(0,1.6,6);
-
-  // simple skybox-ish gradient using fog
-  scene.fog = new THREE.FogExp2(0x071124, 0.01);
-
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x053040, roughness: 0.95 });
+  if(USE_TEXTURES){
+    // simple procedural-looking texture using canvas (optional)
+    const gCanvas = document.createElement('canvas'); gCanvas.width=512; gCanvas.height=512;
+    const gCtx = gCanvas.getContext('2d'); gCtx.fillStyle='#063443'; gCtx.fillRect(0,0,512,512);
+    for(let i=0;i<800;i++){ gCtx.fillStyle='rgba(0,0,0,0.02)'; gCtx.fillRect(Math.random()*512,Math.random()*512,1,1); }
+    groundMat.map = new THREE.CanvasTexture(gCanvas);
+    groundMat.map.wrapS = groundMat.map.wrapT = THREE.RepeatWrapping;
+    groundMat.map.repeat.set(20,20);
+  }
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(CONFIG.MAP_RADIUS*2, CONFIG.MAP_RADIUS*2, 64,64), groundMat);
+  ground.rotation.x = -Math.PI/2; ground.position.y = 0; scene.add(ground);
+  // simple sky hemisphere
+  const skyGeo = new THREE.SphereGeometry(1000, 16, 12);
+  const skyMat = new THREE.MeshBasicMaterial({ color: 0x071028, side: THREE.BackSide });
+  scene.add(new THREE.Mesh(skyGeo, skyMat));
+  // map objects: add rocks/buildings
+  buildMap();
   window.addEventListener('resize', onResize);
 }
 
-/* -------------------- weapon model (simple 3D) -------------------- */
-function createWeapon(){
-  const group = new THREE.Group();
-  // body
-  const bodyMat = new THREE.MeshStandardMaterial({color:0x222a3a, metalness:0.6, roughness:0.4});
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.18,1.4), bodyMat); body.position.set(0,-0.15,-0.35); group.add(body);
-  // magazine
-  const mag = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.5,0.5), new THREE.MeshStandardMaterial({color:0x111122}));
-  mag.position.set(0.2,-0.4,-0.1); mag.rotation.x = 0.08; group.add(mag);
-  // barrel
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.9,12), new THREE.MeshStandardMaterial({color:0x666})); 
-  barrel.rotation.z = Math.PI/2; barrel.position.set(0,-0.12,-1.1); group.add(barrel);
-  // sight
-  const sight = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.05,0.15), new THREE.MeshStandardMaterial({color:0x99d}));
-  sight.position.set(0,-0.05,-0.55); group.add(sight);
-  // small flash point
-  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.03,6,6), new THREE.MeshStandardMaterial({emissive:0xffdba3, emissiveIntensity:1}));
-  flash.position.set(0,-0.12,-1.6); group.add(flash);
-
-  return group;
-}
-
-/* -------------------- enemy creation -------------------- */
-function spawnEnemy(){
-  const geo = new THREE.BoxGeometry(1.0,1.6,0.8);
-  const mat = new THREE.MeshStandardMaterial({color:0xcc4455, metalness:0.1, roughness:0.8});
-  const mesh = new THREE.Mesh(geo, mat);
-  const angle = Math.random()*Math.PI*2;
-  const r = 25 + Math.random()*18;
-  mesh.position.set(Math.cos(angle)*r, 0.8, Math.sin(angle)*r);
-  mesh.userData = {hp: 2 + Math.floor(level/2), speed: CONFIG.ENEMY_BASE_SPEED + Math.random()*3 + level*0.6, bob: Math.random()*1000};
-  scene.add(mesh);
-  enemies.push(mesh);
-}
-
-/* -------------------- map (buildings/obstacles) -------------------- */
+/* build simple map (buildings & covers) */
 function buildMap(){
-  // clear old
-  mapObjects.forEach(m=>scene.remove(m)); mapObjects = [];
-
-  // a few buildings boxes
-  for(let i=0;i<12;i++){
-    const w = 3 + Math.random()*8;
+  const coverMat = new THREE.MeshStandardMaterial({ color: 0x223344, roughness: 0.9 });
+  // generate roofs/buildings
+  for(let i=0;i<40;i++){
+    const w = 4 + Math.random()*15;
     const h = 2 + Math.random()*12;
-    const d = 3 + Math.random()*8;
-    const mat = new THREE.MeshStandardMaterial({color: 0x111a2a + Math.floor(Math.random()*0x002244), roughness: 0.9});
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
-    const angle = Math.random()*Math.PI*2; const dist = 8 + Math.random()*60;
-    b.position.set(Math.cos(angle)*dist, h/2 - 0.1, Math.sin(angle)*dist);
+    const d = 4 + Math.random()*12;
+    const geo = new THREE.BoxGeometry(w,h,d);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x1b2630 + Math.floor(Math.random()*0x001122), roughness:0.9 });
+    const b = new THREE.Mesh(geo, mat);
+    const ang = Math.random()*Math.PI*2; const r = 20 + Math.random()*CONFIG.MAP_RADIUS*0.6;
+    b.position.set(Math.cos(ang)*r, h/2 - 0.1, Math.sin(ang)*r);
     b.rotation.y = Math.random()*Math.PI*2;
-    scene.add(b); mapObjects.push(b);
-    // small rooftop details
-    if(Math.random()>0.6){
-      const deco = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.4,0.8), new THREE.MeshStandardMaterial({color:0x444866}));
-      deco.position.set(b.position.x, b.position.y + h/2 + 0.2, b.position.z);
-      scene.add(deco); mapObjects.push(deco);
-    }
+    scene.add(b);
   }
-  // add some low cover objects
-  for(let i=0;i<20;i++){
-    const w=1+Math.random()*3, d=1+Math.random()*3, h=0.6;
-    const mat = new THREE.MeshStandardMaterial({color:0x223344});
-    const o = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
-    const angle = Math.random()*Math.PI*2; const dist = 6 + Math.random()*40;
-    o.position.set(Math.cos(angle)*dist, h/2, Math.sin(angle)*dist);
-    o.rotation.y = Math.random()*Math.PI;
-    scene.add(o); mapObjects.push(o);
+  // crates / loot spawns
+  for(let i=0;i<60;i++){
+    if(Math.random() < 0.6) continue;
+    const c = createCrate();
+    const ang = Math.random()*Math.PI*2; const r = 10 + Math.random()*CONFIG.MAP_RADIUS*0.9;
+    c.position.set(Math.cos(ang)*r, 0.3, Math.sin(ang)*r);
+    scene.add(c); crates.push(c);
   }
 }
 
-/* -------------------- particles / explosion -------------------- */
-function spawnExplosion(pos){
-  for(let i=0;i<CONFIG.PARTICLE_COUNT;i++){
-    const p = new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6), new THREE.MeshStandardMaterial({color:0xffaa33, emissive:0xff7744, emissiveIntensity:1}));
-    p.position.copy(pos);
-    p.userData = {vel: new THREE.Vector3((Math.random()-0.5)*6, Math.random()*4, (Math.random()-0.5)*6), life: 0.8 + Math.random()*0.6};
-    scene.add(p); particles.push(p);
-  }
+/* create crate mesh */
+function createCrate(){
+  const geo = new THREE.BoxGeometry(0.8,0.8,0.8);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x664422, metalness: 0.1 });
+  const m = new THREE.Mesh(geo, mat);
+  m.userData = { loot: randomLoot() };
+  return m;
+}
+function randomLoot(){
+  const pool = ['Pistol','SMG','AR','Shotgun','Medkit','Armor'];
+  return pool[Math.floor(Math.random()*pool.length)];
 }
 
-/* -------------------- projectiles -------------------- */
-function fireProjectile(){
-  // weapon recoil/vibration
-  playShoot();
-  const pGeo = new THREE.SphereGeometry(0.06,8,8);
-  const pMat = new THREE.MeshStandardMaterial({color:0xfff4b0, emissive:0xffffcc, emissiveIntensity:1});
-  const proj = new THREE.Mesh(pGeo, pMat);
+/* create simple player weapon mesh */
+function createWeaponMesh(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.16,1.1), new THREE.MeshStandardMaterial({ color: 0x23313f, metalness:0.5 }));
+  body.position.set(0,-0.2,-0.5); g.add(body);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.9,8), new THREE.MeshStandardMaterial({ color:0x5a6066 }));
+  barrel.rotation.x = Math.PI/2; barrel.position.set(0,-0.18,-1.1); g.add(barrel);
+  return g;
+}
+
+/* spawn a bot (simulated player) */
+function spawnBot(){
+  const geo = new THREE.CapsuleGeometry(0.45, 0.6, 4, 8);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xcc3344 });
+  const m = new THREE.Mesh(geo, mat);
+  const ang = Math.random()*Math.PI*2; const r = 20 + Math.random()*CONFIG.MAP_RADIUS*0.8;
+  m.position.set(Math.cos(ang)*r, 0.8, Math.sin(ang)*r);
+  m.userData = { hp: 50 + Math.floor(Math.random()*50), speed: 3 + Math.random()*2, state: 'roam', target: null };
+  scene.add(m); bots.push(m);
+  totalPlayers = 1 + bots.length;
+  playersEl.textContent = totalPlayers;
+}
+
+/* shoot projectile from camera */
+function spawnProjectile(){
+  // small audio feedback (vibration)
+  navigator.vibrate?.(18);
+  const g = new THREE.SphereGeometry(0.06, 8,8);
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ emissive:0xffffcc, emissiveIntensity:1 }));
   const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
-  proj.position.copy(camera.position).add(dir.clone().multiplyScalar(1.6));
-  proj.userData = {vel: dir.clone().multiplyScalar(CONFIG.PROJECTILE_SPEED*0.5), life: 3};
-  scene.add(proj); projectiles.push(proj);
-  // small muzzle flash particle
-  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6), new THREE.MeshStandardMaterial({emissive:0xffddaa, emissiveIntensity:1}));
-  muzzle.position.copy(proj.position);
-  scene.add(muzzle);
-  setTimeout(()=>scene.remove(muzzle), 80);
+  m.position.copy(camera.position).add(dir.clone().multiplyScalar(1.2));
+  m.userData = { vel: dir.clone().multiplyScalar(CONFIG.PROJECTILE_SPEED), life: 3 };
+  scene.add(m); projectiles.push(m);
+  // muzzle flash
+  const f = new THREE.Mesh(new THREE.SphereGeometry(0.08,6,6), new THREE.MeshStandardMaterial({ emissive:0xffddaa, emissiveIntensity:1 }));
+  f.position.copy(m.position); scene.add(f); setTimeout(()=>scene.remove(f),60);
 }
 
-/* -------------------- collisions & updates -------------------- */
-function updateAll(dt){
-  // projectiles
-  for(let i = projectiles.length-1; i>=0; i--){
-    const p = projectiles[i]; p.userData.life -= dt;
+/* projectile collisions */
+function updateProjectiles(dt){
+  for(let i=projectiles.length-1;i>=0;i--){
+    const p = projectiles[i];
     p.position.addScaledVector(p.userData.vel, dt);
-    // check collision with enemies
-    for(let j = enemies.length-1; j>=0; j--){
-      const e = enemies[j];
-      if(e.position.distanceTo(p.position) < 1.0){
-        // hit
-        e.userData.hp -= 1;
-        playHit();
-        // remove projectile
-        scene.remove(p); projectiles.splice(i,1); break;
+    p.userData.life -= dt;
+    // check collision with bots
+    for(let j=bots.length-1;j>=0;j--){
+      const b = bots[j];
+      if(b.position.distanceTo(p.position) < 0.8){
+        b.userData.hp -= 35;
+        // hit effect
+        spawnHitEffect(p.position);
+        scene.remove(p); projectiles.splice(i,1);
+        if(b.userData.hp <= 0){
+          // bot killed
+          spawnLootAt(b.position);
+          scene.remove(b); bots.splice(j,1); totalPlayers = 1 + bots.length; playersEl.textContent = totalPlayers;
+          score += 10; scoreEl.textContent = score;
+        }
+        break;
       }
     }
-    if(p && p.userData.life <= 0){
-      scene.remove(p); projectiles.splice(i,1);
-    }
+    if(p && p.userData.life <= 0){ scene.remove(p); projectiles.splice(i,1); }
   }
+}
 
-  // enemies move toward player
-  const playerPos = camera.position;
-  for(let i = enemies.length-1; i>=0; i--){
-    const e = enemies[i];
-    // bobbing animation
-    e.position.y = 0.8 + Math.sin((performance.now()+e.userData.bob)*0.004)*0.08;
-    const dir = playerPos.clone().sub(e.position); dir.y = 0; dir.normalize();
-    const speed = e.userData.speed * (1 + Math.sin(performance.now()*0.001)*0.05);
-    e.position.addScaledVector(dir, speed * dt);
-
-    // if touches player
-    if(e.position.distanceTo(playerPos) < 1.2){
-      player.life -= 15 * dt; // damage over time
-      if(player.life <= 0 && running){
-        player.life = 0; endGame();
+/* bots AI simple */
+function updateBots(dt){
+  for(let i=bots.length-1;i>=0;i--){
+    const b = bots[i];
+    // if far from center, wander
+    if(!b.userData.target || Math.random()<0.005) {
+      const ang = Math.random()*Math.PI*2; const r = 2 + Math.random()*40;
+      b.userData.target = new THREE.Vector3(Math.cos(ang)*r, 0, Math.sin(ang)*r);
+    }
+    const dir = b.userData.target.clone().sub(b.position); dir.y = 0;
+    if(dir.length() > 0.5) {
+      dir.normalize();
+      b.position.addScaledVector(dir, b.userData.speed * dt);
+    } else {
+      b.userData.target = null;
+    }
+    // simple aggression: if player is near, move towards and occasionally shoot (simulated)
+    if(b.position.distanceTo(camera.position) < 12){
+      const dirP = camera.position.clone().sub(b.position); dirP.y=0; dirP.normalize();
+      b.position.addScaledVector(dirP, b.userData.speed * 1.2 * dt);
+      // occasionally "shoot" at player: reduce life if very close
+      if(b.position.distanceTo(camera.position) < 2.2){
+        player.life -= 18 * dt;
+        if(player.life <= 0) { player.life = 0; endGame(); }
       }
     }
-
-    // enemy death
-    if(e.userData.hp <= 0){
-      score += 10;
-      scoreEl.textContent = score;
-      spawnExplosion(e.position.clone());
-      playExplode();
-      scene.remove(e); enemies.splice(i,1);
-    }
   }
+}
 
-  // particles update
-  for(let i = particles.length-1; i>=0; i--){
+/* spawn loot crate at position */
+function spawnLootAt(pos){
+  const crate = createCrate();
+  crate.position.copy(pos);
+  scene.add(crate); crates.push(crate);
+}
+
+/* spawn hit effect (tiny particle) */
+function spawnHitEffect(pos){
+  const p = new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6), new THREE.MeshStandardMaterial({ emissive:0xff6666, emissiveIntensity:1 }));
+  p.position.copy(pos); p.userData={life:0.5,vel:new THREE.Vector3((Math.random()-0.5)*1.5,Math.random()*1.2, (Math.random()-0.5)*1.5)};
+  scene.add(p); particles.push(p);
+}
+
+/* update particles */
+function updateParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
     const p = particles[i];
     p.userData.life -= dt;
     p.position.addScaledVector(p.userData.vel, dt);
-    p.material.opacity = Math.max(0, p.userData.life/1.2);
-    if(p.userData.life <= 0){
-      scene.remove(p); particles.splice(i,1);
-    }
-  }
-
-  // check spawn timing
-  const now = performance.now();
-  if(now - lastSpawn > CONFIG.SPAWN_INTERVAL && enemies.length < CONFIG.ENEMY_COUNT_BASE + level*2){
-    spawnEnemy(); lastSpawn = now;
+    if(p.userData.life <= 0){ scene.remove(p); particles.splice(i,1); }
   }
 }
 
-/* -------------------- rendering loop -------------------- */
+/* update zone shrink */
+function updateSafeZone(){
+  const now = performance.now();
+  if(shrinkStep >= CONFIG.SAFE_SHRINK_STEPS) return;
+  if(now - lastShrinkTime > CONFIG.SAFE_SHRINK_INTERVAL){
+    // compute new target radius
+    const newRadius = Math.max(CONFIG.SAFE_MIN_RADIUS, safeZone.radius * 0.6);
+    safeZone.targetRadius = newRadius;
+    lastShrinkTime = now;
+    shrinkStep++;
+    log('Zona encolheu! Novo raio: ' + Math.round(newRadius));
+    // slowly animate radius over 6s
+    const start = performance.now();
+    const from = safeZone.radius;
+    const duration = 6000;
+    (function animateRadius(){
+      const t = (performance.now() - start) / duration;
+      if(t >= 1){ safeZone.radius = safeZone.targetRadius; return; }
+      safeZone.radius = from + (safeZone.targetRadius - from) * (t);
+      requestAnimationFrame(animateRadius);
+    })();
+  }
+}
+
+/* update crates (loot pickup) */
+function updateCrates(){
+  for(let i=crates.length-1;i>=0;i--){
+    const c = crates[i];
+    if(c.position.distanceTo(camera.position) < 1.6){
+      // auto pickup: give random reward
+      const loot = c.userData.loot;
+      score += (loot === 'Medkit') ? 15 : 8;
+      scoreEl.textContent = score;
+      scene.remove(c); crates.splice(i,1);
+      log('Loot coletado: ' + loot);
+    }
+  }
+}
+
+/* HUD helpers */
+function log(txt){ logEl.textContent = txt; setTimeout(()=>{ if(logEl.textContent===txt) logEl.textContent = ''; }, 3500); }
+
+/* main update loop */
 let prevTime = performance.now();
 function animate(){
   const now = performance.now();
-  const dt = Math.min(0.05, (now - prevTime) / 1000);
+  const dt = Math.min(0.06, (now - prevTime)/1000);
   prevTime = now;
   if(running && !paused){
-    // movement from joystick (moveX, moveZ)
-    const moveSpeed = player.speed * (player.sprint ? CONFIG.PLAYER_SPRINT_MULT : 1);
-    const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize().applyQuaternion(camera.quaternion);
-    moveVec.y = 0; camera.position.addScaledVector(moveVec, moveSpeed * dt);
-
-    updateAll(dt);
-    // level progression: if all enemies cleared and score threshold reached, next level
-    if(enemies.length === 0 && score >= level * 50 && level < CONFIG.MAX_LEVEL){
-      level++; faseEl.textContent = level;
-      CONFIG.SPAWN_INTERVAL = Math.max(350, CONFIG.SPAWN_INTERVAL - 60);
-      // small reward
-      player.life = Math.min(CONFIG.PLAYER_MAX_LIFE, player.life + 20);
-      buildMap();
+    // bot spawn
+    if(now - lastBotSpawn > CONFIG.BOT_SPAWN_INTERVAL && bots.length < CONFIG.MAX_BOTS){
+      spawnBot(); lastBotSpawn = now;
     }
+    updateProjectiles(dt);
+    updateBots(dt);
+    updateParticles(dt);
+    updateCrates();
+    updateSafeZone();
+    // apply safe zone damage to player if outside
+    const player2 = new THREE.Vector2(camera.position.x, camera.position.z);
+    const distToCenter = player2.distanceTo(safeZone.center);
+    if(distToCenter > safeZone.radius){
+      const excess = distToCenter - safeZone.radius;
+      player.life -= 8 * dt * Math.min(3, excess/5);
+      if(player.life <= 0) { player.life = 0; endGame(); }
+    }
+    // update HUD
+    lifeEl.textContent = Math.max(0, Math.floor(player.life));
+    scoreEl.textContent = score;
+    playersEl.textContent = (1 + bots.length);
+    zoneEl.textContent = Math.round((safeZone.radius / CONFIG.START_SAFE_RADIUS) * 100) + '%';
+    // weapon follow
+    updateWeapon();
   }
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
 
-/* -------------------- controls (touch joystick & shoot) -------------------- */
-let touching = false, startX=0, startY=0, moveX=0, moveZ=0;
-
-joy.addEventListener('touchstart', e=>{
-  e.preventDefault();
-  touching = true;
-  startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-});
-joy.addEventListener('touchmove', e=>{
-  if(!touching) return;
-  const dx = e.touches[0].clientX - startX;
-  const dy = e.touches[0].clientY - startY;
-  const max = 44;
-  const sx = Math.max(-max, Math.min(max, dx));
-  const sy = Math.max(-max, Math.min(max, dy));
-  stick.style.left = 40 + sx + 'px';
-  stick.style.top = 40 + sy + 'px';
-  // map to moveX/moveZ (forward/backwards reversed)
-  moveX = sx / max; moveZ = sy / max * -1;
-});
-joy.addEventListener('touchend', e=>{
-  touching = false; stick.style.left = '40px'; stick.style.top = '40px'; moveX = 0; moveZ = 0;
-});
-
-// shoot button handlers
-shootBtn.addEventListener('touchstart', e=>{ e.preventDefault(); fireProjectile(); });
-shootBtn.addEventListener('mousedown', e=>{ fireProjectile(); });
-
-// allow keyboard for desktop debugging
-window.addEventListener('keydown', e=>{
-  if(e.code === 'Space') fireProjectile();
-  if(e.key === 'Shift') player.sprint = true;
-});
-window.addEventListener('keyup', e=>{ if(e.key === 'Shift') player.sprint = false; });
-
-/* -------------------- shop & upgrades -------------------- */
-let playerData = { coins: 0, weaponLevel: 1, unlocked:true };
-const ITEMS = [
-  { id:'hp', name:'+20 Vida', price: 30, apply: ()=>{ player.life = Math.min(CONFIG.PLAYER_MAX_LIFE, player.life + 20); } },
-  { id:'weapon1', name:'Melhor Munição (+dano)', price: 80, apply: ()=>{ CONFIG.PROJECTILE_SPEED += 60; } },
-  { id:'speed', name:'Correr mais (+velocidade)', price: 100, apply: ()=>{ player.speed += 3; } },
-  { id:'maxhp', name:'+10 Vida Máx', price: 150, apply: ()=>{ CONFIG.PLAYER_MAX_LIFE += 10; player.life += 10; } }
-];
-
-function openShop(){
-  panelTitle.textContent = 'Loja';
-  panelBody.innerHTML = '';
-  ITEMS.forEach(it=>{
-    const div = document.createElement('div'); div.className='item';
-    div.innerHTML = `<div><strong>${it.name}</strong><div style="opacity:.7">Preço: ${it.price}</div></div><div><button class="btnMini" data-id="${it.id}">Comprar</button></div>`;
-    panelBody.appendChild(div);
-  });
-  panel.style.display = 'block';
-  panel.setAttribute('aria-hidden', 'false');
-}
-closePanel.addEventListener('click', ()=>{ panel.style.display='none'; panel.setAttribute('aria-hidden','true'); });
-btnShop.addEventListener('click', openShop);
-panelBody.addEventListener('click', (e)=>{
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  const id = btn.dataset.id;
-  const it = ITEMS.find(x=>x.id===id);
-  if(!it) return;
-  if(playerData.coins >= it.price){
-    playerData.coins -= it.price; it.apply(); alert('Comprado: '+it.name);
-  } else {
-    alert('Sem coins suficientes!');
-  }
-});
-
-/* -------------------- UI controls -------------------- */
-btnPause.addEventListener('click', ()=>{ paused = !paused; btnPause.textContent = paused ? 'Retomar' : 'Pausar'; });
-btnRestart.addEventListener('click', ()=>{ location.reload(); });
-
-/* -------------------- start / end flow -------------------- */
-function startGameFlow(){
-  // resume audio context for mobile autoplay rules
-  if(audioCtx.state === 'suspended') audioCtx.resume();
-  startOverlay.style.display = 'none';
-  running = true; paused = false;
-  initThree();
-  createInitialWorld();
-  animate();
-}
-
-startBtn.addEventListener('click', startGameFlow);
-
-/* -------------------- create initial world and HUD -------------------- */
-let weaponMesh;
-function createInitialWorld(){
-  // weapon
-  weaponMesh = createWeapon(); scene.add(weaponMesh);
-  weaponMesh.position.set(0,-0.35,-0.8); weaponMesh.rotation.x = 0.02;
-
-  // initial enemies
-  for(let i=0;i<CONFIG.ENEMY_COUNT_BASE + level;i++) spawnEnemy();
-  buildMap();
-
-  // show HUD initial
-  lifeEl.textContent = Math.floor(player.life);
-  scoreEl.textContent = score;
-  faseEl.textContent = level;
-
-  lastSpawn = performance.now() + 500;
-}
-
-/* -------------------- camera look follow (simple pseudo-recoil) -------------------- */
-function updateWeapon(){ // keep weapon positioned relative to camera
+/* weapon follow */
+function updateWeapon(){
   if(!weaponMesh) return;
-  // weapon follows camera orientation smoothly
   const camQuat = camera.quaternion;
-  const offset = new THREE.Vector3(0,-0.3,-0.7).applyQuaternion(camQuat);
+  const offset = new THREE.Vector3(0, -0.28, -0.65).applyQuaternion(camQuat);
   weaponMesh.position.copy(camera.position.clone().add(offset));
-  weaponMesh.quaternion.slerp(camQuat, 0.2);
+  weaponMesh.quaternion.slerp(camQuat, 0.25);
 }
 
-/* -------------------- general loop tie-in -------------------- */
-(function mainLoop(){
+/* end game */
+function endGame(){
+  running = false;
+  paused = true;
+  panelTitle.textContent = 'Partida Finalizada';
+  panelBody.innerHTML = `<p>Pontos: ${score}</p><p>Jogadores restantes: ${1 + bots.length}</p><div style="margin-top:8px"><button id="btnRespawn" class="btnMini">Reiniciar</button></div>`;
+  panel.style.display = 'block';
+  document.getElementById('btnRespawn').addEventListener('click', ()=> location.reload());
+}
+
+/* joystick controls */
+let touching=false, startX=0, startY=0, moveX=0, moveZ=0;
+joy.addEventListener('touchstart', e=>{ e.preventDefault(); touching=true; startX=e.touches[0].clientX; startY=e.touches[0].clientY; });
+joy.addEventListener('touchmove', e=>{ if(!touching) return; const dx = e.touches[0].clientX - startX; const dy = e.touches[0].clientY - startY; const max = 44; const sx = Math.max(-max, Math.min(max, dx)); const sy = Math.max(-max, Math.min(max, dy)); stick.style.left = 40 + sx + 'px'; stick.style.top = 40 + sy + 'px'; moveX = sx / max; moveZ = sy / max * -1; });
+joy.addEventListener('touchend', e=>{ touching=false; stick.style.left='40px'; stick.style.top='40px'; moveX=moveZ=0; });
+
+/* map movement applied in RAF */
+function movementApply(dt){
+  if(!camera) return;
+  const speed = player.speed * (player.sprint ? CONFIG.PLAYER_SPRINT_MULT : 1);
+  const forward = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); forward.y = 0; forward.normalize();
+  const right = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion); right.y=0; right.normalize();
+  const moveVec = forward.clone().multiplyScalar(moveZ).add(right.clone().multiplyScalar(moveX));
+  if(moveVec.lengthSq() > 0.0001) camera.position.addScaledVector(moveVec.normalize(), speed * dt);
+}
+
+/* hook movement into animate frame */
+(function movementLoop(){
+  let last = performance.now();
   (function loop(){
-    if(running && !paused){
-      // small updates that depend on time
-      const delta = clock.getDelta();
-      // animate weapon bobbing when moving
-      updateWeapon();
-      // update HUD
-      lifeEl.textContent = Math.max(0, Math.floor(player.life));
-      scoreEl.textContent = score;
-      // update movement values from virtual joystick mapping
-      // moveX, moveZ are set by joy handlers (global)
-      // apply sprint
-      player.sprint = isSprinting;
-    }
+    const now = performance.now();
+    const dt = Math.min(0.06, (now - last)/1000);
+    last = now;
+    if(running && !paused){ movementApply(dt); }
     requestAnimationFrame(loop);
   })();
 })();
 
-/* -------------------- small helpers -------------------- */
-function endGame(){
-  running = false;
-  alert(`Game Over! Pontos: ${score}`);
-  // show panel with restart
-  panelTitle.textContent = 'Game Over';
-  panelBody.innerHTML = `<div style="padding:12px">Pontos: ${score}<br><br><button id="toRestart" class="btnMini">Jogar Novamente</button></div>`;
-  panel.style.display = 'block';
-  document.getElementById('toRestart').addEventListener('click', ()=>location.reload());
+/* mouse look for desktop (pointer lock) */
+const pointerControls = new THREE.PointerLockControls(camera, document.body);
+document.addEventListener('click', ()=> { try{ pointerControls.lock(); } catch(e){} } );
+
+/* shooting handlers */
+shootBtn.addEventListener('touchstart', e=>{ e.preventDefault(); spawnProjectile(); });
+shootBtn.addEventListener('mousedown', e=>{ spawnProjectile(); });
+
+/* simple shop */
+const SHOP = [
+  { id:'medkit', name:'Medkit +30', price: 40, apply: ()=>{ player.life = Math.min(CONFIG.PLAYER_MAX_LIFE, player.life + 30); } },
+  { id:'speed', name:'Velocidade +3', price: 90, apply: ()=>{ player.speed += 3; } },
+  { id:'ammo', name:'Munição Extra (simulada)', price: 60, apply: ()=>{ score += 5; } }
+];
+let playerCoins = 0; // coins earned by kills
+btnShop.addEventListener('click', openShop);
+closePanel.addEventListener('click', ()=>{ panel.style.display='none' });
+function openShop(){
+  panelTitle.textContent = 'Loja';
+  panelBody.innerHTML = '';
+  SHOP.forEach(it=>{
+    const div = document.createElement('div'); div.style.display='flex'; div.style.justifyContent='space-between'; div.style.alignItems='center'; div.style.padding='8px 0';
+    div.innerHTML = `<div><strong>${it.name}</strong><div style="opacity:0.75">Preço: ${it.price}</div></div><div><button class="btnMini buy" data-id="${it.id}">Comprar</button></div>`;
+    panelBody.appendChild(div);
+  });
+  const coinsDiv = document.createElement('div'); coinsDiv.style.marginTop='8px'; coinsDiv.innerHTML = `<small>Coins: ${playerCoins}</small>`;
+  panelBody.appendChild(coinsDiv);
+  panel.style.display='block';
+  panelTitle.scrollIntoView();
+  panel.addEventListener('click', onShopClick);
+}
+function onShopClick(e){
+  const b = e.target.closest('button.buy');
+  if(!b) return;
+  const id = b.dataset.id; const it = SHOP.find(x=>x.id===id);
+  if(!it) return;
+  if(playerCoins >= it.price){ playerCoins -= it.price; it.apply(); alert('Comprado: '+it.name); panel.style.display='none'; } else alert('Coins insuficientes!');
 }
 
-/* -------------------- mobile sprint toggle (double-tap on joy) -------------------- */
-let lastTap = 0; let isSprinting = false;
-joy.addEventListener('touchend', ()=>{
-  const now = Date.now();
-  if(now - lastTap < 300){ isSprinting = !isSprinting; navigator.vibrate?.(40); }
-  lastTap = now;
-});
+/* restart */
+btnRestart.addEventListener('click', ()=> location.reload() );
 
-/* -------------------- hooking into animate() and rendering -------------------- */
-/* We had animate() defined earlier that calls renderer and updateAll. To tie updateWeapon and UI updates,
-   we will replace animate with a wrapper that includes them. */
-prevTime = performance.now();
-function mainAnimate(){
-  const now = performance.now();
-  const dt = Math.min(0.06, (now - prevTime) / 1000);
-  prevTime = now;
-  if(running && !paused){
-    // joystick movement uses moveX/moveZ mapped earlier
-    const moveSpeed = player.speed * (player.sprint ? CONFIG.PLAYER_SPRINT_MULT : 1);
-    const forward = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).setY(0).normalize();
-    const right = new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion).setY(0).normalize();
-    const moveVec = forward.clone().multiplyScalar(moveZ).add(right.clone().multiplyScalar(moveX));
-    if(moveVec.lengthSq() > 0.0001) camera.position.addScaledVector(moveVec.normalize(), moveSpeed * dt);
-    // weapon follow
-    updateWeapon();
-    // update world
-    updateAll(dt);
-    lifeEl.textContent = Math.floor(player.life);
-    scoreEl.textContent = score;
-    faseEl.textContent = level;
-  }
-  renderer.render(scene, camera);
-  requestAnimationFrame(mainAnimate);
-}
-
-/* Replace earlier animate with this */
-animate = mainAnimate;
-
-/* ensure window resize handled */
-function onResize(){ camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); }
-
-/* -------------------- enable pointer lock & mouse look for desktop use -------------------- */
-const pointerLockControls = new THREE.PointerLockControls(camera, document.body);
-document.addEventListener('click', ()=>{ try{ pointerLockControls.lock(); }catch(e){} });
-pointerLockControls.addEventListener('lock', ()=>{ /* locked */ });
-pointerLockControls.addEventListener('unlock', ()=>{ /* unlocked */ });
-scene?.add(pointerLockControls.getObject());
-
-/* -------------------- initialization safe-call (create scene early but start only on click) -------------------- */
-initThree(); // create renderer and scene; will be reused on startFlow
-// Remove auto-started render loop; the real loop starts when startGameFlow called
-renderer.render(scene, camera);
-
-/* -------------------- utilities tie-ups -------------------- */
-function createWeapon(){ // shorter recreate for beginning
-  return createWeaponModel();
-}
-
-/* createWeaponModel returns a THREE.Group; define it here to avoid hoisting issues */
-function createWeaponModel(){
-  const group = new THREE.Group();
-  const bodyMat = new THREE.MeshStandardMaterial({color:0x2b3140, metalness:0.6, roughness:0.35});
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.18,1.4), bodyMat); body.position.set(0,-0.15,-0.35);
-  group.add(body);
-  const mag = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.5,0.5), new THREE.MeshStandardMaterial({color:0x0f1724}));
-  mag.position.set(0.18,-0.4,-0.1); group.add(mag);
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.9,12), new THREE.MeshStandardMaterial({color:0x616b76}));
-  barrel.rotation.z = Math.PI/2; barrel.position.set(0,-0.12,-1.1); group.add(barrel);
-  const sight = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.05,0.15), new THREE.MeshStandardMaterial({color:0x6fb6ff}));
-  sight.position.set(0,-0.05,-0.55); group.add(sight);
-  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.03,6,6), new THREE.MeshStandardMaterial({emissive:0xffdba3, emissiveIntensity:1}));
-  flash.position.set(0,-0.12,-1.6); group.add(flash);
-  return group;
-}
-
-/* small helper to call fireProjectile and animate muzzle recoil */
-function fireProjectile(){
-  fireProjectileInternal();
-  // camera recoil small
-  const recoil = 0.05;
-  camera.rotation.x = Math.max(-0.3, camera.rotation.x - recoil*0.6);
-  setTimeout(()=>{ camera.rotation.x += recoil*0.6; }, 80);
-}
-
-/* actual function defined earlier as fireProjectile; rename to avoid double def issues */
-function fireProjectileInternal(){
-  playShoot();
-  const pGeo = new THREE.SphereGeometry(0.06,8,8);
-  const pMat = new THREE.MeshStandardMaterial({color:0xfff4b0, emissive:0xffffcc, emissiveIntensity:1});
-  const proj = new THREE.Mesh(pGeo, pMat);
-  const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
-  proj.position.copy(camera.position).add(dir.clone().multiplyScalar(1.6));
-  proj.userData = {vel: dir.clone().multiplyScalar(CONFIG.PROJECTILE_SPEED*0.8), life: 3};
-  scene.add(proj); projectiles.push(proj);
-  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6), new THREE.MeshStandardMaterial({emissive:0xffddaa, emissiveIntensity:1}));
-  muzzle.position.copy(proj.position);
-  scene.add(muzzle);
-  setTimeout(()=>scene.remove(muzzle), 80);
-}
-
-/* expose some debug helpers globally (for advanced tweaks) */
-window.__game = { scene, camera, renderer, spawnEnemy, spawnExplosion, playerData };
-
-/* final: start main animation loop when player actually starts */
+/* initial start */
 startBtn.addEventListener('click', ()=>{
-  if(audioCtx.state === 'suspended') audioCtx.resume();
+  // resume audio context if needed for vibration/sounds (not used heavy here)
   startOverlay.style.display = 'none';
-  if(!running){
-    // re-init scene if necessary
-    if(!scene) initThree();
-    // weapon
-    weaponMesh = createWeaponModel();
-    scene.add(weaponMesh);
-    // initial enemies and map
-    for(let i=0;i<CONFIG.ENEMY_COUNT_BASE + level;i++) spawnEnemy();
-    buildMap();
-    running = true; paused = false;
-    prevTime = performance.now();
-    mainAnimate();
-  }
+  if(!scene) initThree();
+  // weapon model
+  weaponMesh = createWeaponMesh(); scene.add(weaponMesh);
+  // spawn initial bots (smaller number for mobile)
+  const initialBots = Math.min(8, Math.floor(CONFIG.MAX_BOTS/3));
+  for(let i=0;i<initialBots;i++) spawnBot();
+  lastBotSpawn = performance.now();
+  running = true; paused = false;
+  prevTime = performance.now();
+  lastShrinkTime = performance.now() + 12000; // start shrinking after 12s
+  animate();
 });
 
-/* ensure initial instructions visible when loaded */
-startOverlay.style.display = 'flex';
+/* utilities */
+function onResize(){ if(camera && renderer){ camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); } }
 
+/* small particle spawn for feedback on crate explosion */
+function spawnCratePop(pos){
+  for(let i=0;i<10;i++){
+    const p = new THREE.Mesh(new THREE.SphereGeometry(0.04,6,6), new THREE.MeshStandardMaterial({ color: 0xffcc66, emissive:0xff8844 }));
+    p.position.copy(pos); p.userData = { vel: new THREE.Vector3((Math.random()-0.5)*2,(Math.random()*2), (Math.random()-0.5)*2), life: 0.6 + Math.random()*0.6 };
+    scene.add(p); particles.push(p);
+  }
+}
+
+/* periodic cleanup (keep scene lighter) */
+setInterval(()=>{ // remove far objects if any (simple)
+  // no heavy cleanup for prototype
+}, 12000);
+
+/* keyboard debug (desktop) */
+window.addEventListener('keydown', e=>{
+  if(e.key==='t'){ USE_TEXTURES = !USE_TEXTURES; alert('Textures: '+USE_TEXTURES); }
+  if(e.key==='k'){ spawnBot(); }
+});
+
+/* expose some debug API */
+window.__BR = { scene, spawnBot, spawnCrateAt: spawnLootAt, CONFIG };
+
+/* end of script */
 </script>
 </body>
 </html>
