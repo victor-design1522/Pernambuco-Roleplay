@@ -1,116 +1,175 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Pernambuco Roleplay</title>
+<meta charset="UTF-8">
+<title>Pernambuco Roleplay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin: 0;
+  background: #0d0d0d;
+  font-family: Arial, sans-serif;
+  color: white;
+  text-align: center;
+}
 
-  <style>
-    body {
-      margin: 0;
-      background: #0d0d0d;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
+header {
+  background: #111;
+  padding: 18px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #00ff88;
+}
 
-    header {
-      background: #111;
-      padding: 20px;
-      font-size: 24px;
-      font-weight: bold;
-      color: #00ff88;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.menu {
+  display: flex;
+  background: #000;
+}
 
-    header img {
-      height: 40px;
-    }
+.menu button {
+  flex: 1;
+  padding: 15px;
+  background: #000;
+  color: white;
+  border: none;
+  font-size: 15px;
+}
 
-    .menu {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 15px;
-    }
+.menu .ativo {
+  background: #00ff88;
+  color: black;
+  font-weight: bold;
+}
 
-    .menu button {
-      background: #00ff88;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+.tela {
+  display: none;
+  padding: 20px;
+}
 
-    .box {
-      margin-top: 40px;
-      padding: 20px;
-    }
+.tela.ativa {
+  display: block;
+}
 
-    .server-box {
-      background: #111;
-      margin: 20px;
-      padding: 20px;
-      border-radius: 12px;
-    }
+.box {
+  background: #111;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 20px auto;
+  max-width: 360px;
+}
 
-    .status {
-      color: #00ff88;
-      font-weight: bold;
-    }
+.status {
+  color: #00ff88;
+  font-weight: bold;
+}
 
-    .enter-btn {
-      margin-top: 15px;
-      width: 100%;
-      padding: 15px;
-      font-size: 18px;
-      border: none;
-      border-radius: 12px;
-      background: #00ff88;
-      color: black;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  </style>
+button.principal {
+  margin-top: 15px;
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  border: none;
+  border-radius: 10px;
+  background: #00ff88;
+  color: black;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+}
+
+.aviso {
+  margin-top: 10px;
+  color: #ffcc00;
+  font-size: 14px;
+}
+</style>
 </head>
 
 <body>
 
-  <header>
-    PERNAMBUCO ROLEPLAY
-    <img src="https://i.imgur.com/6XGQZQn.png">
-  </header>
+<header>PERNAMBUCO ROLEPLAY</header>
 
-  <div class="menu">
-    <button>Servidor</button>
-    <button>Informações</button>
-    <button>Configurações</button>
-  </div>
+<div class="menu">
+  <button class="ativo" onclick="trocar('servidor', this)">Servidor</button>
+  <button onclick="trocar('noticias', this)">Notícias</button>
+  <button onclick="trocar('download', this)">Download</button>
+  <button onclick="trocar('config', this)">Config</button>
+</div>
 
+<!-- SERVIDOR -->
+<div id="servidor" class="tela ativa">
   <div class="box">
-    <h2>Servidores</h2>
+    <h2>Pernambuco Roleplay</h2>
+    <p>Status: <span class="status">ONLINE ✅</span></p>
+    <p>IP: 51.81.59.76:15792</p>
 
-    <div class="server-box">
-      <h3>Pernambuco Roleplay</h3>
-      <p>Status: <span class="status">ONLINE ✅</span></p>
-      <p>IP: 51.81.59.76:15792</p>
+    <button class="principal" onclick="entrarServidor()">
+      Entrar no Servidor
+    </button>
 
-      <!-- BOTÃO QUE ABRE O SA-MP -->
-      <button class="enter-btn" onclick="entrarServidor()">
-        Entrar no Servidor
-      </button>
+    <div class="aviso" id="aviso">
+      Se não abrir automático, copie o IP e cole no SA-MP.
     </div>
   </div>
+</div>
 
-  <script>
-    function entrarServidor() {
-      window.location.href = "samp://51.81.59.76:15792";
-    }
-  </script>
+<!-- NOTÍCIAS -->
+<div id="noticias" class="tela">
+  <div class="box">
+    <h3>Notícias</h3>
+    <p>✅ Servidor aberto para novos jogadores</p>
+    <p>✅ Atualizações semanais</p>
+    <p>✅ Sistemas novos em breve</p>
+  </div>
+</div>
+
+<!-- DOWNLOAD -->
+<div id="download" class="tela">
+  <div class="box">
+    <h3>Baixar o Aplicativo</h3>
+    <p>Baixe o APK oficial do Pernambuco Roleplay.</p>
+
+    <!-- Troque esse link depois pelo link real do seu APK -->
+    <a href="#" style="text-decoration:none;">
+      <button class="principal">Baixar APK</button>
+    </a>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="config" class="tela">
+  <div class="box">
+    <h3>Configurações</h3>
+
+    <input type="text" placeholder="Seu Nick">
+
+    <button class="principal" onclick="alert('Configurações salvas!')">
+      Salvar
+    </button>
+  </div>
+</div>
+
+<script>
+function trocar(id, botao) {
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativa');
+
+  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
+  botao.classList.add('ativo');
+}
+
+function entrarServidor() {
+  document.getElementById("aviso").style.display = "block";
+  window.location.href = "samp://51.81.59.76:15792";
+}
+</script>
 
 </body>
 </html>
