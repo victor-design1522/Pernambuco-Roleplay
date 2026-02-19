@@ -2,17 +2,76 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini Battle Royale Mobile</title>
+<title>Mini Battle Royale</title>
 <style>
-body { margin:0; overflow:hidden; background:#111; font-family:Arial; }
-#ui {
+body { margin:0; overflow:hidden; font-family:Arial; background:#000; }
+
+/* MENU */
+#menu {
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:linear-gradient(#0f2027,#203a43,#2c5364);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  z-index:10;
+}
+.menu-btn {
+  padding:15px 40px;
+  margin:10px;
+  font-size:20px;
+  border:none;
+  border-radius:10px;
+  background:#e67e22;
+  color:white;
+}
+
+/* CONFIG */
+#config {
+  display:none;
+  flex-direction:column;
+  align-items:center;
+}
+input { margin:10px; }
+
+/* HUD */
+#hud {
   position:absolute;
   top:10px;
   left:10px;
   color:white;
   font-size:18px;
+  display:none;
 }
-button {
+#lifeBar {
+  width:200px;
+  height:20px;
+  background:#555;
+  border-radius:10px;
+  overflow:hidden;
+}
+#lifeFill {
+  height:100%;
+  width:100%;
+  background:#e74c3c;
+}
+
+/* MIRA */
+#crosshair {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-size:30px;
+  color:white;
+  display:none;
+}
+
+/* BOTÕES */
+button.gameBtn {
   position:absolute;
   width:80px;
   height:80px;
@@ -29,17 +88,52 @@ button {
 </head>
 <body>
 
-<div id="ui">Vida: 100</div>
+<div id="menu">
+  <h1>Mini Battle Royale</h1>
+  <button class="menu-btn" onclick="startGame()">JOGAR</button>
+  <button class="menu-btn" onclick="openConfig()">CONFIGURAÇÕES</button>
 
-<button id="shoot"></button>
-<button id="forward"></button>
-<button id="back"></button>
-<button id="left"></button>
-<button id="right"></button>
+  <div id="config">
+    <label>Sensibilidade</label>
+    <input type="range" id="sens" min="0.001" max="0.02" step="0.001" value="0.005">
+    <label><input type="checkbox" id="showCross" checked> Mostrar Mira</label>
+    <button class="menu-btn" onclick="saveConfig()">Salvar</button>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="lifeBar"><div id="lifeFill"></div></div>
+</div>
+
+<div id="crosshair">+</div>
+
+<button id="shoot" class="gameBtn"></button>
+<button id="forward" class="gameBtn"></button>
+<button id="back" class="gameBtn"></button>
+<button id="left" class="gameBtn"></button>
+<button id="right" class="gameBtn"></button>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-
 <script>
+
+let sensitivity = 0.005;
+
+function openConfig(){
+  document.getElementById("config").style.display="flex";
+}
+
+function saveConfig(){
+  sensitivity = parseFloat(document.getElementById("sens").value);
+  let cross = document.getElementById("showCross").checked;
+  document.getElementById("crosshair").style.display = cross?"block":"none";
+  alert("Configuração salva!");
+}
+
+function startGame(){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("hud").style.display="block";
+  document.getElementById("crosshair").style.display="block";
+}
 
 let scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
@@ -49,12 +143,10 @@ let renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// LUZ
 let light = new THREE.DirectionalLight(0xffffff,1);
 light.position.set(5,10,5);
 scene.add(light);
 
-// CHÃO
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(100,100),
   new THREE.MeshStandardMaterial({color:0x2ecc71})
@@ -62,51 +154,23 @@ let floor = new THREE.Mesh(
 floor.rotation.x = -Math.PI/2;
 scene.add(floor);
 
-// FUNÇÃO PARA CRIAR BONECO
 function createCharacter(color){
   let group = new THREE.Group();
-
   let material = new THREE.MeshStandardMaterial({color:color});
-
   let body = new THREE.Mesh(new THREE.BoxGeometry(1,1.5,0.5), material);
   body.position.y = 1.5;
   group.add(body);
-
-  let head = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,0.8), material);
-  head.position.y = 2.6;
-  group.add(head);
-
-  let arm1 = new THREE.Mesh(new THREE.BoxGeometry(0.3,1,0.3), material);
-  arm1.position.set(-0.8,1.5,0);
-  group.add(arm1);
-
-  let arm2 = arm1.clone();
-  arm2.position.x = 0.8;
-  group.add(arm2);
-
-  let leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.4,1,0.4), material);
-  leg1.position.set(-0.3,0.5,0);
-  group.add(leg1);
-
-  let leg2 = leg1.clone();
-  leg2.position.x = 0.3;
-  group.add(leg2);
-
   return group;
 }
 
-// PLAYER
 let player = createCharacter(0x3498db);
 scene.add(player);
-player.position.y = 0;
 
 camera.position.set(0,4,6);
 
-// VIDA
 let life = 100;
-
-// INIMIGOS
 let enemies = [];
+
 for(let i=0;i<5;i++){
   let bot = createCharacter(0xe74c3c);
   bot.position.set(Math.random()*40-20,0,Math.random()*40-20);
@@ -115,7 +179,6 @@ for(let i=0;i<5;i++){
   enemies.push(bot);
 }
 
-// MOVIMENTO
 let move = {f:false,b:false,l:false,r:false};
 
 function movePlayer(){
@@ -126,20 +189,15 @@ function movePlayer(){
   if(move.r) player.rotation.y -= 0.05;
 }
 
-// BOTÕES
 forward.ontouchstart=()=>move.f=true;
 forward.ontouchend=()=>move.f=false;
-
 back.ontouchstart=()=>move.b=true;
 back.ontouchend=()=>move.b=false;
-
 left.ontouchstart=()=>move.l=true;
 left.ontouchend=()=>move.l=false;
-
 right.ontouchstart=()=>move.r=true;
 right.ontouchend=()=>move.r=false;
 
-// TIRO
 shoot.onclick=function(){
   let bullet = new THREE.Mesh(
     new THREE.SphereGeometry(0.2),
@@ -172,19 +230,17 @@ shoot.onclick=function(){
   },30);
 }
 
-// CÂMERA ARRASTANDO
 let previousTouch;
 renderer.domElement.addEventListener("touchmove",function(e){
   let touch = e.touches[0];
   if(previousTouch){
     let deltaX = touch.clientX - previousTouch.clientX;
-    player.rotation.y -= deltaX * 0.005;
+    player.rotation.y -= deltaX * sensitivity;
   }
   previousTouch = touch;
 });
 renderer.domElement.addEventListener("touchend",()=>previousTouch=null);
 
-// ANIMAÇÃO
 function animate(){
   requestAnimationFrame(animate);
 
@@ -201,7 +257,7 @@ function animate(){
 
     if(bot.position.distanceTo(player.position)<1.5){
       life -=0.3;
-      document.getElementById("ui").innerText="Vida: "+Math.floor(life);
+      document.getElementById("lifeFill").style.width = life+"%";
       if(life<=0){
         alert("Você perdeu 😢");
         location.reload();
