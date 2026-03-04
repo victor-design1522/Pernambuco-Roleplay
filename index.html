@@ -1,236 +1,227 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Pixel Battle Royale</title>
-<style>
-body {
-    margin: 0;
-    overflow: hidden;
-    background: #111;
-    font-family: Arial, sans-serif;
-}
-
-canvas {
-    display: block;
-    background: #2a7a2a;
-}
-
-.ui {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    color: white;
-}
-
-.health-bar {
-    width: 200px;
-    height: 20px;
-    background: red;
-    margin-top: 5px;
-}
-
-.health {
-    height: 100%;
-    background: lime;
-}
-
-.players-left {
-    margin-top: 10px;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Mad Block Royale - Vanilla JS</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #222; font-family: 'Courier New', Courier, monospace; }
+        canvas { display: block; background: #4a7c44; cursor: crosshair; }
+        #ui {
+            position: absolute; top: 10px; left: 10px; color: white;
+            text-shadow: 2px 2px 0 #000; pointer-events: none;
+        }
+        .hud-bar { width: 200px; height: 20px; background: #333; border: 2px solid #fff; margin-bottom: 5px; }
+        #hp-fill { width: 100%; height: 100%; background: #ff4444; transition: width 0.2s; }
+    </style>
 </head>
 <body>
 
-<div class="ui">
-    Vida:
-    <div class="health-bar">
-        <div class="health" id="health"></div>
+    <div id="ui">
+        <div class="hud-bar"><div id="hp-fill"></div></div>
+        <div id="status">VIVOS: 10 | ARMA: Pistola</div>
+        <div id="storm-warn" style="color: yellow;"></div>
     </div>
-    <div class="players-left" id="playersLeft"></div>
-</div>
 
-<canvas id="game"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+/** * CONFIGURAÇÕES GERAIS 
+ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const hpFill = document.getElementById('hp-fill');
+const statusText = document.getElementById('status');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+const WORLD_SIZE = 2000;
+let players = [];
+let bullets = [];
 const keys = {};
-const bullets = [];
-const bots = [];
-let playersLeft = 0;
-let stormRadius = 800;
-let stormShrink = 0.05;
-let gameOver = false;
+let mousePos = { x: 0, y: 0 };
+let stormRadius = 1500;
+let frameCount = 0;
 
-const player = {
-    x: canvas.width/2,
-    y: canvas.height/2,
-    size: 25,
-    speed: 3,
-    health: 100,
-    maxHealth: 100,
-    damage: 15,
-    fireRate: 300,
-    lastShot: 0
+// Tipos de armas
+const WEAPONS = {
+    Pistola: { damage: 10, speed: 7, fireRate: 400, color: '#aaa' },
+    Rifle: { damage: 15, speed: 12, fireRate: 150, color: '#555' },
+    Laser: { damage: 25, speed: 20, fireRate: 600, color: '#0ff' }
 };
 
-function spawnBots(count) {
-    for(let i=0;i<count;i++){
-        bots.push({
-            x: Math.random()*2000-1000,
-            y: Math.random()*2000-1000,
-            size:25,
-            speed:1.5,
-            health:50,
-            damage:8,
-            fireRate:800,
-            lastShot:0
-        });
+/** * CLASSES DO JOGO
+ */
+class Entity {
+    constructor(x, y, color, isBot = true) {
+        this.x = x;
+        this.y = y;
+        this.size = 30;
+        this.color = color;
+        this.hp = 100;
+        this.speed = 3;
+        this.isBot = isBot;
+        this.weapon = "Pistola";
+        this.lastShot = 0;
+        this.angle = 0;
     }
-    playersLeft = bots.length + 1;
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        
+        // Corpo estilo bloco
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(-this.size/2, -this.size/2, this.size, this.size);
+
+        // Arma
+        ctx.fillStyle = WEAPONS[this.weapon].color;
+        ctx.fillRect(10, -5, 20, 10);
+        ctx.restore();
+
+        // Barra de vida (sobre a cabeça)
+        ctx.fillStyle = 'red';
+        ctx.fillRect(this.x - 15, this.y - 25, 30, 5);
+        ctx.fillStyle = 'green';
+        ctx.fillRect(this.x - 15, this.y - 25, (this.hp/100) * 30, 5);
+    }
+
+    shoot() {
+        const now = Date.now();
+        if (now - this.lastShot > WEAPONS[this.weapon].fireRate) {
+            bullets.push(new Bullet(this.x, this.y, this.angle, this.weapon, this));
+            this.lastShot = now;
+        }
+    }
 }
-spawnBots(10);
 
-document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
-document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+class Bullet {
+    constructor(x, y, angle, type, owner) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.speed = WEAPONS[type].speed;
+        this.damage = WEAPONS[type].damage;
+        this.owner = owner;
+        this.life = 100;
+    }
 
-canvas.addEventListener("mousedown", shoot);
+    update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.life--;
+    }
 
-function shoot(e){
-    if(Date.now() - player.lastShot > player.fireRate){
-        const angle = Math.atan2(
-            e.clientY - canvas.height/2,
-            e.clientX - canvas.width/2
-        );
-        bullets.push({
-            x: player.x,
-            y: player.y,
-            dx: Math.cos(angle)*6,
-            dy: Math.sin(angle)*6,
-            owner: "player"
-        });
-        player.lastShot = Date.now();
+    draw() {
+        ctx.fillStyle = 'yellow';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
 
-function update(){
-    if(gameOver) return;
+/** * INICIALIZAÇÃO E LÓGICA
+ */
+const player = new Entity(1000, 1000, '#3498db', false);
+players.push(player);
 
-    if(keys["w"]) player.y -= player.speed;
-    if(keys["s"]) player.y += player.speed;
-    if(keys["a"]) player.x -= player.speed;
-    if(keys["d"]) player.x += player.speed;
+// Gerar Bots
+for(let i=0; i<9; i++) {
+    players.push(new Entity(Math.random() * WORLD_SIZE, Math.random() * WORLD_SIZE, '#e67e22'));
+}
 
-    // Storm damage
-    const distFromCenter = Math.hypot(player.x, player.y);
-    if(distFromCenter > stormRadius){
-        player.health -= 0.2;
-    }
+function update() {
+    // 1. Movimentação Jogador
+    if (keys['w']) player.y -= player.speed;
+    if (keys['s']) player.y += player.speed;
+    if (keys['a']) player.x -= player.speed;
+    if (keys['d']) player.x += player.speed;
 
-    stormRadius -= stormShrink;
+    // Mira Jogador
+    const dx = (mousePos.x + (player.x - canvas.width/2)) - player.x;
+    const dy = (mousePos.y + (player.y - canvas.height/2)) - player.y;
+    player.angle = Math.atan2(dy, dx);
 
-    bullets.forEach((b, i)=>{
-        b.x += b.dx;
-        b.y += b.dy;
+    // 2. IA dos Bots
+    players.forEach(p => {
+        if (!p.isBot || p.hp <= 0) return;
 
-        if(b.owner === "player"){
-            bots.forEach((bot, j)=>{
-                if(Math.hypot(b.x - bot.x, b.y - bot.y) < bot.size){
-                    bot.health -= player.damage;
-                    bullets.splice(i,1);
-                    if(bot.health <= 0){
-                        bots.splice(j,1);
-                        playersLeft--;
-                        player.damage += 2; // Loot melhora arma
+        // Segue o jogador se estiver perto
+        const dist = Math.hypot(player.x - p.x, player.y - p.y);
+        if (dist < 400) {
+            p.angle = Math.atan2(player.y - p.y, player.x - p.x);
+            p.x += Math.cos(p.angle) * 1.5;
+            p.y += Math.sin(p.angle) * 1.5;
+            if (dist < 300) p.shoot();
+        }
+    });
+
+    // 3. Sistema de Balas e Dano
+    bullets.forEach((b, i) => {
+        b.update();
+        if (b.life <= 0) bullets.splice(i, 1);
+
+        players.forEach(p => {
+            if (p !== b.owner && p.hp > 0) {
+                if (Math.hypot(b.x - p.x, b.y - p.y) < p.size/2) {
+                    p.hp -= b.damage;
+                    bullets.splice(i, 1);
+                    // Loot System: Se matar, ganha arma melhor
+                    if (p.hp <= 0 && b.owner === player) {
+                        player.weapon = player.weapon === "Pistola" ? "Rifle" : "Laser";
                     }
                 }
-            });
-        } else {
-            if(Math.hypot(b.x - player.x, b.y - player.y) < player.size){
-                player.health -= 10;
-                bullets.splice(i,1);
             }
-        }
+        });
     });
 
-    bots.forEach(bot=>{
-        const angle = Math.atan2(player.y - bot.y, player.x - bot.x);
-        bot.x += Math.cos(angle)*bot.speed;
-        bot.y += Math.sin(angle)*bot.speed;
+    // 4. Storm (Zona Segura)
+    stormRadius -= 0.2;
+    const distFromCenter = Math.hypot(player.x - 1000, player.y - 1000);
+    if (distFromCenter > stormRadius) player.hp -= 0.1;
 
-        if(Date.now() - bot.lastShot > bot.fireRate){
-            bullets.push({
-                x: bot.x,
-                y: bot.y,
-                dx: Math.cos(angle)*4,
-                dy: Math.sin(angle)*4,
-                owner:"bot"
-            });
-            bot.lastShot = Date.now();
-        }
-
-        if(Math.hypot(bot.x, bot.y) > stormRadius){
-            bot.health -= 0.3;
-        }
-    });
-
-    if(player.health <= 0){
-        gameOver = true;
-        alert("Você perdeu!");
-    }
-
-    if(bots.length === 0){
-        gameOver = true;
-        alert("Você venceu o Battle Royale!");
-    }
-
-    document.getElementById("health").style.width = 
-        (player.health/player.maxHealth*100)+"%";
-
-    document.getElementById("playersLeft").innerText =
-        "Jogadores restantes: " + playersLeft;
+    // UI Updates
+    hpFill.style.width = player.hp + "%";
+    const alive = players.filter(p => p.hp > 0).length;
+    statusText.innerText = `VIVOS: ${alive} | ARMA: ${player.weapon}`;
 }
 
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.translate(canvas.width/2 - player.x, canvas.height/2 - player.y);
+    // Câmera seguindo o jogador
+    ctx.translate(-player.x + canvas.width/2, -player.y + canvas.height/2);
 
-    // Storm Circle
+    // Desenha Mundo / Chão
+    ctx.fillStyle = '#568a4d';
+    ctx.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
+
+    // Desenha Storm
+    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+    ctx.lineWidth = 10;
     ctx.beginPath();
-    ctx.arc(0,0,stormRadius,0,Math.PI*2);
-    ctx.strokeStyle="blue";
-    ctx.lineWidth=5;
+    ctx.arc(1000, 1000, stormRadius, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Player
-    ctx.fillStyle="cyan";
-    ctx.fillRect(player.x-player.size/2,player.y-player.size/2,
-                 player.size,player.size);
-
-    // Bots
-    ctx.fillStyle="red";
-    bots.forEach(bot=>{
-        ctx.fillRect(bot.x-bot.size/2,bot.y-bot.size/2,
-                     bot.size,bot.size);
-    });
-
-    // Bullets
-    ctx.fillStyle="yellow";
-    bullets.forEach(b=>{
-        ctx.fillRect(b.x-3,b.y-3,6,6);
-    });
+    // Entidades
+    players.forEach(p => { if(p.hp > 0) p.draw(); });
+    bullets.forEach(b => b.draw());
 
     ctx.restore();
 }
 
-function gameLoop(){
+/** * INPUTS
+ */
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+window.addEventListener('mousemove', e => { mousePos.x = e.clientX; mousePos.y = e.clientY; });
+window.addEventListener('mousedown', () => player.shoot());
+
+function gameLoop() {
     update();
     draw();
     requestAnimationFrame(gameLoop);
