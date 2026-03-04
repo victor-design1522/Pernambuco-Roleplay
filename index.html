@@ -34,16 +34,29 @@ resize();
 window.addEventListener("resize",resize);
 
 /* ==========================
-   GAME STATE
+   WORLD + CAMERA
 ========================== */
-let gameState = "menu";
+const world = {
+width:3000,
+height:3000
+};
+
+let camera = {
+x:0,
+y:0
+};
 
 /* ==========================
-   PLAYER SYSTEM
+   GAME STATE
 ========================== */
-const player = {
-x:300,
-y:300,
+let gameState="menu";
+
+/* ==========================
+   PLAYER
+========================== */
+const player={
+x:1500,
+y:1500,
 r:20,
 speed:3,
 life:100,
@@ -53,9 +66,6 @@ level:1,
 color:"cyan"
 };
 
-/* ==========================
-   ARRAYS
-========================== */
 let bullets=[];
 let enemies=[];
 let explosions=[];
@@ -65,7 +75,7 @@ let spawnTimer=0;
 /* ==========================
    JOYSTICK
 ========================== */
-let joystick = {active:false,x:100,y:canvas.height-120,dx:0,dy:0};
+let joystick={active:false,x:100,y:canvas.height-120,dx:0,dy:0};
 
 /* ==========================
    UTILS
@@ -75,29 +85,25 @@ return Math.hypot(a-c,b-d);
 }
 
 /* ==========================
-   SPAWN ENEMY
+   SPAWN ENEMY (no mundo)
 ========================== */
 function spawnEnemy(){
-let side = Math.random()*4;
-let x,y;
-if(side<1){x=0;y=Math.random()*canvas.height;}
-else if(side<2){x=canvas.width;y=Math.random()*canvas.height;}
-else if(side<3){x=Math.random()*canvas.width;y=0;}
-else{x=Math.random()*canvas.width;y=canvas.height;}
+let x=Math.random()*world.width;
+let y=Math.random()*world.height;
 
 enemies.push({
 x,y,
 r:18,
-life:30 + player.level*5,
-speed:1.2 + player.level*0.1
+life:30+player.level*5,
+speed:1.2+player.level*0.1
 });
 }
 
 /* ==========================
-   AUTO AIM PROFISSIONAL
+   AUTO AIM
 ========================== */
 function shootAuto(){
-if(enemies.length===0) return;
+if(enemies.length===0)return;
 
 let closest=null;
 let minDist=Infinity;
@@ -110,7 +116,7 @@ closest=e;
 }
 }
 
-if(!closest) return;
+if(!closest)return;
 
 let angle=Math.atan2(closest.y-player.y,closest.x-player.x);
 let speed=7;
@@ -127,14 +133,22 @@ vy:Math.sin(angle)*speed
    UPDATE
 ========================== */
 function update(){
-if(gameState!=="playing") return;
+if(gameState!=="playing")return;
 
 /* movement */
-player.x += joystick.dx * player.speed;
-player.y += joystick.dy * player.speed;
+player.x+=joystick.dx*player.speed;
+player.y+=joystick.dy*player.speed;
 
-player.x=Math.max(player.r,Math.min(canvas.width-player.r,player.x));
-player.y=Math.max(player.r,Math.min(canvas.height-player.r,player.y));
+/* limite do mundo */
+player.x=Math.max(player.r,Math.min(world.width-player.r,player.x));
+player.y=Math.max(player.r,Math.min(world.height-player.r,player.y));
+
+/* camera follow */
+camera.x=player.x-canvas.width/2;
+camera.y=player.y-canvas.height/2;
+
+camera.x=Math.max(0,Math.min(world.width-canvas.width,camera.x));
+camera.y=Math.max(0,Math.min(world.height-canvas.height,camera.y));
 
 /* spawn */
 spawnTimer++;
@@ -149,8 +163,7 @@ let b=bullets[i];
 b.x+=b.vx;
 b.y+=b.vy;
 
-/* remove fora da tela */
-if(b.x<0||b.x>canvas.width||b.y<0||b.y>canvas.height){
+if(b.x<0||b.x>world.width||b.y<0||b.y>world.height){
 bullets.splice(i,1);
 continue;
 }
@@ -188,7 +201,7 @@ gameState="gameover";
 /* explosions */
 for(let i=explosions.length-1;i>=0;i--){
 explosions[i].t--;
-if(explosions[i].t<=0) explosions.splice(i,1);
+if(explosions[i].t<=0)explosions.splice(i,1);
 }
 
 /* level up */
@@ -226,17 +239,32 @@ ctx.fillText("Toque para Reiniciar",canvas.width/2,400);
 return;
 }
 
+/* world background grid */
+ctx.strokeStyle="#222";
+for(let x=0;x<world.width;x+=200){
+ctx.beginPath();
+ctx.moveTo(x-camera.x,0-camera.y);
+ctx.lineTo(x-camera.x,world.height-camera.y);
+ctx.stroke();
+}
+for(let y=0;y<world.height;y+=200){
+ctx.beginPath();
+ctx.moveTo(0-camera.x,y-camera.y);
+ctx.lineTo(world.width-camera.x,y-camera.y);
+ctx.stroke();
+}
+
 /* player */
 ctx.fillStyle=player.color;
 ctx.beginPath();
-ctx.arc(player.x,player.y,player.r,0,Math.PI*2);
+ctx.arc(player.x-camera.x,player.y-camera.y,player.r,0,Math.PI*2);
 ctx.fill();
 
 /* bullets */
 ctx.fillStyle="yellow";
 for(let b of bullets){
 ctx.beginPath();
-ctx.arc(b.x,b.y,5,0,Math.PI*2);
+ctx.arc(b.x-camera.x,b.y-camera.y,5,0,Math.PI*2);
 ctx.fill();
 }
 
@@ -244,7 +272,7 @@ ctx.fill();
 ctx.fillStyle="red";
 for(let e of enemies){
 ctx.beginPath();
-ctx.arc(e.x,e.y,e.r,0,Math.PI*2);
+ctx.arc(e.x-camera.x,e.y-camera.y,e.r,0,Math.PI*2);
 ctx.fill();
 }
 
@@ -252,7 +280,7 @@ ctx.fill();
 ctx.fillStyle="orange";
 for(let ex of explosions){
 ctx.beginPath();
-ctx.arc(ex.x,ex.y,ex.t,0,Math.PI*2);
+ctx.arc(ex.x-camera.x,ex.y-camera.y,ex.t,0,Math.PI*2);
 ctx.fill();
 }
 
@@ -272,9 +300,7 @@ ctx.arc(joystick.x,joystick.y,50,0,Math.PI*2);
 ctx.stroke();
 }
 
-/* ==========================
-   LOOP
-========================== */
+/* LOOP */
 function loop(){
 update();
 draw();
@@ -282,27 +308,18 @@ requestAnimationFrame(loop);
 }
 loop();
 
-/* ==========================
-   TOUCH
-========================== */
+/* TOUCH */
 canvas.addEventListener("touchstart",e=>{
 let t=e.touches[0];
-
-if(gameState==="menu"){
-gameState="playing";
-return;
-}
-if(gameState==="gameover"){
-location.reload();
-}
-
+if(gameState==="menu"){gameState="playing";return;}
+if(gameState==="gameover"){location.reload();}
 if(dist(t.clientX,t.clientY,joystick.x,joystick.y)<60){
 joystick.active=true;
 }
 });
 
 canvas.addEventListener("touchmove",e=>{
-if(!joystick.active) return;
+if(!joystick.active)return;
 let t=e.touches[0];
 let dx=t.clientX-joystick.x;
 let dy=t.clientY-joystick.y;
@@ -319,7 +336,7 @@ joystick.dx=0;
 joystick.dy=0;
 });
 
-/* auto shoot interval */
+/* auto shoot */
 setInterval(()=>{
 if(gameState==="playing"){
 shootAuto();
