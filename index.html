@@ -12,32 +12,25 @@ canvas{display:block;background:#1b1b1b;}
 <body>
 <canvas id="game"></canvas>
 <script>
-
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
-function resize(){
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-}
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
 resize();
 window.addEventListener("resize",resize);
 
 /* WORLD */
-const world={width:3000,height:3000};
+const world={width:5000,height:5000};
 let camera={x:0,y:0};
 
 /* GAME */
 let gameState="menu";
 let startTime=0;
+let safeZone={x:world.width/2,y:world.height/2,r:world.width/2-200};
+let safeShrinkTimer=0;
 
 /* PLAYER */
-const player={
-x:1500,y:1500,r:20,speed:3,
-life:100,maxLife:100,
-xp:0,level:1,color:"cyan"
-};
-
+const player={x:2500,y:2500,r:20,speed:3,life:100,maxLife:100,xp:0,level:1,color:"cyan"};
 let bullets=[],enemies=[],explosions=[];
 let score=0,spawnTimer=0;
 
@@ -47,14 +40,14 @@ let joystick={active:false,x:100,y:canvas.height-120,dx:0,dy:0};
 /* UTILS */
 function dist(a,b,c,d){return Math.hypot(a-c,b-d);}
 
-/* SPAWN */
+/* SPAWN ENEMY/BOT */
 function spawnEnemy(){
 let x=Math.random()*world.width;
 let y=Math.random()*world.height;
 enemies.push({x,y,r:18,life:30+player.level*5,speed:1.2+player.level*0.1});
 }
 
-/* AUTO AIM */
+/* AUTO AIM FOR PLAYER */
 function shootAuto(){
 if(enemies.length===0)return;
 let closest=null,minDist=Infinity;
@@ -65,9 +58,14 @@ if(d<minDist){minDist=d;closest=e;}
 if(!closest)return;
 let angle=Math.atan2(closest.y-player.y,closest.x-player.x);
 let speed=7;
-bullets.push({x:player.x,y:player.y,
-vx:Math.cos(angle)*speed,
-vy:Math.sin(angle)*speed});
+bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed});
+}
+
+/* BOT SHOOT */
+function botShoot(bot){
+let angle=Math.atan2(player.y-bot.y,player.x-bot.x);
+let speed=5;
+bullets.push({x:bot.x,y:bot.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed});
 }
 
 /* UPDATE */
@@ -82,59 +80,63 @@ player.y+=joystick.dy*player.speed;
 player.x=Math.max(player.r,Math.min(world.width-player.r,player.x));
 player.y=Math.max(player.r,Math.min(world.height-player.r,player.y));
 
-/* camera */
+/* camera follow */
 camera.x=player.x-canvas.width/2;
 camera.y=player.y-canvas.height/2;
 camera.x=Math.max(0,Math.min(world.width-canvas.width,camera.x));
 camera.y=Math.max(0,Math.min(world.height-canvas.height,camera.y));
 
-/* spawn */
+/* spawn enemies */
 spawnTimer++;
-if(spawnTimer>100){spawnEnemy();spawnTimer=0;}
+if(spawnTimer>200 && enemies.length<30){spawnEnemy();spawnTimer=0;}
 
 /* bullets */
 for(let i=bullets.length-1;i>=0;i--){
 let b=bullets[i];
 b.x+=b.vx;b.y+=b.vy;
-if(b.x<0||b.x>world.width||b.y<0||b.y>world.height){
-bullets.splice(i,1);continue;
-}
+if(b.x<0||b.x>world.width||b.y<0||b.y>world.height){bullets.splice(i,1);continue;}
 for(let j=enemies.length-1;j>=0;j--){
 let e=enemies[j];
 if(dist(b.x,b.y,e.x,e.y)<e.r+5){
 e.life-=20;bullets.splice(i,1);
-if(e.life<=0){
-score+=10;player.xp+=10;
-explosions.push({x:e.x,y:e.y,t:20});
-enemies.splice(j,1);
-}
+if(e.life<=0){score+=10;player.xp+=10;explosions.push({x:e.x,y:e.y,t:20});enemies.splice(j,1);}
 break;
 }
 }
 }
 
-/* enemies */
+/* enemies movement + bot shooting */
 for(let e of enemies){
 let angle=Math.atan2(player.y-e.y,player.x-e.x);
 e.x+=Math.cos(angle)*e.speed;
 e.y+=Math.sin(angle)*e.speed;
+
+/* bot shoot */
+if(Math.random()<0.01)botShoot(e);
+
+/* collision with player */
 if(dist(e.x,e.y,player.x,player.y)<e.r+player.r){
-player.life-=0.3;
+player.life-=0.5;
 if(player.life<=0)gameState="gameover";
 }
 }
 
 /* explosions */
-for(let i=explosions.length-1;i>=0;i--){
-explosions[i].t--;
-if(explosions[i].t<=0)explosions.splice(i,1);
-}
+for(let i=explosions.length-1;i>=0;i--){explosions[i].t--;if(explosions[i].t<=0)explosions.splice(i,1);}
 
 /* level up */
-if(player.xp>=100){
-player.level++;player.xp=0;
-player.maxLife+=20;player.life=player.maxLife;
+if(player.xp>=100){player.level++;player.xp=0;player.maxLife+=20;player.life=player.maxLife;}
+
+/* safe zone shrink */
+safeShrinkTimer++;
+if(safeShrinkTimer>300){
+safeZone.r=Math.max(50,safeZone.r-10);
+safeShrinkTimer=0;
 }
+
+/* damage outside safe zone */
+let d=dist(player.x,player.y,safeZone.x,safeZone.y);
+if(d>safeZone.r)player.life-=0.3;
 }
 
 /* DRAW */
@@ -143,9 +145,7 @@ ctx.clearRect(0,0,canvas.width,canvas.height);
 
 /* MENU */
 if(gameState==="menu"){
-ctx.fillStyle="white";
-ctx.font="40px Arial";
-ctx.textAlign="center";
+ctx.fillStyle="white";ctx.font="40px Arial";ctx.textAlign="center";
 ctx.fillText("BATTLE ROYALE 2D",canvas.width/2,200);
 ctx.fillText("TOQUE PARA JOGAR",canvas.width/2,300);
 return;
@@ -153,124 +153,82 @@ return;
 
 /* GAME OVER */
 if(gameState==="gameover"){
-ctx.fillStyle="red";
-ctx.font="50px Arial";
-ctx.textAlign="center";
+ctx.fillStyle="red";ctx.font="50px Arial";ctx.textAlign="center";
 ctx.fillText("GAME OVER",canvas.width/2,250);
-ctx.fillStyle="white";
-ctx.fillText("Score: "+score,canvas.width/2,320);
+ctx.fillStyle="white";ctx.fillText("Score: "+score,canvas.width/2,320);
 return;
 }
 
 /* GRID */
 ctx.strokeStyle="#222";
-for(let x=0;x<world.width;x+=200){
-ctx.beginPath();
-ctx.moveTo(x-camera.x,0-camera.y);
-ctx.lineTo(x-camera.x,world.height-camera.y);
-ctx.stroke();
-}
-for(let y=0;y<world.height;y+=200){
-ctx.beginPath();
-ctx.moveTo(0-camera.x,y-camera.y);
-ctx.lineTo(world.width-camera.x,y-camera.y);
-ctx.stroke();
-}
+for(let x=0;x<world.width;x+=200){ctx.beginPath();ctx.moveTo(x-camera.x,0-camera.y);ctx.lineTo(x-camera.x,world.height-camera.y);ctx.stroke();}
+for(let y=0;y<world.height;y+=200){ctx.beginPath();ctx.moveTo(0-camera.x,y-camera.y);ctx.lineTo(world.width-camera.x,y-camera.y);ctx.stroke();}
+
+/* SAFE ZONE */
+ctx.strokeStyle="lime";ctx.lineWidth=3;
+ctx.beginPath();ctx.arc(safeZone.x-camera.x,safeZone.y-camera.y,safeZone.r,0,Math.PI*2);ctx.stroke();
+ctx.lineWidth=1;
 
 /* PLAYER */
 ctx.fillStyle=player.color;
-ctx.beginPath();
-ctx.arc(player.x-camera.x,player.y-camera.y,player.r,0,Math.PI*2);
-ctx.fill();
+ctx.beginPath();ctx.arc(player.x-camera.x,player.y-camera.y,player.r,0,Math.PI*2);ctx.fill();
 
 /* BULLETS */
 ctx.fillStyle="yellow";
-for(let b of bullets){
-ctx.beginPath();
-ctx.arc(b.x-camera.x,b.y-camera.y,5,0,Math.PI*2);
-ctx.fill();
-}
+for(let b of bullets){ctx.beginPath();ctx.arc(b.x-camera.x,b.y-camera.y,5,0,Math.PI*2);ctx.fill();}
 
 /* ENEMIES */
 ctx.fillStyle="red";
-for(let e of enemies){
-ctx.beginPath();
-ctx.arc(e.x-camera.x,e.y-camera.y,e.r,0,Math.PI*2);
-ctx.fill();
-}
+for(let e of enemies){ctx.beginPath();ctx.arc(e.x-camera.x,e.y-camera.y,e.r,0,Math.PI*2);ctx.fill();}
 
 /* EXPLOSIONS */
 ctx.fillStyle="orange";
-for(let ex of explosions){
-ctx.beginPath();
-ctx.arc(ex.x-camera.x,ex.y-camera.y,ex.t,0,Math.PI*2);
-ctx.fill();
-}
+for(let ex of explosions){ctx.beginPath();ctx.arc(ex.x-camera.x,ex.y-camera.y,ex.t,0,Math.PI*2);ctx.fill();}
 
-/* ================= HUD ================= */
-
-/* Score */
-ctx.fillStyle="white";
-ctx.font="18px Arial";
-ctx.fillText("Score: "+score,20,25);
-
-/* Time survived */
+/* HUD */
+ctx.fillStyle="white";ctx.font="18px Arial";ctx.fillText("Score: "+score,20,25);
 let time=Math.floor((Date.now()-startTime)/1000);
 ctx.fillText("Tempo: "+time+"s",20,50);
 
 /* Life bar */
-ctx.fillRect(20,65,200,12);
-ctx.fillStyle="lime";
+ctx.fillRect(20,65,200,12);ctx.fillStyle="lime";
 ctx.fillRect(20,65,200*(player.life/player.maxLife),12);
 
-/* XP BAR GRANDE */
-ctx.fillStyle="#333";
-ctx.fillRect(canvas.width/2-150,20,300,15);
-ctx.fillStyle="cyan";
-ctx.fillRect(canvas.width/2-150,20,300*(player.xp/100),15);
+/* XP BAR */
+ctx.fillStyle="#333";ctx.fillRect(canvas.width/2-150,20,300,15);
+ctx.fillStyle="cyan";ctx.fillRect(canvas.width/2-150,20,300*(player.xp/100),15);
 
-/* LEVEL GRANDE */
-ctx.fillStyle="white";
-ctx.font="28px Arial";
+/* LEVEL */
+ctx.fillStyle="white";ctx.font="28px Arial";
 ctx.fillText("LVL "+player.level,canvas.width/2-40,60);
 
 /* MINI MAP */
-let mapSize=120;
-let mapX=canvas.width-mapSize-15;
-let mapY=15;
-
-ctx.fillStyle="black";
-ctx.fillRect(mapX,mapY,mapSize,mapSize);
-ctx.strokeStyle="white";
-ctx.strokeRect(mapX,mapY,mapSize,mapSize);
+let mapSize=120,mapX=canvas.width-mapSize-15,mapY=15;
+ctx.fillStyle="black";ctx.fillRect(mapX,mapY,mapSize,mapSize);
+ctx.strokeStyle="white";ctx.strokeRect(mapX,mapY,mapSize,mapSize);
 
 /* player dot */
 let px=(player.x/world.width)*mapSize;
 let py=(player.y/world.height)*mapSize;
-ctx.fillStyle="cyan";
-ctx.fillRect(mapX+px-3,mapY+py-3,6,6);
+ctx.fillStyle="cyan";ctx.fillRect(mapX+px-3,mapY+py-3,6,6);
 
 /* enemy dots */
 ctx.fillStyle="red";
-for(let e of enemies){
-let ex=(e.x/world.width)*mapSize;
-let ey=(e.y/world.height)*mapSize;
-ctx.fillRect(mapX+ex-2,mapY+ey-2,4,4);
-}
+for(let e of enemies){let ex=(e.x/world.width)*mapSize;let ey=(e.y/world.height)*mapSize;
+ctx.fillRect(mapX+ex-2,mapY+ey-2,4,4);}
+
+/* safe zone dot */
+ctx.strokeStyle="lime";ctx.lineWidth=2;
+ctx.beginPath();ctx.arc(mapX+(safeZone.x/world.width)*mapSize,mapY+(safeZone.y/world.height)*mapSize,
+(safeZone.r/world.width)*mapSize,0,Math.PI*2);ctx.stroke();
+ctx.lineWidth=1;
 
 /* joystick */
-ctx.strokeStyle="white";
-ctx.beginPath();
-ctx.arc(joystick.x,joystick.y,50,0,Math.PI*2);
-ctx.stroke();
+ctx.strokeStyle="white";ctx.beginPath();ctx.arc(joystick.x,joystick.y,50,0,Math.PI*2);ctx.stroke();
 }
 
 /* LOOP */
-function loop(){
-update();
-draw();
-requestAnimationFrame(loop);
-}
+function loop(){update();draw();requestAnimationFrame(loop);}
 loop();
 
 /* TOUCH */
@@ -278,26 +236,18 @@ canvas.addEventListener("touchstart",e=>{
 let t=e.touches[0];
 if(gameState==="menu"){gameState="playing";startTime=Date.now();return;}
 if(gameState==="gameover"){location.reload();}
-if(dist(t.clientX,t.clientY,joystick.x,joystick.y)<60){
-joystick.active=true;
-}
+if(dist(t.clientX,t.clientY,joystick.x,joystick.y)<60){joystick.active=true;}
 });
 canvas.addEventListener("touchmove",e=>{
 if(!joystick.active)return;
-let t=e.touches[0];
-let dx=t.clientX-joystick.x;
-let dy=t.clientY-joystick.y;
+let t=e.touches[0];let dx=t.clientX-joystick.x;let dy=t.clientY-joystick.y;
 let mag=Math.hypot(dx,dy);
 if(mag>0){joystick.dx=dx/mag;joystick.dy=dy/mag;}
 });
-canvas.addEventListener("touchend",()=>{
-joystick.active=false;joystick.dx=0;joystick.dy=0;
-});
+canvas.addEventListener("touchend",()=>{joystick.active=false;joystick.dx=0;joystick.dy=0;});
 
 /* AUTO SHOOT */
-setInterval(()=>{
-if(gameState==="playing")shootAuto();
-},400);
+setInterval(()=>{if(gameState==="playing")shootAuto();},400);
 
 </script>
 </body>
