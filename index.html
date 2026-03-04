@@ -5,133 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Battle Royale 2D</title>
 <style>
-body{
-margin:0;
-overflow:hidden;
-background:#111;
-font-family:Arial;
-touch-action:none;
-}
-canvas{
-display:block;
-background:#1b1b1b;
-}
+body{margin:0;overflow:hidden;background:#111;font-family:Arial;touch-action:none;}
+canvas{display:block;background:#1b1b1b;}
 </style>
 </head>
 <body>
-
 <canvas id="game"></canvas>
-
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
 function resize(){
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 }
 resize();
 window.addEventListener("resize",resize);
 
-/* ==========================
-   WORLD + CAMERA
-========================== */
-const world = {
-width:3000,
-height:3000
-};
+/* WORLD */
+const world={width:3000,height:3000};
+let camera={x:0,y:0};
 
-let camera = {
-x:0,
-y:0
-};
-
-/* ==========================
-   GAME STATE
-========================== */
+/* GAME */
 let gameState="menu";
+let startTime=0;
 
-/* ==========================
-   PLAYER
-========================== */
+/* PLAYER */
 const player={
-x:1500,
-y:1500,
-r:20,
-speed:3,
-life:100,
-maxLife:100,
-xp:0,
-level:1,
-color:"cyan"
+x:1500,y:1500,r:20,speed:3,
+life:100,maxLife:100,
+xp:0,level:1,color:"cyan"
 };
 
-let bullets=[];
-let enemies=[];
-let explosions=[];
-let score=0;
-let spawnTimer=0;
+let bullets=[],enemies=[],explosions=[];
+let score=0,spawnTimer=0;
 
-/* ==========================
-   JOYSTICK
-========================== */
+/* JOYSTICK */
 let joystick={active:false,x:100,y:canvas.height-120,dx:0,dy:0};
 
-/* ==========================
-   UTILS
-========================== */
-function dist(a,b,c,d){
-return Math.hypot(a-c,b-d);
-}
+/* UTILS */
+function dist(a,b,c,d){return Math.hypot(a-c,b-d);}
 
-/* ==========================
-   SPAWN ENEMY (no mundo)
-========================== */
+/* SPAWN */
 function spawnEnemy(){
 let x=Math.random()*world.width;
 let y=Math.random()*world.height;
-
-enemies.push({
-x,y,
-r:18,
-life:30+player.level*5,
-speed:1.2+player.level*0.1
-});
+enemies.push({x,y,r:18,life:30+player.level*5,speed:1.2+player.level*0.1});
 }
 
-/* ==========================
-   AUTO AIM
-========================== */
+/* AUTO AIM */
 function shootAuto(){
 if(enemies.length===0)return;
-
-let closest=null;
-let minDist=Infinity;
-
+let closest=null,minDist=Infinity;
 for(let e of enemies){
 let d=dist(player.x,player.y,e.x,e.y);
-if(d<minDist){
-minDist=d;
-closest=e;
+if(d<minDist){minDist=d;closest=e;}
 }
-}
-
 if(!closest)return;
-
 let angle=Math.atan2(closest.y-player.y,closest.x-player.x);
 let speed=7;
-
-bullets.push({
-x:player.x,
-y:player.y,
+bullets.push({x:player.x,y:player.y,
 vx:Math.cos(angle)*speed,
-vy:Math.sin(angle)*speed
-});
+vy:Math.sin(angle)*speed});
 }
 
-/* ==========================
-   UPDATE
-========================== */
+/* UPDATE */
 function update(){
 if(gameState!=="playing")return;
 
@@ -139,43 +78,33 @@ if(gameState!=="playing")return;
 player.x+=joystick.dx*player.speed;
 player.y+=joystick.dy*player.speed;
 
-/* limite do mundo */
+/* world limit */
 player.x=Math.max(player.r,Math.min(world.width-player.r,player.x));
 player.y=Math.max(player.r,Math.min(world.height-player.r,player.y));
 
-/* camera follow */
+/* camera */
 camera.x=player.x-canvas.width/2;
 camera.y=player.y-canvas.height/2;
-
 camera.x=Math.max(0,Math.min(world.width-canvas.width,camera.x));
 camera.y=Math.max(0,Math.min(world.height-canvas.height,camera.y));
 
 /* spawn */
 spawnTimer++;
-if(spawnTimer>100){
-spawnEnemy();
-spawnTimer=0;
-}
+if(spawnTimer>100){spawnEnemy();spawnTimer=0;}
 
 /* bullets */
 for(let i=bullets.length-1;i>=0;i--){
 let b=bullets[i];
-b.x+=b.vx;
-b.y+=b.vy;
-
+b.x+=b.vx;b.y+=b.vy;
 if(b.x<0||b.x>world.width||b.y<0||b.y>world.height){
-bullets.splice(i,1);
-continue;
+bullets.splice(i,1);continue;
 }
-
 for(let j=enemies.length-1;j>=0;j--){
 let e=enemies[j];
 if(dist(b.x,b.y,e.x,e.y)<e.r+5){
-e.life-=20;
-bullets.splice(i,1);
+e.life-=20;bullets.splice(i,1);
 if(e.life<=0){
-score+=10;
-player.xp+=10;
+score+=10;player.xp+=10;
 explosions.push({x:e.x,y:e.y,t:20});
 enemies.splice(j,1);
 }
@@ -189,12 +118,9 @@ for(let e of enemies){
 let angle=Math.atan2(player.y-e.y,player.x-e.x);
 e.x+=Math.cos(angle)*e.speed;
 e.y+=Math.sin(angle)*e.speed;
-
 if(dist(e.x,e.y,player.x,player.y)<e.r+player.r){
 player.life-=0.3;
-if(player.life<=0){
-gameState="gameover";
-}
+if(player.life<=0)gameState="gameover";
 }
 }
 
@@ -206,19 +132,16 @@ if(explosions[i].t<=0)explosions.splice(i,1);
 
 /* level up */
 if(player.xp>=100){
-player.level++;
-player.xp=0;
-player.maxLife+=20;
-player.life=player.maxLife;
+player.level++;player.xp=0;
+player.maxLife+=20;player.life=player.maxLife;
 }
 }
 
-/* ==========================
-   DRAW
-========================== */
+/* DRAW */
 function draw(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
+/* MENU */
 if(gameState==="menu"){
 ctx.fillStyle="white";
 ctx.font="40px Arial";
@@ -228,6 +151,7 @@ ctx.fillText("TOQUE PARA JOGAR",canvas.width/2,300);
 return;
 }
 
+/* GAME OVER */
 if(gameState==="gameover"){
 ctx.fillStyle="red";
 ctx.font="50px Arial";
@@ -235,11 +159,10 @@ ctx.textAlign="center";
 ctx.fillText("GAME OVER",canvas.width/2,250);
 ctx.fillStyle="white";
 ctx.fillText("Score: "+score,canvas.width/2,320);
-ctx.fillText("Toque para Reiniciar",canvas.width/2,400);
 return;
 }
 
-/* world background grid */
+/* GRID */
 ctx.strokeStyle="#222";
 for(let x=0;x<world.width;x+=200){
 ctx.beginPath();
@@ -254,13 +177,13 @@ ctx.lineTo(world.width-camera.x,y-camera.y);
 ctx.stroke();
 }
 
-/* player */
+/* PLAYER */
 ctx.fillStyle=player.color;
 ctx.beginPath();
 ctx.arc(player.x-camera.x,player.y-camera.y,player.r,0,Math.PI*2);
 ctx.fill();
 
-/* bullets */
+/* BULLETS */
 ctx.fillStyle="yellow";
 for(let b of bullets){
 ctx.beginPath();
@@ -268,7 +191,7 @@ ctx.arc(b.x-camera.x,b.y-camera.y,5,0,Math.PI*2);
 ctx.fill();
 }
 
-/* enemies */
+/* ENEMIES */
 ctx.fillStyle="red";
 for(let e of enemies){
 ctx.beginPath();
@@ -276,7 +199,7 @@ ctx.arc(e.x-camera.x,e.y-camera.y,e.r,0,Math.PI*2);
 ctx.fill();
 }
 
-/* explosions */
+/* EXPLOSIONS */
 ctx.fillStyle="orange";
 for(let ex of explosions){
 ctx.beginPath();
@@ -284,14 +207,56 @@ ctx.arc(ex.x-camera.x,ex.y-camera.y,ex.t,0,Math.PI*2);
 ctx.fill();
 }
 
-/* HUD */
-ctx.fillStyle="white";
-ctx.font="20px Arial";
-ctx.fillText("Score: "+score,100,30);
+/* ================= HUD ================= */
 
-ctx.fillRect(20,40,200,10);
+/* Score */
+ctx.fillStyle="white";
+ctx.font="18px Arial";
+ctx.fillText("Score: "+score,20,25);
+
+/* Time survived */
+let time=Math.floor((Date.now()-startTime)/1000);
+ctx.fillText("Tempo: "+time+"s",20,50);
+
+/* Life bar */
+ctx.fillRect(20,65,200,12);
 ctx.fillStyle="lime";
-ctx.fillRect(20,40,200*(player.life/player.maxLife),10);
+ctx.fillRect(20,65,200*(player.life/player.maxLife),12);
+
+/* XP BAR GRANDE */
+ctx.fillStyle="#333";
+ctx.fillRect(canvas.width/2-150,20,300,15);
+ctx.fillStyle="cyan";
+ctx.fillRect(canvas.width/2-150,20,300*(player.xp/100),15);
+
+/* LEVEL GRANDE */
+ctx.fillStyle="white";
+ctx.font="28px Arial";
+ctx.fillText("LVL "+player.level,canvas.width/2-40,60);
+
+/* MINI MAP */
+let mapSize=120;
+let mapX=canvas.width-mapSize-15;
+let mapY=15;
+
+ctx.fillStyle="black";
+ctx.fillRect(mapX,mapY,mapSize,mapSize);
+ctx.strokeStyle="white";
+ctx.strokeRect(mapX,mapY,mapSize,mapSize);
+
+/* player dot */
+let px=(player.x/world.width)*mapSize;
+let py=(player.y/world.height)*mapSize;
+ctx.fillStyle="cyan";
+ctx.fillRect(mapX+px-3,mapY+py-3,6,6);
+
+/* enemy dots */
+ctx.fillStyle="red";
+for(let e of enemies){
+let ex=(e.x/world.width)*mapSize;
+let ey=(e.y/world.height)*mapSize;
+ctx.fillRect(mapX+ex-2,mapY+ey-2,4,4);
+}
 
 /* joystick */
 ctx.strokeStyle="white";
@@ -311,36 +276,27 @@ loop();
 /* TOUCH */
 canvas.addEventListener("touchstart",e=>{
 let t=e.touches[0];
-if(gameState==="menu"){gameState="playing";return;}
+if(gameState==="menu"){gameState="playing";startTime=Date.now();return;}
 if(gameState==="gameover"){location.reload();}
 if(dist(t.clientX,t.clientY,joystick.x,joystick.y)<60){
 joystick.active=true;
 }
 });
-
 canvas.addEventListener("touchmove",e=>{
 if(!joystick.active)return;
 let t=e.touches[0];
 let dx=t.clientX-joystick.x;
 let dy=t.clientY-joystick.y;
 let mag=Math.hypot(dx,dy);
-if(mag>0){
-joystick.dx=dx/mag;
-joystick.dy=dy/mag;
-}
+if(mag>0){joystick.dx=dx/mag;joystick.dy=dy/mag;}
 });
-
 canvas.addEventListener("touchend",()=>{
-joystick.active=false;
-joystick.dx=0;
-joystick.dy=0;
+joystick.active=false;joystick.dx=0;joystick.dy=0;
 });
 
-/* auto shoot */
+/* AUTO SHOOT */
 setInterval(()=>{
-if(gameState==="playing"){
-shootAuto();
-}
+if(gameState==="playing")shootAuto();
 },400);
 
 </script>
