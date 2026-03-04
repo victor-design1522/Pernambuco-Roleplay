@@ -30,21 +30,39 @@ let safeZone={x:world.width/2,y:world.height/2,r:world.width/2-200};
 let safeShrinkTimer=0;
 
 /* PLAYER */
-const player={x:2500,y:2500,r:20,speed:3,life:100,maxLife:100,xp:0,level:1,color:"cyan"};
-let bullets=[],enemies=[],explosions=[];
-let score=0,spawnTimer=0;
+const player={
+  x:2500,y:2500,r:20,speed:3,
+  life:100,maxLife:100,
+  xp:0,level:1,color:"cyan",
+  weapon:{name:"Pistol",dmg:20,speed:7}
+};
+
+let bullets=[],enemies=[],explosions=[],loots=[];
+let score=0,spawnTimer=0,dmgFlash=0;
 
 /* JOYSTICK */
 let joystick={active:false,x:100,y:canvas.height-120,dx:0,dy:0};
 
 /* UTILS */
 function dist(a,b,c,d){return Math.hypot(a-c,b-d);}
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 
 /* SPAWN ENEMY/BOT */
 function spawnEnemy(){
 let x=Math.random()*world.width;
 let y=Math.random()*world.height;
-enemies.push({x,y,r:18,life:30+player.level*5,speed:1.2+player.level*0.1});
+enemies.push({
+  x,y,r:18,life:30+player.level*5,speed:1.2+player.level*0.1,
+  weapon:{name:"Pistol",dmg:15,speed:5}
+});
+}
+
+/* SPAWN LOOT */
+function spawnLoot(){
+let x=Math.random()*world.width;
+let y=Math.random()*world.height;
+let type=Math.random()<0.5?"life":"rifle";
+loots.push({x,y,type,r:10});
 }
 
 /* AUTO AIM FOR PLAYER */
@@ -57,15 +75,15 @@ if(d<minDist){minDist=d;closest=e;}
 }
 if(!closest)return;
 let angle=Math.atan2(closest.y-player.y,closest.x-player.x);
-let speed=7;
-bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed});
+let speed=player.weapon.speed;
+bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,dmg:player.weapon.dmg,owner:"player"});
 }
 
 /* BOT SHOOT */
 function botShoot(bot){
 let angle=Math.atan2(player.y-bot.y,player.x-bot.x);
-let speed=5;
-bullets.push({x:bot.x,y:bot.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed});
+let speed=bot.weapon.speed;
+bullets.push({x:bot.x,y:bot.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,dmg:bot.weapon.dmg,owner:"bot"});
 }
 
 /* UPDATE */
@@ -86,38 +104,63 @@ camera.y=player.y-canvas.height/2;
 camera.x=Math.max(0,Math.min(world.width-canvas.width,camera.x));
 camera.y=Math.max(0,Math.min(world.height-canvas.height,camera.y));
 
-/* spawn enemies */
+/* spawn enemies & loot */
 spawnTimer++;
 if(spawnTimer>200 && enemies.length<30){spawnEnemy();spawnTimer=0;}
+if(spawnTimer%500===0){spawnLoot();}
 
-/* bullets */
+/* bullets movement */
 for(let i=bullets.length-1;i>=0;i--){
 let b=bullets[i];
 b.x+=b.vx;b.y+=b.vy;
 if(b.x<0||b.x>world.width||b.y<0||b.y>world.height){bullets.splice(i,1);continue;}
+
+/* collisions */
+if(b.owner==="player"){
 for(let j=enemies.length-1;j>=0;j--){
 let e=enemies[j];
 if(dist(b.x,b.y,e.x,e.y)<e.r+5){
-e.life-=20;bullets.splice(i,1);
+e.life-=b.dmg;bullets.splice(i,1);
 if(e.life<=0){score+=10;player.xp+=10;explosions.push({x:e.x,y:e.y,t:20});enemies.splice(j,1);}
 break;
 }
 }
+}else{
+if(dist(b.x,b.y,player.x,player.y)<player.r+5){player.life-=b.dmg;bullets.splice(i,1);dmgFlash=5;}
+}
 }
 
-/* enemies movement + bot shooting */
+/* enemies AI */
 for(let e of enemies){
 let angle=Math.atan2(player.y-e.y,player.x-e.x);
+let distToPlayer=dist(e.x,e.y,player.x,player.y);
+
+/* movement */
+if(distToPlayer>150){ // move closer
 e.x+=Math.cos(angle)*e.speed;
 e.y+=Math.sin(angle)*e.speed;
+}else if(distToPlayer<50){ // keep distance
+e.x-=Math.cos(angle)*e.speed;
+e.y-=Math.sin(angle)*e.speed;
+}
 
 /* bot shoot */
 if(Math.random()<0.01)botShoot(e);
 
 /* collision with player */
 if(dist(e.x,e.y,player.x,player.y)<e.r+player.r){
-player.life-=0.5;
+player.life-=0.5;dmgFlash=5;
 if(player.life<=0)gameState="gameover";
+}
+}
+
+/* pick loot */
+for(let i=loots.length-1;i>=0;i--){
+let l=loots[i];
+if(dist(player.x,player.y,l.x,l.y)<player.r+l.r){
+if(l.type==="life"){player.life=Math.min(player.maxLife,player.life+30);}
+else if(l.type==="rifle"){player.weapon={name:"Rifle",dmg:35,speed:6};}
+loots.splice(i,1);
 }
 }
 
@@ -130,18 +173,20 @@ if(player.xp>=100){player.level++;player.xp=0;player.maxLife+=20;player.life=pla
 /* safe zone shrink */
 safeShrinkTimer++;
 if(safeShrinkTimer>300){
-safeZone.r=Math.max(50,safeZone.r-10);
-safeShrinkTimer=0;
+safeZone.r=Math.max(50,safeZone.r-10);safeShrinkTimer=0;
 }
 
 /* damage outside safe zone */
 let d=dist(player.x,player.y,safeZone.x,safeZone.y);
-if(d>safeZone.r)player.life-=0.3;
+if(d>safeZone.r){player.life-=0.3;dmgFlash=3;}
 }
 
 /* DRAW */
 function draw(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
+
+/* damage flash */
+if(dmgFlash>0){ctx.fillStyle="rgba(255,0,0,0.3)";ctx.fillRect(0,0,canvas.width,canvas.height); dmgFlash--}
 
 /* MENU */
 if(gameState==="menu"){
@@ -169,9 +214,17 @@ ctx.strokeStyle="lime";ctx.lineWidth=3;
 ctx.beginPath();ctx.arc(safeZone.x-camera.x,safeZone.y-camera.y,safeZone.r,0,Math.PI*2);ctx.stroke();
 ctx.lineWidth=1;
 
+/* LOOT */
+for(let l of loots){
+ctx.fillStyle=l.type==="life"?"lime":"blue";
+ctx.beginPath();ctx.arc(l.x-camera.x,l.y-camera.y,l.r,0,Math.PI*2);ctx.fill();
+}
+
 /* PLAYER */
 ctx.fillStyle=player.color;
-ctx.beginPath();ctx.arc(player.x-camera.x,player.y-camera.y,player.r,0,Math.PI*2);ctx.fill();
+ctx.beginPath();
+ctx.arc(player.x-camera.x,player.y-camera.y,player.r,0,Math.PI*2);
+ctx.fill();
 
 /* BULLETS */
 ctx.fillStyle="yellow";
@@ -186,13 +239,14 @@ ctx.fillStyle="orange";
 for(let ex of explosions){ctx.beginPath();ctx.arc(ex.x-camera.x,ex.y-camera.y,ex.t,0,Math.PI*2);ctx.fill();}
 
 /* HUD */
-ctx.fillStyle="white";ctx.font="18px Arial";ctx.fillText("Score: "+score,20,25);
-let time=Math.floor((Date.now()-startTime)/1000);
-ctx.fillText("Tempo: "+time+"s",20,50);
+ctx.fillStyle="white";ctx.font="18px Arial";
+ctx.fillText("Score: "+score,20,25);
+ctx.fillText("Tempo: "+Math.floor((Date.now()-startTime)/1000)+"s",20,50);
+ctx.fillText("Vivos: "+(enemies.length+1),20,75);
 
 /* Life bar */
-ctx.fillRect(20,65,200,12);ctx.fillStyle="lime";
-ctx.fillRect(20,65,200*(player.life/player.maxLife),12);
+ctx.fillRect(20,90,200,12);ctx.fillStyle="lime";
+ctx.fillRect(20,90,200*(player.life/player.maxLife),12);
 
 /* XP BAR */
 ctx.fillStyle="#333";ctx.fillRect(canvas.width/2-150,20,300,15);
@@ -208,19 +262,15 @@ ctx.fillStyle="black";ctx.fillRect(mapX,mapY,mapSize,mapSize);
 ctx.strokeStyle="white";ctx.strokeRect(mapX,mapY,mapSize,mapSize);
 
 /* player dot */
-let px=(player.x/world.width)*mapSize;
-let py=(player.y/world.height)*mapSize;
-ctx.fillStyle="cyan";ctx.fillRect(mapX+px-3,mapY+py-3,6,6);
+ctx.fillStyle="cyan";ctx.fillRect(mapX+(player.x/world.width)*mapSize-3,mapY+(player.y/world.height)*mapSize-3,6,6);
 
 /* enemy dots */
 ctx.fillStyle="red";
-for(let e of enemies){let ex=(e.x/world.width)*mapSize;let ey=(e.y/world.height)*mapSize;
-ctx.fillRect(mapX+ex-2,mapY+ey-2,4,4);}
+for(let e of enemies){ctx.fillRect(mapX+(e.x/world.width)*mapSize-2,mapY+(e.y/world.height)*mapSize-2,4,4);}
 
 /* safe zone dot */
 ctx.strokeStyle="lime";ctx.lineWidth=2;
-ctx.beginPath();ctx.arc(mapX+(safeZone.x/world.width)*mapSize,mapY+(safeZone.y/world.height)*mapSize,
-(safeZone.r/world.width)*mapSize,0,Math.PI*2);ctx.stroke();
+ctx.beginPath();ctx.arc(mapX+(safeZone.x/world.width)*mapSize,mapY+(safeZone.y/world.height)*mapSize,(safeZone.r/world.width)*mapSize,0,Math.PI*2);ctx.stroke();
 ctx.lineWidth=1;
 
 /* joystick */
