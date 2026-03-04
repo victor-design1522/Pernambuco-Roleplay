@@ -3,348 +3,874 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GTA Web Mobile Prototype</title>
+    <title>GTA Web Mobile Completo - Sem Frameworks</title>
     <style>
         /* --- ESTILOS CSS --- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none; /* Evita seleção de texto no mobile */
-            -webkit-user-select: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; }
+        #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #000;
-            font-family: 'Courier New', Courier, monospace;
-        }
+        /* --- MENUS E TELAS --- */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; }
+        .bg-dark { background: rgba(0, 0, 0, 0.85); }
+        h1 { font-size: 3rem; text-shadow: 2px 2px 4px #000; margin-bottom: 20px; color: #f1c40f; }
+        p { font-size: 1.2rem; max-width: 80%; margin-bottom: 30px; }
+        button { padding: 15px 40px; font-size: 1.5rem; font-weight: bold; background: #27ae60; color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
+        button:active { transform: scale(0.98); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .hidden { display: none !important; }
 
-        #game-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
+        #game-over-screen { background: rgba(139, 0, 0, 0.9); }
+        #game-over-screen h1 { color: #fff; font-size: 4rem; }
 
-        /* Menu Inicial */
-        #main-menu {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(20, 20, 30, 0.9);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
+        #btn-pause-toggle { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 20; padding: 5px 15px; background: rgba(255,255,255,0.2); border: 1px solid #fff; border-radius: 5px; color: #fff; pointer-events: auto; }
 
-        #main-menu h1 { font-size: 2.5rem; margin-bottom: 20px; text-align: center;}
-        #btn-play {
-            padding: 15px 40px; font-size: 1.5rem; font-weight: bold;
-            background: #ff4757; color: white; border: none; border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.5);
-        }
+        /* --- HUD --- */
+        #hud { position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 10; pointer-events: none; display: flex; justify-content: space-between; }
+        #stats { display: flex; flex-direction: column; gap: 8px; }
+        .stat-item { color: white; font-weight: bold; font-size: 1.1rem; text-shadow: 1px 1px 2px black; display: flex; align-items: center; }
+        
+        #health-bar { width: 180px; height: 18px; background: rgba(0,0,0,0.6); border: 2px solid #fff; border-radius: 9px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        #health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.3s ease; }
 
-        /* HUD */
-        #hud {
-            position: absolute;
-            top: 10px; left: 10px; width: calc(100% - 20px);
-            z-index: 10; pointer-events: none;
-            display: flex; justify-content: space-between;
-        }
+        /* --- MINIMAPA --- */
+        #minimap-wrapper { width: 120px; height: 120px; position: relative; border: 4px solid #fff; border-radius: 50%; background: rgba(0,0,0,0.5); overflow: hidden; pointer-events: auto; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #minimap-canvas { width: 100%; height: 100%; }
 
-        #stats { display: flex; flex-direction: column; gap: 5px; }
-
-        #health-bar {
-            width: 150px; height: 15px; background: rgba(0,0,0,0.5);
-            border: 2px solid #fff; border-radius: 10px; overflow: hidden;
-        }
-        #health-fill { width: 100%; height: 100%; background: #2ed573; transition: width 0.2s; }
-
-        #ammo, #money { color: white; text-shadow: 1px 1px 2px black; font-weight: bold; }
-
-        #minimap-container {
-            width: 80px; height: 80px; background: rgba(255,255,255,0.2);
-            border: 3px solid #fff; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center; color: white;
-        }
-
-        /* Controles Mobile */
-        #controls {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
-            z-index: 10; pointer-events: none;
-        }
-
-        .touch-zone {
-            position: absolute; width: 40%; height: 100%; bottom: 0;
-            pointer-events: auto; /* Permite toque nas zonas */
-        }
+        /* --- CONTROLES MOBILE --- */
+        #controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; z-index: 15; pointer-events: none; }
+        .touch-zone { position: absolute; width: 45%; height: 100%; bottom: 0; pointer-events: auto; }
         #joystick-left { left: 0; }
         #joystick-right { right: 0; }
+        .stick-base { position: absolute; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; transform: translate(-50%, -50%); display: none; }
+        .stick-thumb { position: absolute; width: 40px; height: 40px; background: rgba(255,255,255,0.5); border-radius: 50%; transform: translate(-50%, -50%); }
 
-        .stick {
-            position: absolute; width: 50px; height: 50px;
-            background: rgba(255,255,255,0.3); border: 2px solid rgba(255,255,255,0.6);
-            border-radius: 50%; transform: translate(-50%, -50%); display: none;
-        }
-
-        #btn-shoot, #btn-jump {
-            position: absolute; width: 60px; height: 60px;
-            background: rgba(255, 71, 87, 0.7); border: 2px solid #fff; border-radius: 50%;
-            color: white; font-size: 24px; pointer-events: auto;
-        }
-        #btn-shoot { bottom: 80px; right: 80px; }
-        #btn-jump { bottom: 20px; right: 20px; background: rgba(46, 213, 115, 0.7); }
+        .action-btn { position: absolute; width: 65px; height: 65px; border-radius: 50%; color: white; font-size: 26px; border: 3px solid #fff; pointer-events: auto; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.4); text-shadow: 1px 1px 2px #000; }
+        .action-btn:active { transform: scale(0.92); }
+        
+        #btn-shoot { bottom: 90px; right: 25px; background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        #btn-jump { bottom: 15px; right: 25px; background: linear-gradient(135deg, #3498db, #2980b9); }
+        #btn-reload { bottom: 170px; right: 25px; background: linear-gradient(135deg, #f39c12, #d35400); width: 55px; height: 55px; font-size: 20px;}
+        #btn-vehicle { bottom: 15px; left: 25px; background: linear-gradient(135deg, #2ecc71, #27ae60); display: none; } /* Só aparece perto do carro */
     </style>
 </head>
 <body>
-    <div id="main-menu">
-        <h1>Open World Mobile</h1>
-        <button id="btn-play">JOGAR</button>
-        <p style="margin-top: 15px; text-align: center; max-width: 80%;">Use o lado esquerdo da tela para andar e o direito para mirar.</p>
+    <div id="main-menu" class="overlay bg-dark">
+        <h1>CITY BLOCKS 3D</h1>
+        <p>Explore a cidade, dirija e lute. Use o lado esquerdo para mover/dirigir e o direito para olhar/virar.</p>
+        <button onclick="gameState.startGame()">JOGAR</button>
     </div>
 
-    <div id="hud" style="display: none;">
+    <div id="pause-screen" class="overlay bg-dark hidden">
+        <h1>PAUSADO</h1>
+        <button onclick="gameState.togglePause()">RETOMAR</button>
+    </div>
+
+    <div id="game-over-screen" class="overlay hidden">
+        <h1>VOCÊ MORREU</h1>
+        <button onclick="gameState.respawnPlayer()">RESPAWN</button>
+    </div>
+
+    <button id="btn-pause-toggle" class="hidden" onclick="gameState.togglePause()">||</button>
+
+    <div id="hud" class="hidden">
         <div id="stats">
-            <div id="health-bar"><div id="health-fill"></div></div>
-            <div id="ammo">🔫 30 / 30</div>
-            <div id="money">💰 $ 0</div>
+            <div class="stat-item"><div id="health-bar"><div id="health-fill"></div></div></div>
+            <div class="stat-item">🔫 <span id="ammo-val">30</span> / 30</div>
+            <div class="stat-item">💰 $ <span id="money-val">0</span></div>
         </div>
-        <div id="minimap-container">M</div>
+        <div id="minimap-wrapper">
+            <canvas id="minimap-canvas" width="120" height="120"></canvas>
+        </div>
     </div>
 
-    <div id="controls" style="display: none;">
+    <div id="controls" class="hidden">
         <div id="joystick-left" class="touch-zone">
-            <div id="stick-left" class="stick"></div>
+            <div class="stick-base"><div class="stick-thumb"></div></div>
         </div>
         <div id="joystick-right" class="touch-zone">
-            <div id="stick-right" class="stick"></div>
+            <div class="stick-base"><div class="stick-thumb"></div></div>
         </div>
-        <button id="btn-shoot">💥</button>
-        <button id="btn-jump">⬆️</button>
+        <div id="btn-shoot" class="action-btn">💥</div>
+        <div id="btn-jump" class="action-btn">⬆️</div>
+        <div id="btn-reload" class="action-btn">♻️</div>
+        <div id="btn-vehicle" class="action-btn">🚗</div>
     </div>
 
     <div id="game-canvas"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
+
     <script>
-        // --- LÓGICA DO JOGO (JAVASCRIPT) ---
-        
-        // Configuração Básica
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); 
-        scene.fog = new THREE.Fog(0x87CEEB, 20, 100);
+        // === CONFIGURAÇÕES E CONSTANTES ===
+        const CONFIG = {
+            worldSize: 250, // Tamanho do mapa
+            numBuildings: 80,
+            numNPCs: 15,
+            player: { speed: 0.18, jumpHeight: 0.35, maxHealth: 100 },
+            vehicle: { turnSpeed: 0.04, acceleration: 0.008, friction: 0.98 },
+            ammoMax: 30,
+            colors: { ground: 0x333333, building: 0x7f8c8d, player: 0xe74c3c, npc: 0x3498db, vehicle: 0x2ecc71, skyDay: 0x87CEEB, skyNight: 0x1a1a2e }
+        };
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.getElementById('game-canvas').appendChild(renderer.domElement);
-
-        // Iluminação
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-        scene.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(50, 100, 50);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
-
-        // Mundo (Chão e Prédios)
-        const collidables = [];
-        
-        const groundGeo = new THREE.PlaneGeometry(200, 200);
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
-        const buildingMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
-
-        for (let i = 0; i < 40; i++) {
-            const mesh = new THREE.Mesh(buildingGeo, buildingMat);
-            mesh.scale.set(Math.random() * 5 + 2, Math.random() * 15 + 5, Math.random() * 5 + 2);
-            let x = (Math.random() - 0.5) * 150;
-            let z = (Math.random() - 0.5) * 150;
-            if(Math.abs(x) < 10 && Math.abs(z) < 10) x += 20; 
+        // === ESTADO GLOBAL DO JOGO ===
+        const gameState = {
+            isPaused: false,
+            isPlaying: false,
+            isDriving: false,
+            dayTime: 0, // 0 a 1 (manhã -> noite -> manhã)
+            money: 0,
             
-            mesh.position.set(x, mesh.scale.y / 2, z);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            scene.add(mesh);
-            collidables.push(mesh);
-        }
+            // Elementos de UI
+            ui: {
+                main: document.getElementById('main-menu'),
+                pause: document.getElementById('pause-screen'),
+                gameOver: document.getElementById('game-over-screen'),
+                btnPause: document.getElementById('btn-pause-toggle'),
+                hud: document.getElementById('hud'),
+                controls: document.getElementById('controls'),
+                healthFill: document.getElementById('health-fill'),
+                ammoVal: document.getElementById('ammo-val'),
+                moneyVal: document.getElementById('money-val'),
+                btnVehicle: document.getElementById('btn-vehicle')
+            },
 
-        // Jogador
-        const playerGeo = new THREE.BoxGeometry(1, 2, 1);
-        const playerMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const player = new THREE.Mesh(playerGeo, playerMat);
-        player.position.y = 1;
-        player.castShadow = true;
-        scene.add(player);
+            startGame() {
+                this.isPlaying = true;
+                this.ui.main.classList.add('hidden');
+                this.ui.hud.classList.remove('hidden');
+                this.ui.controls.classList.remove('hidden');
+                this.ui.btnPause.classList.remove('hidden');
+                // Ativar minimapa
+                minimap.init();
+            },
 
-        const cameraOffset = new THREE.Vector3(0, 3, 5);
-        let playerVelocity = new THREE.Vector3();
-        const speed = 0.15;
-        let isJumping = false;
-        let ammo = 30;
+            togglePause() {
+                if(!this.isPlaying || player.health <= 0) return;
+                this.isPaused = !this.isPaused;
+                if(this.isPaused) {
+                    this.ui.pause.classList.remove('hidden');
+                    this.ui.controls.classList.add('hidden');
+                } else {
+                    this.ui.pause.classList.add('hidden');
+                    this.ui.controls.classList.remove('hidden');
+                }
+            },
 
-        // Controles Touch
-        const input = { moveX: 0, moveY: 0, lookX: 0, lookY: 0 };
-        let playerRotationY = 0;
+            addMoney(amount) {
+                this.money += amount;
+                this.ui.moneyVal.innerText = this.money;
+            },
 
-        function setupJoystick(zoneId, stickId, isMove) {
-            const zone = document.getElementById(zoneId);
-            const stick = document.getElementById(stickId);
-            let touchId = null;
-            let centerX, centerY;
+            showGameOver() {
+                this.isPlaying = false;
+                this.ui.gameOver.classList.remove('hidden');
+                this.ui.controls.classList.add('hidden');
+                this.ui.btnPause.classList.add('hidden');
+            },
 
-            zone.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const touch = e.changedTouches[0];
-                touchId = touch.identifier;
-                centerX = touch.clientX;
-                centerY = touch.clientY;
-                stick.style.display = 'block';
-                stick.style.left = centerX + 'px';
-                stick.style.top = centerY + 'px';
-            }, {passive: false});
+            respawnPlayer() {
+                this.ui.gameOver.classList.add('hidden');
+                player.respawn();
+                this.startGame();
+            }
+        };
 
-            zone.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === touchId) {
-                        const touch = e.changedTouches[i];
-                        const deltaX = touch.clientX - centerX;
-                        const deltaY = touch.clientY - centerY;
-                        const distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
-                        const maxDist = 40;
-                        
-                        const ratio = Math.min(distance, maxDist) / maxDist;
-                        const angle = Math.atan2(deltaY, deltaX);
-                        
-                        const finalX = Math.cos(angle) * maxDist * ratio;
-                        const finalY = Math.sin(angle) * maxDist * ratio;
-                        
-                        stick.style.left = (centerX + finalX) + 'px';
-                        stick.style.top = (centerY + finalY) + 'px';
+        // === MOTOR 3D (CORE) ===
+        const core = {
+            scene: new THREE.Scene(),
+            camera: new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000),
+            renderer: new THREE.WebGLRenderer({ antialias: true }),
+            clock: new THREE.Clock(),
+            
+            // Luzes
+            lights: {
+                ambient: new THREE.AmbientLight(0x404040, 0.6),
+                sun: new THREE.DirectionalLight(0xffffff, 1)
+            },
 
-                        if(isMove) {
-                            input.moveX = finalX / maxDist;
-                            input.moveY = finalY / maxDist;
-                        } else {
-                            input.lookX = finalX / maxDist;
-                            input.lookY = finalY / maxDist;
+            init() {
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.shadowMap.enabled = true;
+                document.getElementById('game-canvas').appendChild(this.renderer.domElement);
+                
+                // Config NÉVOA
+                this.scene.fog = new THREE.Fog(CONFIG.colors.skyDay, 20, 150);
+                this.scene.background = new THREE.Color(CONFIG.colors.skyDay);
+
+                // Config Luzes
+                this.scene.add(this.lights.ambient);
+                this.lights.sun.position.set(50, 100, 50);
+                this.lights.sun.castShadow = true;
+                // Ajustar alcance da sombra para performance mobile
+                this.lights.sun.shadow.camera.left = -CONFIG.worldSize/2;
+                this.lights.sun.shadow.camera.right = CONFIG.worldSize/2;
+                this.lights.sun.shadow.camera.top = CONFIG.worldSize/2;
+                this.lights.sun.shadow.camera.bottom = -CONFIG.worldSize/2;
+                this.lights.sun.shadow.mapSize.width = 1024;
+                this.lights.sun.shadow.mapSize.height = 1024;
+                this.scene.add(this.lights.sun);
+
+                window.addEventListener('resize', () => this.onResize());
+                this.createWorld();
+            },
+
+            createWorld() {
+                // Chão
+                const groundGeo = new THREE.PlaneGeometry(CONFIG.worldSize, CONFIG.worldSize);
+                const groundMat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.ground });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                this.scene.add(ground);
+
+                // Prédios (Obstáculos)
+                const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
+                
+                for (let i = 0; i < CONFIG.numBuildings; i++) {
+                    const h = Math.random() * 20 + 5;
+                    const w = Math.random() * 8 + 4;
+                    const d = Math.random() * 8 + 4;
+                    
+                    const mat = new THREE.MeshStandardMaterial({ 
+                        color: CONFIG.colors.building,
+                        emissive: 0x000000 // Para janelas acesas à noite (futuro)
+                    });
+                    const building = new THREE.Mesh(buildingGeo, mat);
+                    building.scale.set(w, h, d);
+                    
+                    // Posicionamento aleatório evitando centro
+                    let x, z;
+                    do {
+                        x = (Math.random() - 0.5) * (CONFIG.worldSize - 20);
+                        z = (Math.random() - 0.5) * (CONFIG.worldSize - 20);
+                    } while (Math.abs(x) < 15 && Math.abs(z) < 15); // Espaço limpo no spawn
+
+                    building.position.set(x, h/2, z);
+                    building.castShadow = true;
+                    building.receiveShadow = true;
+                    // Tag para colisão
+                    building.userData.isObstacle = true;
+                    
+                    this.scene.add(building);
+                    worldObjects.obstacles.push(building);
+                }
+            },
+
+            onResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            },
+
+            // Atualiza ciclo dia/noite na renderização
+            updateSky(delta) {
+                gameState.dayTime += delta * 0.01; // Velocidade do ciclo
+                if(gameState.dayTime > 1) gameState.dayTime = 0;
+
+                const t = gameState.dayTime;
+                
+                // Cor do Céu e Névoa (Lerp simples)
+                const skyColor = new THREE.Color().lerpColors(
+                    new THREE.Color(CONFIG.colors.skyDay),
+                    new THREE.Color(CONFIG.colors.skyNight),
+                    Math.sin(t * Math.PI) // Noite no meio do ciclo
+                );
+                this.scene.background = skyColor;
+                this.scene.fog.color = skyColor;
+
+                // Intensidade do Sol
+                const sunInt = Math.max(0.1, Math.cos(t * Math.PI * 2));
+                this.lights.sun.intensity = sunInt;
+                this.lights.ambient.intensity = Math.max(0.2, sunInt * 0.6);
+                
+                // Mover o sol
+                this.lights.sun.position.x = Math.sin(t * Math.PI * 2) * 100;
+                this.lights.sun.position.y = Math.cos(t * Math.PI * 2) * 100;
+            }
+        };
+
+        // === ARRAYS GLOBAIS DE OBJETOS ===
+        const worldObjects = {
+            obstacles: [], // Prédios para colisão de câmera e tiro
+            targets: [],   // NPCs que podem tomar tiro
+            vehicles: []
+        };
+
+        // === SISTEMA DE ENTRADA (JOYSTICKS) ===
+        const input = {
+            move: { x: 0, y: 0, active: false },
+            look: { x: 0, y: 0, active: false },
+            isShooting: false,
+            
+            init() {
+                this.setupJoystick('joystick-left', this.move);
+                this.setupJoystick('joystick-right', this.look);
+                
+                // Botões de Ação
+                this.bindButton('btn-shoot', (press) => this.isShooting = press);
+                this.bindButton('btn-jump', (press) => { if(press && !gameState.isDriving) player.jump() });
+                this.bindButton('btn-reload', (press) => { if(press && !gameState.isDriving) player.reload() });
+                this.bindButton('btn-vehicle', (press) => { if(press) vehicleSystem.toggleVehicle() });
+            },
+
+            setupJoystick(id, inputObj) {
+                const zone = document.getElementById(id);
+                const base = zone.querySelector('.stick-base');
+                const thumb = zone.querySelector('.stick-thumb');
+                let touchId = null;
+                let centerX, centerY;
+
+                zone.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if(touchId !== null) return; 
+                    const touch = e.changedTouches[0];
+                    touchId = touch.identifier;
+                    centerX = touch.clientX;
+                    centerY = touch.clientY;
+                    
+                    inputObj.active = true;
+                    base.style.display = 'block';
+                    base.style.left = centerX + 'px';
+                    base.style.top = centerY + 'px';
+                    thumb.style.left = '50%'; thumb.style.top = '50%';
+                });
+
+                zone.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    for(let t of e.changedTouches) {
+                        if(t.identifier === touchId) {
+                            const dx = t.clientX - centerX;
+                            const dy = t.clientY - centerY;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            const maxRadius = 40;
+                            
+                            const normalizedDist = Math.min(dist, maxRadius);
+                            const angle = Math.atan2(dy, dx);
+                            
+                            const x = Math.cos(angle) * normalizedDist;
+                            const y = Math.sin(angle) * normalizedDist;
+                            
+                            thumb.style.left = `calc(50% + ${x}px)`;
+                            thumb.style.top = `calc(50% + ${y}px)`;
+                            
+                            inputObj.x = x / maxRadius; // -1 a 1
+                            inputObj.y = dy / maxRadius; // -1 a 1 (dy para preservar sinal do eixo Y nativo)
                         }
                     }
-                }
-            }, {passive: false});
+                });
 
-            const reset = (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === touchId) {
-                        touchId = null;
-                        stick.style.display = 'none';
-                        if(isMove) { input.moveX = 0; input.moveY = 0; } 
-                        else { input.lookX = 0; input.lookY = 0; }
+                const end = (e) => {
+                    for(let t of e.changedTouches) {
+                        if(t.identifier === touchId) {
+                            touchId = null;
+                            inputObj.active = false;
+                            inputObj.x = 0; inputObj.y = 0;
+                            base.style.display = 'none';
+                        }
+                    }
+                };
+                zone.addEventListener('touchend', end);
+                zone.addEventListener('touchcancel', end);
+            },
+
+            bindButton(id, callback) {
+                const btn = document.getElementById(id);
+                btn.addEventListener('touchstart', (e) => { e.preventDefault(); callback(true); });
+                btn.addEventListener('touchend', (e) => { e.preventDefault(); callback(false); });
+            }
+        };
+
+        // === PLAYER (TERCEIRA PESSOA) ===
+        const player = {
+            mesh: null,
+            health: CONFIG.player.maxHealth,
+            ammo: CONFIG.ammoMax,
+            isReloading: false,
+            velocity: new THREE.Vector3(),
+            isGrounded: true,
+            rotationY: 0,
+            
+            // Câmera Tps
+            cameraOffset: new THREE.Vector3(0, 2.5, 5),
+            lookPitch: 0, // Rotação vertical da camera
+
+            init() {
+                const geo = new THREE.BoxGeometry(1, 2, 1);
+                const mat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.player });
+                this.mesh = new THREE.Mesh(geo, mat);
+                this.mesh.position.y = 1; // Altura pé no chão
+                this.mesh.castShadow = true;
+                core.scene.add(this.mesh);
+                core.camera.position.copy(this.mesh.position).add(this.cameraOffset);
+            },
+
+            update(delta) {
+                if(!gameState.isPlaying || gameState.isDriving || this.health <= 0) return;
+
+                // 1. ROTAÇÃO (MIRA) baseada no joystick direito
+                if(input.look.active) {
+                    this.rotationY -= input.look.x * 0.06; // Sensibilidade horizontal
+                    this.lookPitch = Math.max(-Math.PI/3, Math.min(Math.PI/4, this.lookPitch - input.look.y * 0.04)); // Vertical limitada
+                }
+                this.mesh.rotation.y = this.rotationY;
+
+                // 2. MOVIMENTO baseado no joystick esquerdo e direção da camera
+                if(input.move.active) {
+                    const moveDir = new THREE.Vector3(input.move.x, 0, input.move.y).normalize();
+                    // Alinhar movimento com a rotação do player
+                    moveDir.applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationY);
+                    this.mesh.position.add(moveDir.multiplyScalar(CONFIG.player.speed));
+                }
+
+                // 3. FÍSICA BÁSICA (Gravidade)
+                this.velocity.y -= 0.015; // Gravidade
+                this.mesh.position.y += this.velocity.y;
+
+                if(this.mesh.position.y <= 1) {
+                    this.mesh.position.y = 1;
+                    this.velocity.y = 0;
+                    this.isGrounded = true;
+                } else {
+                    this.isGrounded = false;
+                }
+
+                // 4. LIMITES DO MAPA
+                const halfSize = CONFIG.worldSize / 2 - 1;
+                this.mesh.position.x = Math.max(-halfSize, Math.min(halfSize, this.mesh.position.x));
+                this.mesh.position.z = Math.max(-halfSize, Math.min(halfSize, this.mesh.position.z));
+
+                this.updateCamera();
+                this.handleShooting(delta);
+            },
+
+            updateCamera() {
+                // Posicionamento suave atrás do player
+                const idealPos = this.cameraOffset.clone().applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationY).add(this.mesh.position);
+                // Inclinação vertical (pitch)
+                idealPos.y += Math.sin(this.lookPitch) * 2;
+                
+                core.camera.position.lerp(idealPos, 0.2); // Suavidade
+                // Camera olha ligeiramente acima do player
+                const lookTarget = this.mesh.position.clone();
+                lookTarget.y += 1.5 + Math.sin(this.lookPitch);
+                core.camera.lookAt(lookTarget);
+            },
+
+            jump() {
+                if(this.isGrounded) {
+                    this.velocity.y = CONFIG.player.jumpHeight;
+                }
+            },
+
+            // --- SISTEMA DE COMBATE ---
+            timeSinceLastShot: 0,
+            fireRate: 0.15, // Segundos entre tiros
+
+            handleShooting(delta) {
+                this.timeSinceLastShot += delta;
+                if(input.isShooting && this.timeSinceLastShot >= this.fireRate && this.ammo > 0 && !this.isReloading) {
+                    this.shoot();
+                    this.timeSinceLastShot = 0;
+                }
+            },
+
+            shoot() {
+                this.ammo--;
+                gameState.ui.ammoVal.innerText = this.ammo;
+
+                // Raycasting do centro da camera (mira livre)
+                const raycaster = new THREE.Raycaster();
+                // Pegar centro da tela em coord normalizadas (-1 a 1)
+                const screenCenter = new THREE.Vector2(0, 0); 
+                raycaster.setFromCamera(screenCenter, core.camera);
+
+                // Lista de coisas acertáveis (Obstáculos e NPCs)
+                const checkList = [...worldObjects.obstacles, ...worldObjects.targets];
+                const intersects = raycaster.intersectObjects(checkList);
+
+                // Efeito Visual Traçante (linha rápida)
+                const p1 = this.mesh.position.clone(); p1.y += 1.3; // Arma imaginária
+                let p2;
+
+                if (intersects.length > 0) {
+                    const hit = intersects[0];
+                    p2 = hit.point;
+                    
+                    const obj = hit.object;
+                    // Se acertou NPC
+                    if(obj.userData.isNPC && obj.userData.parentObj) {
+                        obj.userData.parentObj.takeDamage(25);
+                    } else if (obj.userData.isObstacle) {
+                        // Efeito simples no prédio (piscar)
+                        const orig = obj.material.color.getHex();
+                        obj.material.color.setHex(0xffffff);
+                        setTimeout(() => obj.material.color.setHex(orig), 50);
+                    }
+                } else {
+                    // Tiro pro nada, estender linha
+                    p2 = raycaster.ray.direction.clone().multiplyScalar(50).add(p1);
+                }
+                
+                fx.createTracer(p1, p2);
+                if(this.ammo === 0) setTimeout(() => this.reload(), 500);
+            },
+
+            reload() {
+                if(this.isReloading || this.ammo === CONFIG.ammoMax) return;
+                this.isReloading = true;
+                gameState.ui.ammoVal.innerText = "--";
+                // Simular tempo de recarga
+                setTimeout(() => {
+                    this.ammo = CONFIG.ammoMax;
+                    gameState.ui.ammoVal.innerText = this.ammo;
+                    this.isReloading = false;
+                }, 1500);
+            },
+
+            takeDamage(amount) {
+                if(gameState.isDriving) return; // Carro protege por enquanto
+                this.health -= amount;
+                gameState.ui.healthFill.style.width = (this.health / CONFIG.player.maxHealth * 100) + '%';
+                if(this.health <= 0) {
+                    gameState.showGameOver();
+                }
+            },
+
+            respawn() {
+                this.health = CONFIG.player.maxHealth;
+                gameState.ui.healthFill.style.width = '100%';
+                this.ammo = CONFIG.ammoMax;
+                gameState.ui.ammoVal.innerText = this.ammo;
+                this.mesh.position.set(0, 1, 0);
+                this.rotationY = 0; this.lookPitch = 0;
+            }
+        };
+
+        // === VEÍCULO (CAIXA VERDE) ===
+        const vehicleSystem = {
+            carMesh: null,
+            currentVehicle: null, // Referência se estiver dirigindo
+            speed: 0,
+            
+            init() {
+                // Criar um carro simples (caixa)
+                const geo = new THREE.BoxGeometry(2, 1.2, 4);
+                const mat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.vehicle });
+                this.carMesh = new THREE.Mesh(geo, mat);
+                this.carMesh.position.set(10, 0.6, 10); // Perto do spawn
+                this.carMesh.castShadow = true;
+                this.carMesh.receiveShadow = true;
+                core.scene.add(this.carMesh);
+                worldObjects.vehicles.push(this.carMesh);
+            },
+
+            update(delta) {
+                // Checar proximidade para mostrar botão de entrar
+                const dist = player.mesh.position.distanceTo(this.carMesh.position);
+                if(!gameState.isDriving && dist < 4) {
+                    gameState.ui.btnVehicle.style.display = 'flex';
+                    gameState.ui.btnVehicle.innerText = '🚗 In';
+                } else if (!gameState.isDriving) {
+                    gameState.ui.btnVehicle.style.display = 'none';
+                }
+
+                if(!gameState.isDriving || !gameState.isPlaying) return;
+
+                // FÍSICA E CONTROLE DE DIREÇÃO
+                
+                // Aceleração/Ré (Joystick Esq Y)
+                if(input.move.active) {
+                    this.speed -= input.move.y * CONFIG.vehicle.acceleration;
+                }
+                // Atrito
+                this.speed *= CONFIG.vehicle.friction;
+
+                // Curva (Joystick Esq X) - Só curva se estiver movendo
+                if(input.move.active && Math.abs(this.speed) > 0.01) {
+                    // Inverter curva na ré
+                    const turnDir = this.speed > 0 ? -1 : 1;
+                    this.carMesh.rotation.y += input.move.x * CONFIG.vehicle.turnSpeed * turnDir * Math.min(1, Math.abs(this.speed)*5);
+                }
+
+                // Mover baseado na rotação local
+                this.carMesh.translateZ(this.speed);
+
+                // Colisão simples com bordas
+                const halfSize = CONFIG.worldSize / 2 - 2;
+                this.carMesh.position.x = Math.max(-halfSize, Math.min(halfSize, this.carMesh.position.x));
+                this.carMesh.position.z = Math.max(-halfSize, Math.min(halfSize, this.carMesh.position.z));
+
+                this.updateCamera();
+            },
+
+            updateCamera() {
+                // Camera de perseguição do carro
+                const relativeCameraOffset = new THREE.Vector3(0, 4, 8); // Mais alta e longe
+                const cameraPos = relativeCameraOffset.applyMatrix4(this.carMesh.matrixWorld);
+                core.camera.position.lerp(cameraPos, 0.1);
+                
+                const lookTarget = this.carMesh.position.clone();
+                lookTarget.y += 1;
+                core.camera.lookAt(lookTarget);
+            },
+
+            toggleVehicle() {
+                if(gameState.isDriving) {
+                    // SAIR DO CARRO
+                    gameState.isDriving = false;
+                    player.mesh.visible = true;
+                    // Posicionar player do lado
+                    player.mesh.position.copy(this.carMesh.position).add(new THREE.Vector3(2, 0.5, 0));
+                    gameState.ui.btnVehicle.innerText = '🚗 In';
+                    player.rotationY = this.carMesh.rotation.y + Math.PI/2; // Olhar pra fora
+                    
+                    // Esconder botões de combate ao dirigir (opicional, mantido para simplicidade)
+                } else {
+                    // TENTAR ENTRAR
+                    const dist = player.mesh.position.distanceTo(this.carMesh.position);
+                    if(dist < 4) {
+                        gameState.isDriving = true;
+                        player.mesh.visible = false;
+                        gameState.ui.btnVehicle.innerText = '🚶 Out';
+                        this.speed = 0;
                     }
                 }
-            };
-            zone.addEventListener('touchend', reset);
-            zone.addEventListener('touchcancel', reset);
-        }
+            }
+        };
 
-        setupJoystick('joystick-left', 'stick-left', true);
-        setupJoystick('joystick-right', 'stick-right', false);
+        // === NPCs (CUBOS AZUIS VAGANDO) ===
+        class NPC {
+            constructor() {
+                const geo = new THREE.BoxGeometry(1, 2, 1);
+                const mat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.npc });
+                this.mesh = new THREE.Mesh(geo, mat);
+                
+                // Dados para o sistema de tiro
+                this.mesh.userData.isNPC = true;
+                this.mesh.userData.parentObj = this; 
 
-        // Ações (Tiro e Pulo)
-        document.getElementById('btn-shoot').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if(ammo > 0) {
-                ammo--;
-                document.getElementById('ammo').innerText = `🔫 ${ammo} / 30`;
+                this.health = 50;
+                this.speed = 0.04 + Math.random() * 0.03;
+                this.dead = false;
+
+                // Lógica de IA simples (vagar)
+                this.targetPos = new THREE.Vector3();
+                this.setNewTarget();
                 
-                const raycaster = new THREE.Raycaster();
-                const centerScreen = new THREE.Vector2(0, 0);
-                raycaster.setFromCamera(centerScreen, camera);
+                this.spawn();
+                core.scene.add(this.mesh);
+                worldObjects.targets.push(this.mesh);
+            }
+
+            spawn() {
+                this.mesh.position.set(
+                    (Math.random() - 0.5) * (CONFIG.worldSize - 20),
+                    1,
+                    (Math.random() - 0.5) * (CONFIG.worldSize - 20)
+                );
+                this.mesh.visible = true;
+                this.dead = false;
+                this.health = 50;
+            }
+
+            setNewTarget() {
+                // Ponto aleatório perto da posição atual
+                this.targetPos.set(
+                    this.mesh.position.x + (Math.random() - 0.5) * 30,
+                    1,
+                    this.mesh.position.z + (Math.random() - 0.5) * 30
+                );
+                // Manter nos limites
+                const limit = CONFIG.worldSize / 2 - 5;
+                this.targetPos.x = Math.max(-limit, Math.min(limit, this.targetPos.x));
+                this.targetPos.z = Math.max(-limit, Math.min(limit, this.targetPos.z));
                 
-                const intersects = raycaster.intersectObjects(collidables);
-                if (intersects.length > 0) {
-                    const target = intersects[0].object;
-                    const originalColor = target.material.color.getHex();
-                    target.material.color.setHex(0xffffff);
-                    setTimeout(() => { target.material.color.setHex(originalColor); }, 100);
+                this.mesh.lookAt(this.targetPos);
+            }
+
+            update(delta) {
+                if(this.dead || !gameState.isPlaying) return;
+
+                // Mover em direção ao alvo
+                const distToTarget = this.mesh.position.distanceTo(this.targetPos);
+                if(distToTarget > 0.5) {
+                    this.mesh.translateZ(this.speed);
+                } else {
+                    this.setNewTarget();
+                }
+
+                // Dano passivo ao player se estiver perto (como inimigo básico)
+                if(!gameState.isDriving && this.mesh.position.distanceTo(player.mesh.position) < 1.5) {
+                    player.takeDamage(10 * delta); // Dano por segundo
                 }
             }
-        });
 
-        document.getElementById('btn-jump').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if(!isJumping) {
-                playerVelocity.y = 0.3;
-                isJumping = true;
-            }
-        });
+            takeDamage(amount) {
+                if(this.dead) return;
+                this.health -= amount;
+                
+                // Feedback visual de dano
+                const orig = this.mesh.material.color.getHex();
+                this.mesh.material.color.setHex(0xffffff);
+                setTimeout(() => { if(this.mesh) this.mesh.material.color.setHex(orig)}, 50);
 
-        // Menu Inicial
-        document.getElementById('btn-play').addEventListener('click', () => {
-            document.getElementById('main-menu').style.display = 'none';
-            document.getElementById('hud').style.display = 'flex';
-            document.getElementById('controls').style.display = 'block';
-        });
-
-        // Game Loop
-        function animate() {
-            requestAnimationFrame(animate);
-
-            playerRotationY -= input.lookX * 0.05;
-            player.rotation.y = playerRotationY;
-            
-            cameraOffset.y -= input.lookY * 0.1;
-            cameraOffset.y = Math.max(1, Math.min(cameraOffset.y, 6));
-
-            const moveZ = input.moveY * speed;
-            const moveX = input.moveX * speed;
-            
-            const direction = new THREE.Vector3(moveX, 0, moveZ);
-            direction.applyEuler(new THREE.Euler(0, playerRotationY, 0));
-            player.position.add(direction);
-
-            playerVelocity.y -= 0.015;
-            player.position.y += playerVelocity.y;
-
-            if (player.position.y <= 1) {
-                player.position.y = 1;
-                playerVelocity.y = 0;
-                isJumping = false;
+                if(this.health <= 0) {
+                    this.die();
+                }
             }
 
-            player.position.x = Math.max(-95, Math.min(95, player.position.x));
-            player.position.z = Math.max(-95, Math.min(95, player.position.z));
-
-            const relativeCameraOffset = cameraOffset.clone().applyMatrix4(player.matrixWorld);
-            camera.position.copy(relativeCameraOffset);
-            camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
-
-            renderer.render(scene, camera);
+            die() {
+                this.dead = true;
+                this.mesh.visible = false;
+                gameState.addMoney(10); // Recompensa
+                // Respawnar em outro lugar após um tempo
+                setTimeout(() => this.spawn(), 5000);
+            }
         }
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        const npcSystem = {
+            npcs: [],
+            init() {
+                for(let i=0; i<CONFIG.numNPCs; i++) {
+                    this.npcs.push(new NPC());
+                }
+            },
+            update(delta) {
+                this.npcs.forEach(n => n.update(delta));
+            }
+        };
 
-        animate();
+        // === EFEITOS VISUAIS (FX) ===
+        const fx = {
+            createTracer(p1, p2) {
+                const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+                const material = new THREE.LineBasicMaterial({ color: 0xf1c40f, transparent: true, opacity: 1 });
+                const line = new THREE.Line(geometry, material);
+                core.scene.add(line);
+                
+                // Desaparecer rapidamente
+                let op = 1;
+                const fade = setInterval(() => {
+                    op -= 0.1;
+                    material.opacity = op;
+                    if(op <= 0) {
+                        clearInterval(fade);
+                        core.scene.remove(line);
+                        geometry.dispose();
+                        material.dispose();
+                    }
+                }, 20);
+            }
+        };
+
+        // === MINIMAPA (2D CANVAS) ===
+        const minimap = {
+            ctx: document.getElementById('minimap-canvas').getContext('2d'),
+            size: 120,
+            zoom: 1.5, // Fator de escala
+
+            init() {
+                // Nada específico aqui, só preparar render
+            },
+
+            update() {
+                if(!gameState.isPlaying) return;
+                const ctx = this.ctx;
+                const halfSize = this.size / 2;
+                const scale = (this.size / CONFIG.worldSize) * this.zoom;
+
+                // Limpar BG
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.fillRect(0, 0, this.size, this.size);
+
+                // Centralizar mapa no jogador
+                ctx.save();
+                ctx.translate(halfSize, halfSize);
+                
+                // Posição normalizada do player para o canvas
+                const pX = player.mesh.position.x * scale;
+                const pZ = player.mesh.position.z * scale;
+
+                // Desenhar Prédios (Obstáculos) em cinza
+                ctx.fillStyle = '#555';
+                worldObjects.obstacles.forEach(obs => {
+                    const oX = (obs.position.x * scale) - pX;
+                    const oZ = (obs.position.z * scale) - pZ;
+                    // Simplificar como quadrados usando scale x/z
+                    const ow = obs.scale.x * scale;
+                    const od = obs.scale.z * scale;
+                    ctx.fillRect(oX - ow/2, oZ - od/2, ow, od);
+                });
+
+                // Desenhar Carro (Ponto Verde)
+                if(!gameState.isDriving) {
+                    ctx.fillStyle = '#2ecc71';
+                    const cX = (vehicleSystem.carMesh.position.x * scale) - pX;
+                    const cZ = (vehicleSystem.carMesh.position.z * scale) - pZ;
+                    ctx.beginPath(); ctx.arc(cX, cZ, 3, 0, Math.PI*2); ctx.fill();
+                }
+
+                // Desenhar NPCs (Pontos Azuis)
+                ctx.fillStyle = '#3498db';
+                npcSystem.npcs.forEach(n => {
+                    if(!n.dead) {
+                        const nX = (n.mesh.position.x * scale) - pX;
+                        const nZ = (n.mesh.position.z * scale) - pZ;
+                        ctx.beginPath(); ctx.arc(nX, nZ, 1.5, 0, Math.PI*2); ctx.fill();
+                    }
+                });
+
+                ctx.restore();
+
+                // Desenhar Jogador (Seta/Ponto Fixo no centro)
+                ctx.fillStyle = '#e74c3c';
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+                ctx.beginPath();
+                // Triângulo apontando pra direção
+                ctx.save();
+                ctx.translate(halfSize, halfSize);
+                // Inverter rotação TPS para o mapa 2D top-down
+                ctx.rotate(-player.rotationY); 
+                ctx.moveTo(0, -6); ctx.lineTo(4, 4); ctx.lineTo(-4, 4); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+                ctx.restore();
+
+                // Borda do mapa (Norte)
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(halfSize, halfSize, halfSize-1, 0, Math.PI*2); ctx.stroke();
+            }
+        };
+
+        // === LOOP PRINCIPAL ===
+        function loop() {
+            requestAnimationFrame(loop);
+            
+            const delta = core.clock.getDelta();
+
+            if(gameState.isPlaying && !gameState.isPaused) {
+                core.updateSky(delta);
+                player.update(delta);
+                vehicleSystem.update(delta);
+                npcSystem.update(delta);
+                minimap.update();
+            }
+
+            core.renderer.render(core.scene, core.camera);
+        }
+
+        // === INICIALIZAÇÃO TUDO ===
+        window.onload = () => {
+            core.init();
+            input.init();
+            player.init();
+            vehicleSystem.init();
+            npcSystem.init();
+            
+            loop();
+            
+            // Pré-renderizar uma vez para evitar lag no início
+            core.renderer.render(core.scene, core.camera);
+        };
     </script>
 </body>
 </html>
