@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Battle Royale 2D</title>
+<style>
+body{
+margin:0;
+overflow:hidden;
+background:#111;
+font-family:Arial;
+touch-action:none;
+}
+canvas{
+display:block;
+background:#1b1b1b;
+}
+.ui-btn{
+position:absolute;
+background:rgba(255,255,255,0.2);
+border-radius:50%;
+}
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize",resize);
+
+/* ==========================
+   GAME STATE
+========================== */
+let gameState = "menu"; // menu, select, playing, gameover, pause
+
+/* ==========================
+   PLAYER SYSTEM
+========================== */
+const player = {
+x:300,
+y:300,
+r:20,
+speed:3,
+life:100,
+maxLife:100,
+xp:0,
+level:1,
+color:"cyan",
+shootCooldown:0
+};
+
+/* ==========================
+   SYSTEM ARRAYS
+========================== */
+let bullets=[];
+let enemies=[];
+let explosions=[];
+let powerups=[];
+let score=0;
+let spawnTimer=0;
+
+/* ==========================
+   TOUCH CONTROLS
+========================== */
+let joystick = {active:false,x:100,y:canvas.height-120,dx:0,dy:0};
+let shootBtn = {x:canvas.width-100,y:canvas.height-120,r:40};
+let skillBtn = {x:canvas.width-200,y:canvas.height-200,r:35};
+
+/* ==========================
+   UTILS
+========================== */
+function dist(a,b,c,d){
+return Math.hypot(a-c,b-d);
+}
+
+/* ==========================
+   SPAWN ENEMY
+========================== */
+function spawnEnemy(){
+let side = Math.random()*4;
+let x,y;
+if(side<1){x=0;y=Math.random()*canvas.height;}
+else if(side<2){x=canvas.width;y=Math.random()*canvas.height;}
+else if(side<3){x=Math.random()*canvas.width;y=0;}
+else{x=Math.random()*canvas.width;y=canvas.height;}
+
+enemies.push({
+x,y,
+r:18,
+life:30 + player.level*5,
+speed:1.2 + player.level*0.1
+});
+}
+
+/* ==========================
+   UPDATE
+========================== */
+function update(){
+if(gameState!=="playing")return;
+
+player.x += joystick.dx * player.speed;
+player.y += joystick.dy * player.speed;
+
+player.x=Math.max(player.r,Math.min(canvas.width-player.r,player.x));
+player.y=Math.max(player.r,Math.min(canvas.height-player.r,player.y));
+
+spawnTimer++;
+if(spawnTimer>100){
+spawnEnemy();
+spawnTimer=0;
+}
+
+/* bullets */
+bullets.forEach((b,i)=>{
+b.x+=b.vx;
+b.y+=b.vy;
+
+enemies.forEach((e,ei)=>{
+if(dist(b.x,b.y,e.x,e.y)<e.r){
+e.life-=20;
+bullets.splice(i,1);
+if(e.life<=0){
+score+=10;
+player.xp+=10;
+explosions.push({x:e.x,y:e.y,t:20});
+enemies.splice(ei,1);
+}
+}
+});
+});
+
+/* enemies */
+enemies.forEach(e=>{
+let angle=Math.atan2(player.y-e.y,player.x-e.x);
+e.x+=Math.cos(angle)*e.speed;
+e.y+=Math.sin(angle)*e.speed;
+
+if(dist(e.x,e.y,player.x,player.y)<e.r+player.r){
+player.life-=0.3;
+if(player.life<=0){
+gameState="gameover";
+}
+}
+});
+
+/* explosions */
+explosions.forEach((ex,i)=>{
+ex.t--;
+if(ex.t<=0)explosions.splice(i,1);
+});
+
+/* level up */
+if(player.xp>=100){
+player.level++;
+player.xp=0;
+player.maxLife+=20;
+player.life=player.maxLife;
+}
+}
+
+/* ==========================
+   DRAW
+========================== */
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+if(gameState==="menu"){
+ctx.fillStyle="white";
+ctx.font="40px Arial";
+ctx.textAlign="center";
+ctx.fillText("BATTLE ROYALE 2D",canvas.width/2,200);
+ctx.fillText("TOQUE PARA JOGAR",canvas.width/2,300);
+return;
+}
+
+if(gameState==="gameover"){
+ctx.fillStyle="red";
+ctx.font="50px Arial";
+ctx.textAlign="center";
+ctx.fillText("GAME OVER",canvas.width/2,250);
+ctx.fillStyle="white";
+ctx.fillText("Score: "+score,canvas.width/2,320);
+ctx.fillText("Toque para Reiniciar",canvas.width/2,400);
+return;
+}
+
+/* player */
+ctx.fillStyle=player.color;
+ctx.beginPath();
+ctx.arc(player.x,player.y,player.r,0,Math.PI*2);
+ctx.fill();
+
+/* bullets */
+ctx.fillStyle="yellow";
+bullets.forEach(b=>{
+ctx.beginPath();
+ctx.arc(b.x,b.y,5,0,Math.PI*2);
+ctx.fill();
+});
+
+/* enemies */
+ctx.fillStyle="red";
+enemies.forEach(e=>{
+ctx.beginPath();
+ctx.arc(e.x,e.y,e.r,0,Math.PI*2);
+ctx.fill();
+});
+
+/* explosions */
+ctx.fillStyle="orange";
+explosions.forEach(ex=>{
+ctx.beginPath();
+ctx.arc(ex.x,ex.y,ex.t,0,Math.PI*2);
+ctx.fill();
+});
+
+/* HUD */
+ctx.fillStyle="white";
+ctx.fillText("Score: "+score,100,30);
+ctx.fillRect(20,40,200,10);
+ctx.fillStyle="lime";
+ctx.fillRect(20,40,200*(player.life/player.maxLife),10);
+
+/* joystick */
+ctx.strokeStyle="white";
+ctx.beginPath();
+ctx.arc(joystick.x,joystick.y,50,0,Math.PI*2);
+ctx.stroke();
+
+/* shoot btn */
+ctx.beginPath();
+ctx.arc(canvas.width-100,canvas.height-120,40,0,Math.PI*2);
+ctx.stroke();
+
+}
+
+/* ==========================
+   LOOP
+========================== */
+function loop(){
+update();
+draw();
+requestAnimationFrame(loop);
+}
+loop();
+
+/* ==========================
+   TOUCH EVENTS
+========================== */
+canvas.addEventListener("touchstart",e=>{
+let t=e.touches[0];
+if(gameState==="menu"){
+gameState="playing";
+return;
+}
+if(gameState==="gameover"){
+location.reload();
+}
+
+let dx=t.clientX-joystick.x;
+let dy=t.clientY-joystick.y;
+if(dist(t.clientX,t.clientY,joystick.x,joystick.y)<60){
+joystick.active=true;
+}
+});
+
+canvas.addEventListener("touchmove",e=>{
+if(!joystick.active)return;
+let t=e.touches[0];
+let dx=t.clientX-joystick.x;
+let dy=t.clientY-joystick.y;
+let mag=Math.hypot(dx,dy);
+joystick.dx=dx/mag;
+joystick.dy=dy/mag;
+});
+
+canvas.addEventListener("touchend",()=>{
+joystick.active=false;
+joystick.dx=0;
+joystick.dy=0;
+});
+
+/* auto shoot */
+setInterval(()=>{
+if(gameState==="playing"){
+let angle=Math.atan2(0,1);
+let vx=Math.cos(angle)*6;
+let vy=Math.sin(angle)*6;
+bullets.push({x:player.x,y:player.y,vx,vy});
+}
+},400);
+
+</script>
+</body>
+</html>
