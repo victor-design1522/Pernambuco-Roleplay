@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>City Nights V4.5 PLUS</title>
+    <title>City Nights V4.5 - Turbinada</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; touch-action: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Arial Black', sans-serif; }
@@ -14,9 +14,9 @@
         .bar-container { width: 150px; height: 15px; background: rgba(0,0,0,0.5); border: 2px solid #fff; margin-top: 5px; float: right; clear: both; }
         #hp-fill { width: 100%; height: 100%; background: #e74c3c; transition: 0.3s; }
 
-        #minimap { position: absolute; bottom: 20px; left: 20px; width: 130px; height: 130px; background: rgba(0,0,0,0.8); border: 3px solid #34495e; border-radius: 50%; z-index: 10; overflow: hidden; }
-        #map-content { position: relative; width: 100%; height: 100%; }
+        #minimap { position: absolute; bottom: 20px; left: 20px; width: 130px; height: 130px; background: rgba(0,0,0,0.8); border: 3px solid #fff; border-radius: 50%; z-index: 10; overflow: hidden; }
         #map-player { position: absolute; width: 10px; height: 10px; background: #3498db; top: 50%; left: 50%; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; }
+        .map-icon { position: absolute; width: 6px; height: 6px; border-radius: 50%; transform: translate(-50%, -50%); }
 
         #mission-text { position: absolute; bottom: 160px; width: 100%; text-align: center; color: #f1c40f; font-size: 1.4rem; text-shadow: 2px 2px #000; z-index: 5; font-weight: bold; }
 
@@ -29,16 +29,16 @@
         #btn-shoot { bottom: 120px; right: 20px; background: rgba(231, 76, 60, 0.7); }
         #btn-v { bottom: 30px; right: 20px; background: rgba(46, 204, 113, 0.7); display: none; }
         
-        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); z-index:100; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; }
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, #222 0%, #000 100%); z-index:100; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="menu" class="overlay">
-        <h1 style="color:#f1c40f; font-size: 3.5rem; text-shadow: 3px 3px #000;">CITY NIGHTS</h1>
-        <p style="letter-spacing: 2px;">V4.5 PLUS EDITION</p><br>
-        <button style="padding:18px 50px; font-weight:bold; cursor:pointer; background:#27ae60; color:white; border:none; border-radius:10px; font-size: 1.2rem; box-shadow: 0 5px #1e8449;" onclick="start()">INICIAR CAOS</button>
+        <h1 style="color:#f1c40f; font-size: 3rem; text-shadow: 2px 2px #000;">CITY NIGHTS 4.5+</h1>
+        <p>TURBINADA E MELHORADA</p><br>
+        <button style="padding:15px 45px; font-weight:bold; cursor:pointer; background:#27ae60; color:white; border:none; border-radius:8px; font-size: 1.1rem;" onclick="start()">INICIAR CARREIRA</button>
     </div>
 
     <div id="hud" class="hidden">
@@ -48,9 +48,8 @@
     </div>
 
     <div id="minimap" class="hidden">
-        <div id="map-content">
-            <div id="map-player"></div>
-        </div>
+        <div id="map-icons"></div>
+        <div id="map-player"></div>
     </div>
 
     <div id="mission-text" class="hidden">VÁ ATÉ O MARCADOR AMARELO</div>
@@ -71,7 +70,7 @@
         function playSound(freq, type, duration) {
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
             osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
@@ -84,40 +83,40 @@
 
         let worldSize = 800;
         let playerStats = { hp: 100, money: parseInt(localStorage.getItem('cityNightsMoney')) || 0, wanted: 0 };
-        let buildings = [], npcs = [], policeCars = [];
-        let missionMarker = null, currentStep = 0;
+        let buildings = [], npcs = [], policeCars = [], props = [];
+        let missionMarker = null, currentMissionStep = 0;
 
         function initWorld() {
             scene.background = new THREE.Color(0x020205);
-            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
-            // Estrelas
+            // Estrelas no céu
             const starGeo = new THREE.BufferGeometry();
             const starCoords = [];
-            for(let i=0; i<1000; i++) starCoords.push((Math.random()-0.5)*1000, 200 + Math.random()*200, (Math.random()-0.5)*1000);
+            for(let i=0; i<500; i++) starCoords.push((Math.random()-0.5)*1000, 100 + Math.random()*100, (Math.random()-0.5)*1000);
             starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
-            scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.8})));
+            scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.7})));
 
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, worldSize), new THREE.MeshStandardMaterial({color: 0x080808}));
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, worldSize), new THREE.MeshStandardMaterial({color: 0x111111}));
             floor.rotation.x = -Math.PI/2; scene.add(floor);
-            scene.add(new THREE.GridHelper(worldSize, 50, 0x1a1a1a, 0x111111));
+            scene.add(new THREE.GridHelper(worldSize, 60, 0x222222, 0x00ff00));
 
-            for(let i=0; i<100; i++) {
-                let h = 30 + Math.random()*60;
+            for(let i=0; i<90; i++) {
+                let h = 25 + Math.random()*60;
                 let x = (Math.random()-0.5)*(worldSize-150);
                 let z = (Math.random()-0.5)*(worldSize-150);
-                if(Math.abs(x) < 40) x += 80;
-                const b = new THREE.Mesh(new THREE.BoxGeometry(18, h, 18), new THREE.MeshStandardMaterial({color: 0x151515, emissive: 0x0a0a0a}));
+                if(Math.abs(x) < 35) x += 70;
+                const b = new THREE.Mesh(new THREE.BoxGeometry(16, h, 16), new THREE.MeshStandardMaterial({color: 0x1a1a1a}));
                 b.position.set(x, h/2, z);
                 scene.add(b); buildings.push(b);
             }
-            createMissionMarker(60, 60);
+            createMissionMarker(50, 50);
             updateHUD();
         }
 
         function createMissionMarker(x, z) {
             if(missionMarker) scene.remove(missionMarker);
-            missionMarker = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.6, 32), new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.7}));
+            missionMarker = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.5, 32), new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.8}));
             missionMarker.position.set(x, 0.1, z);
             scene.add(missionMarker);
             document.getElementById('mission-text').innerText = "VÁ ATÉ O MARCADOR AMARELO";
@@ -128,10 +127,9 @@
         const car = new THREE.Group();
         const carBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), new THREE.MeshStandardMaterial({color: 0xc0392b}));
         carBody.position.y = 0.6; 
-        // Faróis
-        const light = new THREE.SpotLight(0xffffaa, 2, 30, Math.PI/4); light.position.set(0, 0.5, -3); light.target.position.set(0, 0, -10);
-        car.add(carBody, light, light.target);
-        car.position.set(20, 0, 20);
+        const headlight = new THREE.SpotLight(0xffffff, 1.5, 40, Math.PI/4); headlight.position.set(0, 0.5, -3); headlight.target.position.set(0,0,-10);
+        car.add(carBody, headlight, headlight.target);
+        car.position.set(15, 0, 15);
 
         let isInCar = false, playerRotY = 0, carSpeed = 0;
 
@@ -140,8 +138,9 @@
             const pBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.3, 6), new THREE.MeshStandardMaterial({color: 0xffffff}));
             const siren = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 0.6), new THREE.MeshBasicMaterial({color: 0xff0000}));
             siren.position.y = 1.4; p.add(pBody, siren);
-            p.position.set(player.position.x + 100, 0, player.position.z + 100);
-            scene.add(p); policeCars.push({ mesh: p, sirenT: 0 });
+            p.position.set(player.position.x + 90, 0, player.position.z + 90);
+            scene.add(p); policeCars.push({ mesh: p, sirenT: 0, mapIcon: null });
+            playSound(200, 'square', 0.5);
         }
 
         const inputs = { move: {x:0, y:0}, look: {x:0, y:0} };
@@ -164,48 +163,62 @@
 
         function update() {
             requestAnimationFrame(update);
-            const radar = document.getElementById('map-content');
-            
+            const iconsDiv = document.getElementById('map-icons');
+            iconsDiv.innerHTML = ''; // Limpa ícones do radar
+
             if(!isInCar) {
                 playerRotY -= inputs.look.x * 0.05;
                 player.rotation.y = playerRotY;
                 const m = new THREE.Vector3(inputs.move.x, 0, inputs.move.y).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY);
                 player.position.add(m.multiplyScalar(0.28));
-                camera.position.lerp(player.position.clone().add(new THREE.Vector3(0, 6, 12).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY)), 0.1);
+                camera.position.lerp(player.position.clone().add(new THREE.Vector3(0, 7, 13).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY)), 0.1);
                 camera.lookAt(player.position);
                 document.getElementById('btn-v').style.display = player.position.distanceTo(car.position) < 8 ? 'flex' : 'none';
             } else {
-                carSpeed = THREE.MathUtils.lerp(carSpeed, -inputs.move.y * 1.3, 0.05);
+                carSpeed = THREE.MathUtils.lerp(carSpeed, -inputs.move.y * 1.1, 0.05);
                 car.rotation.y -= inputs.move.x * 0.05 * (carSpeed >= 0 ? 1 : -1);
                 car.translateZ(carSpeed);
-                camera.position.lerp(car.position.clone().add(new THREE.Vector3(0, 10, 18).applyAxisAngle(new THREE.Vector3(0,1,0), car.rotation.y)), 0.1);
+                camera.position.lerp(car.position.clone().add(new THREE.Vector3(0, 11, 19).applyAxisAngle(new THREE.Vector3(0,1,0), car.rotation.y)), 0.1);
                 camera.lookAt(car.position);
+                if(Math.abs(carSpeed) > 0.1 && Math.random() < 0.1) playSound(100 + Math.abs(carSpeed)*50, 'sawtooth', 0.05);
             }
 
-            // Atualiza Radar
+            // Polícia Radar e IA
             policeCars.forEach(p => {
                 p.mesh.lookAt(player.position); p.mesh.translateZ(0.55);
                 p.sirenT += 0.2; p.mesh.children[1].material.color.setHex(Math.sin(p.sirenT) > 0 ? 0xff0000 : 0x0000ff);
-                if(p.mesh.position.distanceTo(player.position) < 4.5) { playerStats.hp -= 0.35; updateHUD(); }
+                if(p.mesh.position.distanceTo(player.position) < 4.5) { playerStats.hp -= 0.4; updateHUD(); }
+                
+                // Icone no Radar
+                const icon = document.createElement('div'); icon.className = 'map-icon'; icon.style.background = 'red';
+                const dx = (p.mesh.position.x - player.position.x) * 0.4;
+                const dz = (p.mesh.position.z - player.position.z) * 0.4;
+                icon.style.left = (65 + dx) + 'px'; icon.style.top = (65 + dz) + 'px';
+                iconsDiv.appendChild(icon);
             });
 
-            if(missionMarker && player.position.distanceTo(missionMarker.position) < 5) {
-                currentStep++; playSound(600, 'sine', 0.2);
-                if(currentStep == 1) {
-                    document.getElementById('mission-text').innerText = "MISSAO: ELIMINE O ALVO!";
-                    scene.remove(missionMarker); missionMarker = null;
-                } else if(currentStep == 2) {
-                    playerStats.money += 2500; updateHUD(); saveGame();
-                    document.getElementById('mission-text').innerText = "MISSÃO COMPLETA! +$2500";
-                    setTimeout(() => createMissionMarker((Math.random()-0.5)*200, (Math.random()-0.5)*200), 6000);
-                    currentStep = 0;
+            // Missão Radar
+            if(missionMarker) {
+                const mIcon = document.createElement('div'); mIcon.className = 'map-icon'; mIcon.style.background = 'yellow';
+                const mdx = (missionMarker.position.x - player.position.x) * 0.4;
+                const mdz = (missionMarker.position.z - player.position.z) * 0.4;
+                mIcon.style.left = (65 + mdx) + 'px'; mIcon.style.top = (65 + mdz) + 'px';
+                iconsDiv.appendChild(mIcon);
+
+                if(player.position.distanceTo(missionMarker.position) < 5) {
+                    currentMissionStep++; playSound(600, 'sine', 0.2);
+                    if(currentMissionStep == 1) {
+                        document.getElementById('mission-text').innerText = "MISSAO: CAUSE CAOS (ATIRE NOS NPCS)";
+                        scene.remove(missionMarker); missionMarker = null;
+                    } else if(currentMissionStep == 2) {
+                        playerStats.money += 2000; updateHUD(); saveGame();
+                        document.getElementById('mission-text').innerText = "MISSÃO COMPLETA! +$2000";
+                        setTimeout(() => createMissionMarker((Math.random()-0.5)*200, (Math.random()-0.5)*200), 5000);
+                        currentMissionStep = 0;
+                    }
                 }
             }
 
-            // Posição no Minimapa
-            const zoom = 0.5;
-            document.getElementById('map-player').style.left = '50%';
-            document.getElementById('map-player').style.top = '50%';
             renderer.render(scene, camera);
         }
 
@@ -213,26 +226,27 @@
             document.getElementById('money-ui').innerText = `💰 $ ${playerStats.money}`;
             document.getElementById('hp-fill').style.width = playerStats.hp + "%";
             document.getElementById('wanted-ui').innerText = "⭐".repeat(playerStats.wanted);
-            if(playerStats.hp <= 0) { alert("SE FERROU!"); location.reload(); }
+            if(playerStats.hp <= 0) { alert("VOCÊ FOI PRESO!"); location.reload(); }
         }
 
         function saveGame() { localStorage.setItem('cityNightsMoney', playerStats.money); }
 
         document.getElementById('btn-shoot').addEventListener('touchstart', () => {
-            playSound(180, 'square', 0.1);
+            playSound(150, 'square', 0.1);
             const ray = new THREE.Raycaster(player.position, new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY));
             const hits = ray.intersectObjects(npcs.map(n => n.mesh));
             if(hits.length > 0) {
-                const target = hits[0].object;
-                target.rotation.x = Math.PI/2; target.position.y = 0.5; // Efeito de queda
-                playerStats.money += 150; playerStats.wanted = Math.min(5, playerStats.wanted + 1);
-                spawnPolice(); if(currentStep == 1) currentStep++;
+                const npc = hits[0].object;
+                npc.rotation.x = Math.PI/2; npc.position.y = 0.5; // Cai no chão
+                playerStats.money += 120; playerStats.wanted = Math.min(5, playerStats.wanted + 1);
+                spawnPolice(); if(currentMissionStep == 1) currentMissionStep++;
                 updateHUD(); saveGame();
             }
         });
 
         document.getElementById('btn-v').addEventListener('touchstart', () => {
             isInCar = !isInCar; player.visible = !isInCar;
+            playSound(300, 'sine', 0.1);
             if(isInCar) { car.add(player); player.position.set(0,0,0); }
             else { scene.add(player); player.position.copy(car.position).add(new THREE.Vector3(6, 1, 0)); }
         });
@@ -246,7 +260,7 @@
             initWorld();
             scene.add(player, car);
             for(let i=0; i<30; i++) {
-                const n = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x555555}));
+                const n = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x666666}));
                 n.position.set((Math.random()-0.5)*400, 1, (Math.random()-0.5)*400);
                 scene.add(n); npcs.push({mesh: n});
             }
