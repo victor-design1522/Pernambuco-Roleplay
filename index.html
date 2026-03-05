@@ -3,60 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>City Nights - GTA Style V3</title>
+    <title>City Nights V4 - Full Chaos Edition</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; touch-action: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Arial Black', sans-serif; }
-        #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* UI de Menu */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #222 0%, #000 100%); color: white; text-align: center; }
-        h1 { color: #f1c40f; font-size: 4rem; text-shadow: 4px 4px #c0392b; margin-bottom: 10px; }
-        button { padding: 15px 50px; font-size: 1.5rem; background: #27ae60; color: white; border: 4px solid #2ecc71; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        
-        /* HUD */
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 10; pointer-events: none; color: white; }
-        .bar { width: 150px; height: 12px; background: rgba(0,0,0,0.5); border: 2px solid #fff; border-radius: 6px; margin-bottom: 5px; overflow: hidden; }
-        #hp-fill { width: 100%; height: 100%; background: #2ecc71; }
-        #ammo-ui, #money-ui { font-weight: bold; text-shadow: 2px 2px #000; font-size: 1.4rem; color: #2ecc71; }
-        
-        /* Instruções de Missão */
-        #mission-instruction { position: absolute; bottom: 150px; width: 100%; text-align: center; color: #f1c40f; font-size: 1.5rem; text-shadow: 2px 2px #000; z-index: 50; transition: 0.5s; font-weight: bold; }
+        /* HUD Principal */
+        #hud { position: absolute; top: 10px; right: 10px; z-index: 10; text-align: right; pointer-events: none; }
+        #money-ui { color: #2ecc71; font-size: 2rem; text-shadow: 2px 2px #000; }
+        #wanted-ui { color: #f1c40f; font-size: 1.5rem; letter-spacing: 5px; }
+        #weapon-ui { color: white; font-size: 1.2rem; }
+        .bar-container { width: 150px; height: 15px; background: rgba(0,0,0,0.5); border: 2px solid #fff; margin-top: 5px; float: right; clear: both; }
+        #hp-fill { width: 100%; height: 100%; background: #e74c3c; transition: 0.3s; }
+
+        /* Minimapa */
+        #minimap { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; background: rgba(0,0,0,0.7); border: 3px solid #fff; border-radius: 10px; z-index: 10; overflow: hidden; }
+        #map-player { position: absolute; width: 8px; height: 8px; background: #3498db; top: 50%; left: 50%; border-radius: 50%; transform: translate(-50%, -50%); }
+
+        /* Instruções */
+        #mission-text { position: absolute; top: 100px; width: 100%; text-align: center; color: #f1c40f; font-size: 1.2rem; text-shadow: 2px 2px #000; z-index: 5; }
 
         /* Controles */
-        #controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
-        .joy-zone { position: absolute; width: 50%; height: 60%; bottom: 0; pointer-events: auto; }
+        .joy-zone { position: absolute; width: 50%; height: 100%; top: 0; pointer-events: auto; z-index: 20; }
         #left-zone { left: 0; } #right-zone { right: 0; }
-        .stick-base { position: absolute; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; transform: translate(-50%, -50%); display: none; }
+        .stick-base { position: absolute; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; display: none; transform: translate(-50%, -50%); }
         .stick-tip { position: absolute; width: 40px; height: 40px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); opacity: 0.5; }
         
-        .btn { position: absolute; width: 70px; height: 70px; background: rgba(255,255,255,0.2); border: 3px solid #fff; border-radius: 50%; pointer-events: auto; display: flex; justify-content: center; align-items: center; font-size: 30px; }
-        #btn-shoot { bottom: 110px; right: 25px; background: rgba(231, 76, 60, 0.5); }
-        #btn-v { bottom: 25px; right: 110px; background: rgba(46, 204, 113, 0.5); display: none; }
+        .btn-action { position: absolute; width: 70px; height: 70px; border-radius: 50%; border: 3px solid #fff; z-index: 30; display: flex; justify-content: center; align-items: center; font-size: 30px; pointer-events: auto; }
+        #btn-shoot { bottom: 120px; right: 20px; background: rgba(231, 76, 60, 0.7); }
+        #btn-v { bottom: 30px; right: 20px; background: rgba(46, 204, 113, 0.7); display: none; }
+        #btn-weapon { top: 10px; left: 10px; width: 50px; height: 50px; font-size: 20px; background: rgba(52, 152, 219, 0.7); }
+
         .hidden { display: none !important; }
+        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index:100; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; }
     </style>
 </head>
 <body>
 
     <div id="menu" class="overlay">
-        <h1>CITY NIGHTS</h1>
-        <p style="margin-bottom: 20px;">Inspirado no clássico GTA San Andreas</p>
-        <button onclick="start()">INICIAR JOGO</button>
+        <h1 style="color:#f1c40f; font-size: 3rem;">CITY NIGHTS V4</h1>
+        <p>Polícia, Missões e Minimapa Ativados</p><br>
+        <button style="padding:15px 40px; font-weight:bold; cursor:pointer" onclick="start()">JOGAR</button>
     </div>
 
     <div id="hud" class="hidden">
-        <div class="bar"><div id="hp-fill"></div></div>
-        <div id="ammo-ui">🔫 30 / 30</div>
         <div id="money-ui">💰 $ 0</div>
+        <div id="wanted-ui"></div>
+        <div id="weapon-ui">🔫 PISTOLA</div>
+        <div class="bar-container"><div id="hp-fill"></div></div>
     </div>
 
-    <div id="mission-instruction" class="hidden">VÁ ATÉ O MARCADOR AMARELO</div>
+    <div id="minimap" class="hidden">
+        <div id="map-content" style="position:relative; width:100%; height:100%;">
+            <div id="map-player"></div>
+        </div>
+    </div>
+
+    <div id="mission-text" class="hidden">VA ATÉ O MARCADOR AMARELO</div>
 
     <div id="controls" class="hidden">
         <div id="left-zone" class="joy-zone"><div class="stick-base" id="joy-l"><div class="stick-tip"></div></div></div>
         <div id="right-zone" class="joy-zone"><div class="stick-base" id="joy-r"><div class="stick-tip"></div></div></div>
-        <div id="btn-shoot" class="btn">💥</div>
-        <div id="btn-v" class="btn">🚗</div>
+        <div id="btn-shoot" class="btn-action">💥</div>
+        <div id="btn-v" class="btn-action">🚗</div>
+        <div id="btn-weapon" class="btn-action">🔄</div>
     </div>
 
     <div id="game-canvas"></div>
@@ -64,264 +74,210 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- CONFIGURAÇÃO INICIAL ---
-        const worldSize = 400;
+        // --- CONFIG ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('game-canvas').appendChild(renderer.domElement);
 
-        const buildings = [];
-        const npcs = [];
-        const streetLights = [];
+        let worldSize = 500;
+        let playerObj = { hp: 100, money: 0, ammo: 30, wanted: 0, weapon: 0 };
+        let weapons = ["PISTOLA", "FUZIL"];
+        let buildings = [];
+        let npcs = [];
+        let policeCars = [];
         let missionActive = false;
         let missionMarker = null;
-        let targetNPC = null;
 
-        // --- ILUMINAÇÃO ---
-        const ambient = new THREE.AmbientLight(0x404040, 0.5);
-        scene.add(ambient);
-        const sun = new THREE.DirectionalLight(0xffffff, 0.5);
-        sun.position.set(100, 100, 50);
-        scene.add(sun);
-
-        // --- CRIAÇÃO DO MUNDO ---
-        function createWorld() {
-            // Chão (Asfalto com Grid)
-            const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(worldSize, worldSize),
-                new THREE.MeshStandardMaterial({ color: 0x111111 })
-            );
-            ground.rotation.x = -Math.PI/2;
-            scene.add(ground);
-
-            const grid = new THREE.GridHelper(worldSize, 50, 0x444444, 0x222222);
+        // --- MUNDO ---
+        function initWorld() {
+            scene.background = new THREE.Color(0x020205);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.3); scene.add(ambient);
+            
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, worldSize), new THREE.MeshStandardMaterial({color: 0x111111}));
+            floor.rotation.x = -Math.PI/2; scene.add(floor);
+            
+            const grid = new THREE.GridHelper(worldSize, 40, 0x3498db, 0x111111);
             scene.add(grid);
 
-            // Prédios
-            for (let i = 0; i < 80; i++) {
-                let x = (Math.random() - 0.5) * (worldSize - 50);
-                let z = (Math.random() - 0.5) * (worldSize - 50);
-                if (Math.abs(x) < 20 || Math.abs(z) < 20) x += 40;
-
-                const h = 15 + Math.random() * 30;
-                const bGeo = new THREE.BoxGeometry(10, h, 10);
-                const bMat = new THREE.MeshStandardMaterial({ 
-                    color: 0x333333, 
-                    emissive: 0xffaa00, 
-                    emissiveIntensity: Math.random() > 0.5 ? 0.2 : 0 
-                });
-                const b = new THREE.Mesh(bGeo, bMat);
-                b.position.set(x, h/2, z);
-                scene.add(b);
-                buildings.push(b);
+            for(let i=0; i<60; i++) {
+                let h = 20 + Math.random()*40;
+                const b = new THREE.Mesh(new THREE.BoxGeometry(12, h, 12), new THREE.MeshStandardMaterial({color: 0x222222, emissive: 0x111111}));
+                b.position.set((Math.random()-0.5)*(worldSize-60), h/2, (Math.random()-0.5)*(worldSize-60));
+                if(Math.abs(b.position.x) < 20) b.position.x += 40;
+                scene.add(b); buildings.push(b);
             }
-
-            // Marcador de Missão Inicial
-            createMissionMarker(25, 25);
+            createMissionMarker(30, 30);
         }
 
         function createMissionMarker(x, z) {
-            const geo = new THREE.CylinderGeometry(2, 2, 0.2, 32);
-            const mat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.6 });
-            missionMarker = new THREE.Mesh(geo, mat);
+            missionMarker = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 0.5, 32), new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.7}));
             missionMarker.position.set(x, 0.1, z);
             scene.add(missionMarker);
-            document.getElementById('mission-instruction').classList.remove('hidden');
+            document.getElementById('mission-text').classList.remove('hidden');
         }
 
-        // --- PLAYER E CARRO ---
-        const player = {
-            mesh: null,
-            hp: 100,
-            ammo: 30,
-            rotY: 0,
-            init() {
-                this.mesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x3498db}));
-                this.mesh.position.set(0, 1, 0);
-                scene.add(this.mesh);
-            }
-        };
+        // --- ENTIDADES ---
+        const player = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x3498db}));
+        player.position.y = 1;
 
-        const car = {
-            mesh: null,
-            speed: 0,
-            active: false,
-            init() {
-                this.mesh = new THREE.Group();
-                const body = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 5), new THREE.MeshStandardMaterial({color: 0xe74c3c}));
-                body.position.y = 0.6;
-                this.mesh.add(body);
-                this.mesh.position.set(15, 0, 15);
-                scene.add(this.mesh);
-            }
-        };
+        const car = new THREE.Group();
+        const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 5), new THREE.MeshStandardMaterial({color: 0xe74c3c}));
+        carBody.position.y = 0.6; car.add(carBody);
+        car.position.set(10, 0, 10);
 
-        function createNPC() {
+        let isInCar = false;
+        let playerRotY = 0;
+        let carSpeed = 0;
+
+        function spawnNPC() {
             const n = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x95a5a6}));
-            n.position.set((Math.random()-0.5)*150, 1, (Math.random()-0.5)*150);
+            n.position.set((Math.random()-0.5)*200, 1, (Math.random()-0.5)*200);
             scene.add(n);
-            npcs.push({ mesh: n, health: 100, wanderDir: Math.random() * Math.PI * 2 });
+            npcs.push({ mesh: n, hp: 100, targetPos: new THREE.Vector3((Math.random()-0.5)*200, 1, (Math.random()-0.5)*200) });
         }
 
-        // --- INPUTS ---
-        const inputs = { move: {x:0, y:0}, look: {x:0, y:0} };
-        function setupJoystick(id, type) {
-            const zone = document.getElementById(id);
-            const joy = zone.querySelector('.stick-base');
-            let tId = null; let sX, sY;
+        function spawnPolice() {
+            const p = new THREE.Group();
+            const pBody = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 5), new THREE.MeshStandardMaterial({color: 0xffffff}));
+            const siren = new THREE.Mesh(new THREE.BoxGeometry(1, 0.3, 0.5), new THREE.MeshBasicMaterial({color: 0xff0000}));
+            siren.position.y = 1.3; p.add(pBody, siren);
+            p.position.set(player.position.x + 50, 0, player.position.z + 50);
+            scene.add(p); policeCars.push({ mesh: p, sirenTimer: 0 });
+        }
 
+        // --- CONTROLES ---
+        const inputs = { move: {x:0, y:0}, look: {x:0, y:0} };
+        function setupJoy(id, type) {
+            const zone = document.getElementById(id); const base = zone.querySelector('.stick-base');
+            let tId = null; let sx, sy;
             zone.addEventListener('touchstart', e => {
-                const t = e.changedTouches[0]; tId = t.identifier;
-                sX = t.clientX; sY = t.clientY;
-                joy.style.display = 'block'; joy.style.left = sX+'px'; joy.style.top = sY+'px';
+                const t = e.changedTouches[0]; tId = t.identifier; sx = t.clientX; sy = t.clientY;
+                base.style.display = 'block'; base.style.left = sx+'px'; base.style.top = sy+'px';
             });
             zone.addEventListener('touchmove', e => {
                 for(let t of e.changedTouches) if(t.identifier === tId) {
-                    let dx = (t.clientX - sX)/40; let dy = (t.clientY - sY)/40;
-                    let d = Math.sqrt(dx*dx+dy*dy); if(d>1){dx/=d; dy/=d;}
-                    inputs[type].x = dx; inputs[type].y = dy;
+                    inputs[type].x = (t.clientX - sx)/40; inputs[type].y = (t.clientY - sy)/40;
                 }
             });
             zone.addEventListener('touchend', e => {
-                for(let t of e.changedTouches) if(t.identifier === tId) {
-                    tId = null; joy.style.display = 'none';
-                    inputs[type].x = 0; inputs[type].y = 0;
-                }
+                for(let t of e.changedTouches) if(t.identifier === tId) { tId=null; base.style.display='none'; inputs[type].x=0; inputs[type].y=0; }
             });
         }
 
-        // --- LÓGICA DE JOGO ---
-        function checkCollision(obj, radius) {
-            for (let b of buildings) {
-                let dx = obj.position.x - b.position.x;
-                let dz = obj.position.z - b.position.z;
-                if (Math.abs(dx) < 6 && Math.abs(dz) < 6) return true;
-            }
-            return false;
-        }
-
+        // --- LOOP PRINCIPAL ---
         function update() {
-            // Player ou Carro?
-            if (!car.active) {
-                player.rotY -= inputs.look.x * 0.05;
-                player.mesh.rotation.y = player.rotY;
-                
-                let oldPos = player.mesh.position.clone();
-                const moveDir = new THREE.Vector3(inputs.move.x, 0, inputs.move.y).applyAxisAngle(new THREE.Vector3(0,1,0), player.rotY);
-                player.mesh.position.add(moveDir.multiplyScalar(0.25));
-                
-                if(checkCollision(player.mesh, 1.5)) player.mesh.position.copy(oldPos);
-
-                camera.position.lerp(player.mesh.position.clone().add(new THREE.Vector3(0, 4, 8).applyAxisAngle(new THREE.Vector3(0,1,0), player.rotY)), 0.1);
-                camera.lookAt(player.mesh.position);
-
-                let distToCar = player.mesh.position.distanceTo(car.mesh.position);
-                document.getElementById('btn-v').style.display = distToCar < 6 ? 'flex' : 'none';
+            requestAnimationFrame(update);
+            
+            if(!isInCar) {
+                playerRotY -= inputs.look.x * 0.05;
+                player.rotation.y = playerRotY;
+                const move = new THREE.Vector3(inputs.move.x, 0, inputs.move.y).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY);
+                player.position.add(move.multiplyScalar(0.2));
+                camera.position.lerp(player.position.clone().add(new THREE.Vector3(0, 5, 10).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY)), 0.1);
+                camera.lookAt(player.position);
+                document.getElementById('btn-v').style.display = player.position.distanceTo(car.position) < 6 ? 'flex' : 'none';
             } else {
-                car.speed = THREE.MathUtils.lerp(car.speed, -inputs.move.y * 0.8, 0.1);
-                car.mesh.rotation.y -= inputs.move.x * 0.04 * (car.speed >= 0 ? 1 : -1);
-                
-                let oldPos = car.mesh.position.clone();
-                car.mesh.translateZ(car.speed);
-                if(checkCollision(car.mesh, 3)) { car.speed = 0; car.mesh.position.copy(oldPos); }
-
-                camera.position.lerp(car.mesh.position.clone().add(new THREE.Vector3(0, 6, 12).applyAxisAngle(new THREE.Vector3(0,1,0), car.mesh.rotation.y)), 0.1);
-                camera.lookAt(car.mesh.position);
+                carSpeed = THREE.MathUtils.lerp(carSpeed, -inputs.move.y * 0.8, 0.1);
+                car.rotation.y -= inputs.move.x * 0.05 * (carSpeed >= 0 ? 1 : -1);
+                car.translateZ(carSpeed);
+                camera.position.lerp(car.position.clone().add(new THREE.Vector3(0, 8, 15).applyAxisAngle(new THREE.Vector3(0,1,0), car.rotation.y)), 0.1);
+                camera.lookAt(car.position);
             }
 
-            // NPCs - Inteligência Artificial Básica
+            // NPCs e IA
             npcs.forEach(n => {
-                if(n.health > 0) {
-                    n.mesh.translateZ(0.05);
-                    if(Math.random() < 0.02) n.mesh.rotation.y += (Math.random()-0.5) * 2;
-                    if(Math.abs(n.mesh.position.x) > worldSize/2 || Math.abs(n.mesh.position.z) > worldSize/2) n.mesh.rotation.y += Math.PI;
+                n.mesh.translateZ(0.05);
+                if(Math.random() < 0.01) n.mesh.rotation.y += Math.random();
+            });
+
+            // Polícia IA (Perseguição)
+            policeCars.forEach(p => {
+                p.mesh.lookAt(player.position);
+                p.mesh.translateZ(0.4);
+                p.sirenTimer += 0.2;
+                p.mesh.children[1].material.color.setHex(Math.sin(p.sirenTimer) > 0 ? 0xff0000 : 0x0000ff);
+                if(p.mesh.position.distanceTo(player.position) < 3) {
+                    playerObj.hp -= 0.5;
+                    updateHUD();
                 }
             });
 
-            // Missão
-            if (missionMarker) {
+            // Missão e Marcador
+            if(missionMarker) {
                 missionMarker.rotation.y += 0.05;
-                if (player.mesh.position.distanceTo(missionMarker.position) < 3) {
-                    startMission();
+                if(player.position.distanceTo(missionMarker.position) < 4) {
+                    scene.remove(missionMarker); missionMarker = null;
+                    missionActive = true;
+                    document.getElementById('mission-text').innerText = "MISSÃO: ELIMINE UM NPC!";
+                    playerObj.money += 100; updateHUD();
                 }
             }
 
-            if (missionActive && targetNPC) {
-                if (targetNPC.health <= 0) {
-                    completeMission();
-                }
-            }
+            // Minimapa
+            const mapX = (player.position.x / worldSize) * 100;
+            const mapZ = (player.position.z / worldSize) * 100;
+            document.getElementById('map-player').style.left = (50 + mapX) + '%';
+            document.getElementById('map-player').style.top = (50 + mapZ) + '%';
 
             renderer.render(scene, camera);
-            requestAnimationFrame(update);
         }
 
-        function startMission() {
-            scene.remove(missionMarker);
-            missionMarker = null;
-            missionActive = true;
-            
-            // Escolhe um NPC alvo
-            targetNPC = npcs[Math.floor(Math.random() * npcs.length)];
-            targetNPC.mesh.material.color.setHex(0xff0000); // Fica vermelho
-            targetNPC.mesh.scale.set(1.5, 1.5, 1.5);
-            
-            document.getElementById('mission-instruction').innerText = "ELIMINE O ALVO VERMELHO!";
+        function updateHUD() {
+            document.getElementById('money-ui').innerText = `💰 $ ${playerObj.money}`;
+            document.getElementById('hp-fill').style.width = playerObj.hp + "%";
+            document.getElementById('wanted-ui').innerText = "⭐".repeat(playerObj.wanted);
+            document.getElementById('weapon-ui').innerText = `🔫 ${weapons[playerObj.weapon]}`;
+            if(playerObj.hp <= 0) location.reload();
         }
 
-        function completeMission() {
-            missionActive = false;
-            targetNPC = null;
-            let money = parseInt(document.getElementById('money-ui').innerText.replace(/\D/g,'')) + 1000;
-            document.getElementById('money-ui').innerText = `💰 $ ${money}`;
-            document.getElementById('mission-instruction').innerText = "MISSÃO CONCLUÍDA! +$1000";
-            setTimeout(() => { document.getElementById('mission-instruction').classList.add('hidden'); }, 3000);
-        }
+        // --- AÇÕES ---
+        document.getElementById('btn-shoot').addEventListener('touchstart', () => {
+            const flash = new THREE.PointLight(0xffff00, 10, 10);
+            flash.position.copy(player.position).add(new THREE.Vector3(0, 1, -2).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY));
+            scene.add(flash); setTimeout(() => scene.remove(flash), 50);
+
+            const ray = new THREE.Raycaster(player.position, new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY));
+            const hits = ray.intersectObjects(npcs.map(n => n.mesh));
+            if(hits.length > 0) {
+                hits[0].object.position.y = -10;
+                playerObj.money += 50;
+                playerObj.wanted = Math.min(5, playerObj.wanted + 1);
+                spawnPolice();
+                updateHUD();
+            }
+        });
+
+        document.getElementById('btn-v').addEventListener('touchstart', () => {
+            isInCar = !isInCar;
+            player.visible = !isInCar;
+            if(isInCar) {
+                car.add(player); player.position.set(0,0,0);
+            } else {
+                scene.add(player); 
+                player.position.copy(car.position).add(new THREE.Vector3(4, 1, 0));
+            }
+        });
+
+        document.getElementById('btn-weapon').addEventListener('touchstart', () => {
+            playerObj.weapon = (playerObj.weapon + 1) % weapons.length;
+            updateHUD();
+        });
 
         function start() {
             document.getElementById('menu').classList.add('hidden');
             document.getElementById('hud').classList.remove('hidden');
             document.getElementById('controls').classList.remove('hidden');
-            createWorld();
-            player.init();
-            car.init();
-            for(let i=0; i<10; i++) createNPC();
-            setupJoystick('left-zone', 'move');
-            setupJoystick('right-zone', 'look');
+            document.getElementById('minimap').classList.remove('hidden');
+            initWorld();
+            scene.add(player);
+            scene.add(car);
+            for(let i=0; i<15; i++) spawnNPC();
+            setupJoy('left-zone', 'move');
+            setupJoy('right-zone', 'look');
             update();
         }
-
-        // --- BOTÕES ---
-        document.getElementById('btn-shoot').addEventListener('touchstart', () => {
-            if (player.ammo > 0) {
-                player.ammo--;
-                document.getElementById('ammo-ui').innerText = `🔫 ${player.ammo} / 30`;
-                
-                // Flash de tiro
-                const flash = new THREE.PointLight(0xffff00, 5, 10);
-                flash.position.copy(player.mesh.position).add(new THREE.Vector3(0,1,-2).applyAxisAngle(new THREE.Vector3(0,1,0), player.rotY));
-                scene.add(flash);
-                setTimeout(() => scene.remove(flash), 50);
-
-                // Raycast para atingir NPC
-                const ray = new THREE.Raycaster(player.mesh.position, new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), player.rotY));
-                const hits = ray.intersectObjects(npcs.map(n => n.mesh));
-                if(hits.length > 0) {
-                    const hitObj = hits[0].object;
-                    const npcData = npcs.find(n => n.mesh === hitObj);
-                    npcData.health = 0;
-                    hitObj.position.y = -5; // NPC "morre" sumindo do mapa
-                }
-            }
-        });
-
-        document.getElementById('btn-v').addEventListener('touchstart', () => {
-            car.active = !car.active;
-            player.mesh.visible = !car.active;
-            if(!car.active) player.mesh.position.copy(car.mesh.position).add(new THREE.Vector3(3,1,0));
-        });
 
     </script>
 </body>
