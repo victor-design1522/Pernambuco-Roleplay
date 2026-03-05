@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>City Nights V4 - Full Chaos Edition</title>
+    <title>City Nights V4.5 - Definitive Edition</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; touch-action: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Arial Black', sans-serif; }
@@ -12,7 +12,6 @@
         #hud { position: absolute; top: 10px; right: 10px; z-index: 10; text-align: right; pointer-events: none; }
         #money-ui { color: #2ecc71; font-size: 2rem; text-shadow: 2px 2px #000; }
         #wanted-ui { color: #f1c40f; font-size: 1.5rem; letter-spacing: 5px; }
-        #weapon-ui { color: white; font-size: 1.2rem; }
         .bar-container { width: 150px; height: 15px; background: rgba(0,0,0,0.5); border: 2px solid #fff; margin-top: 5px; float: right; clear: both; }
         #hp-fill { width: 100%; height: 100%; background: #e74c3c; transition: 0.3s; }
 
@@ -20,8 +19,8 @@
         #minimap { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; background: rgba(0,0,0,0.7); border: 3px solid #fff; border-radius: 10px; z-index: 10; overflow: hidden; }
         #map-player { position: absolute; width: 8px; height: 8px; background: #3498db; top: 50%; left: 50%; border-radius: 50%; transform: translate(-50%, -50%); }
 
-        /* Instruções */
-        #mission-text { position: absolute; top: 100px; width: 100%; text-align: center; color: #f1c40f; font-size: 1.2rem; text-shadow: 2px 2px #000; z-index: 5; }
+        /* Texto de Missão Estilo GTA */
+        #mission-text { position: absolute; bottom: 160px; width: 100%; text-align: center; color: #f1c40f; font-size: 1.4rem; text-shadow: 2px 2px #000; z-index: 5; font-weight: bold; }
 
         /* Controles */
         .joy-zone { position: absolute; width: 50%; height: 100%; top: 0; pointer-events: auto; z-index: 20; }
@@ -32,24 +31,22 @@
         .btn-action { position: absolute; width: 70px; height: 70px; border-radius: 50%; border: 3px solid #fff; z-index: 30; display: flex; justify-content: center; align-items: center; font-size: 30px; pointer-events: auto; }
         #btn-shoot { bottom: 120px; right: 20px; background: rgba(231, 76, 60, 0.7); }
         #btn-v { bottom: 30px; right: 20px; background: rgba(46, 204, 113, 0.7); display: none; }
-        #btn-weapon { top: 10px; left: 10px; width: 50px; height: 50px; font-size: 20px; background: rgba(52, 152, 219, 0.7); }
-
-        .hidden { display: none !important; }
+        
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index:100; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="menu" class="overlay">
-        <h1 style="color:#f1c40f; font-size: 3rem;">CITY NIGHTS V4</h1>
-        <p>Polícia, Missões e Minimapa Ativados</p><br>
-        <button style="padding:15px 40px; font-weight:bold; cursor:pointer" onclick="start()">JOGAR</button>
+        <h1 style="color:#f1c40f; font-size: 3rem;">CITY NIGHTS V4.5</h1>
+        <p>DEFINITIVE EDITION</p><br>
+        <button style="padding:15px 40px; font-weight:bold; cursor:pointer; background:#27ae60; color:white; border:none; border-radius:5px;" onclick="start()">INICIAR CARREIRA</button>
     </div>
 
     <div id="hud" class="hidden">
         <div id="money-ui">💰 $ 0</div>
         <div id="wanted-ui"></div>
-        <div id="weapon-ui">🔫 PISTOLA</div>
         <div class="bar-container"><div id="hp-fill"></div></div>
     </div>
 
@@ -59,14 +56,13 @@
         </div>
     </div>
 
-    <div id="mission-text" class="hidden">VA ATÉ O MARCADOR AMARELO</div>
+    <div id="mission-text" class="hidden">VÁ ATÉ O MARCADOR AMARELO</div>
 
     <div id="controls" class="hidden">
         <div id="left-zone" class="joy-zone"><div class="stick-base" id="joy-l"><div class="stick-tip"></div></div></div>
         <div id="right-zone" class="joy-zone"><div class="stick-base" id="joy-r"><div class="stick-tip"></div></div></div>
         <div id="btn-shoot" class="btn-action">💥</div>
         <div id="btn-v" class="btn-action">🚗</div>
-        <div id="btn-weapon" class="btn-action">🔄</div>
     </div>
 
     <div id="game-canvas"></div>
@@ -74,6 +70,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
+        // --- MOTOR DE ÁUDIO (Simulado) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, type, duration) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        }
+
         // --- CONFIG ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -81,70 +88,72 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('game-canvas').appendChild(renderer.domElement);
 
-        let worldSize = 500;
-        let playerObj = { hp: 100, money: 0, ammo: 30, wanted: 0, weapon: 0 };
-        let weapons = ["PISTOLA", "FUZIL"];
-        let buildings = [];
-        let npcs = [];
-        let policeCars = [];
-        let missionActive = false;
-        let missionMarker = null;
+        let worldSize = 600;
+        let playerStats = { 
+            hp: 100, 
+            money: parseInt(localStorage.getItem('cityNightsMoney')) || 0, 
+            wanted: 0 
+        };
+        let buildings = [], npcs = [], policeCars = [], props = [];
+        let missionMarker = null, currentMissionStep = 0;
 
-        // --- MUNDO ---
+        // --- MUNDO DETALHADO ---
         function initWorld() {
-            scene.background = new THREE.Color(0x020205);
-            const ambient = new THREE.AmbientLight(0xffffff, 0.3); scene.add(ambient);
+            scene.background = new THREE.Color(0x050510);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.4); scene.add(ambient);
             
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, worldSize), new THREE.MeshStandardMaterial({color: 0x111111}));
             floor.rotation.x = -Math.PI/2; scene.add(floor);
             
-            const grid = new THREE.GridHelper(worldSize, 40, 0x3498db, 0x111111);
+            const grid = new THREE.GridHelper(worldSize, 60, 0x222222, 0x00ff00);
             scene.add(grid);
 
-            for(let i=0; i<60; i++) {
-                let h = 20 + Math.random()*40;
-                const b = new THREE.Mesh(new THREE.BoxGeometry(12, h, 12), new THREE.MeshStandardMaterial({color: 0x222222, emissive: 0x111111}));
-                b.position.set((Math.random()-0.5)*(worldSize-60), h/2, (Math.random()-0.5)*(worldSize-60));
-                if(Math.abs(b.position.x) < 20) b.position.x += 40;
+            // Prédios e Props (Lixeiras e Postes)
+            for(let i=0; i<80; i++) {
+                let h = 25 + Math.random()*50;
+                let x = (Math.random()-0.5)*(worldSize-100);
+                let z = (Math.random()-0.5)*(worldSize-100);
+                if(Math.abs(x) < 30) x += 60;
+
+                const b = new THREE.Mesh(new THREE.BoxGeometry(15, h, 15), new THREE.MeshStandardMaterial({color: 0x1a1a1a}));
+                b.position.set(x, h/2, z);
                 scene.add(b); buildings.push(b);
+
+                // Adiciona uma "lixeira" perto do prédio
+                const bin = new THREE.Mesh(new THREE.BoxGeometry(1, 1.5, 1), new THREE.MeshStandardMaterial({color: 0x444444}));
+                bin.position.set(x + 10, 0.75, z + 10);
+                scene.add(bin); props.push(bin);
             }
-            createMissionMarker(30, 30);
+            createMissionMarker(40, 40);
+            updateHUD();
         }
 
         function createMissionMarker(x, z) {
-            missionMarker = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 0.5, 32), new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.7}));
+            if(missionMarker) scene.remove(missionMarker);
+            missionMarker = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.5, 32), new THREE.MeshBasicMaterial({color: 0xffff00, transparent: true, opacity: 0.8}));
             missionMarker.position.set(x, 0.1, z);
             scene.add(missionMarker);
+            document.getElementById('mission-text').innerText = "VÁ ATÉ O MARCADOR AMARELO";
             document.getElementById('mission-text').classList.remove('hidden');
         }
 
-        // --- ENTIDADES ---
+        // --- PLAYER E VEÍCULO ---
         const player = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x3498db}));
-        player.position.y = 1;
-
         const car = new THREE.Group();
-        const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 5), new THREE.MeshStandardMaterial({color: 0xe74c3c}));
+        const carBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 6), new THREE.MeshStandardMaterial({color: 0xc0392b}));
         carBody.position.y = 0.6; car.add(carBody);
-        car.position.set(10, 0, 10);
+        car.position.set(15, 0, 15);
 
-        let isInCar = false;
-        let playerRotY = 0;
-        let carSpeed = 0;
-
-        function spawnNPC() {
-            const n = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x95a5a6}));
-            n.position.set((Math.random()-0.5)*200, 1, (Math.random()-0.5)*200);
-            scene.add(n);
-            npcs.push({ mesh: n, hp: 100, targetPos: new THREE.Vector3((Math.random()-0.5)*200, 1, (Math.random()-0.5)*200) });
-        }
+        let isInCar = false, playerRotY = 0, carSpeed = 0;
 
         function spawnPolice() {
             const p = new THREE.Group();
-            const pBody = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 5), new THREE.MeshStandardMaterial({color: 0xffffff}));
-            const siren = new THREE.Mesh(new THREE.BoxGeometry(1, 0.3, 0.5), new THREE.MeshBasicMaterial({color: 0xff0000}));
-            siren.position.y = 1.3; p.add(pBody, siren);
-            p.position.set(player.position.x + 50, 0, player.position.z + 50);
-            scene.add(p); policeCars.push({ mesh: p, sirenTimer: 0 });
+            const pBody = new THREE.Mesh(new THREE.BoxGeometry(3, 1.3, 6), new THREE.MeshStandardMaterial({color: 0xffffff}));
+            const siren = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 0.6), new THREE.MeshBasicMaterial({color: 0xff0000}));
+            siren.position.y = 1.4; p.add(pBody, siren);
+            p.position.set(player.position.x + 80, 0, player.position.z + 80);
+            scene.add(p); policeCars.push({ mesh: p, sirenT: 0 });
+            playSound(200, 'square', 0.5); // Som de alerta
         }
 
         // --- CONTROLES ---
@@ -166,119 +175,116 @@
             });
         }
 
-        // --- LOOP PRINCIPAL ---
+        // --- UPDATE LOOP ---
         function update() {
             requestAnimationFrame(update);
             
             if(!isInCar) {
                 playerRotY -= inputs.look.x * 0.05;
                 player.rotation.y = playerRotY;
-                const move = new THREE.Vector3(inputs.move.x, 0, inputs.move.y).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY);
-                player.position.add(move.multiplyScalar(0.2));
-                camera.position.lerp(player.position.clone().add(new THREE.Vector3(0, 5, 10).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY)), 0.1);
+                const m = new THREE.Vector3(inputs.move.x, 0, inputs.move.y).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY);
+                player.position.add(m.multiplyScalar(0.25));
+                camera.position.lerp(player.position.clone().add(new THREE.Vector3(0, 6, 12).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY)), 0.1);
                 camera.lookAt(player.position);
-                document.getElementById('btn-v').style.display = player.position.distanceTo(car.position) < 6 ? 'flex' : 'none';
+                document.getElementById('btn-v').style.display = player.position.distanceTo(car.position) < 8 ? 'flex' : 'none';
             } else {
-                carSpeed = THREE.MathUtils.lerp(carSpeed, -inputs.move.y * 0.8, 0.1);
+                carSpeed = THREE.MathUtils.lerp(carSpeed, -inputs.move.y * 1.0, 0.05);
                 car.rotation.y -= inputs.move.x * 0.05 * (carSpeed >= 0 ? 1 : -1);
                 car.translateZ(carSpeed);
-                camera.position.lerp(car.position.clone().add(new THREE.Vector3(0, 8, 15).applyAxisAngle(new THREE.Vector3(0,1,0), car.rotation.y)), 0.1);
+                camera.position.lerp(car.position.clone().add(new THREE.Vector3(0, 10, 18).applyAxisAngle(new THREE.Vector3(0,1,0), car.rotation.y)), 0.1);
                 camera.lookAt(car.position);
+                if(Math.abs(carSpeed) > 0.1 && Math.random() < 0.1) playSound(100 + Math.abs(carSpeed)*50, 'sawtooth', 0.05);
             }
 
-            // NPCs e IA
-            npcs.forEach(n => {
-                n.mesh.translateZ(0.05);
-                if(Math.random() < 0.01) n.mesh.rotation.y += Math.random();
-            });
-
-            // Polícia IA (Perseguição)
+            // Polícia IA e Dano
             policeCars.forEach(p => {
-                p.mesh.lookAt(player.position);
-                p.mesh.translateZ(0.4);
-                p.sirenTimer += 0.2;
-                p.mesh.children[1].material.color.setHex(Math.sin(p.sirenTimer) > 0 ? 0xff0000 : 0x0000ff);
-                if(p.mesh.position.distanceTo(player.position) < 3) {
-                    playerObj.hp -= 0.5;
-                    updateHUD();
+                p.mesh.lookAt(player.position); p.mesh.translateZ(0.5);
+                p.sirenT += 0.2;
+                p.mesh.children[1].material.color.setHex(Math.sin(p.sirenT) > 0 ? 0xff0000 : 0x0000ff);
+                if(p.mesh.position.distanceTo(player.position) < 4) {
+                    playerStats.hp -= 0.3; updateHUD();
                 }
             });
 
-            // Missão e Marcador
+            // Lógica de Missão
             if(missionMarker) {
                 missionMarker.rotation.y += 0.05;
-                if(player.position.distanceTo(missionMarker.position) < 4) {
-                    scene.remove(missionMarker); missionMarker = null;
-                    missionActive = true;
-                    document.getElementById('mission-text').innerText = "MISSÃO: ELIMINE UM NPC!";
-                    playerObj.money += 100; updateHUD();
+                if(player.position.distanceTo(missionMarker.position) < 5) {
+                    completeStep();
                 }
             }
 
             // Minimapa
-            const mapX = (player.position.x / worldSize) * 100;
-            const mapZ = (player.position.z / worldSize) * 100;
-            document.getElementById('map-player').style.left = (50 + mapX) + '%';
-            document.getElementById('map-player').style.top = (50 + mapZ) + '%';
+            document.getElementById('map-player').style.left = (50 + (player.position.x / worldSize) * 100) + '%';
+            document.getElementById('map-player').style.top = (50 + (player.position.z / worldSize) * 100) + '%';
 
             renderer.render(scene, camera);
         }
 
+        function completeStep() {
+            currentMissionStep++;
+            playSound(600, 'sine', 0.2);
+            if(currentMissionStep == 1) {
+                document.getElementById('mission-text').innerText = "MISSAO: CAUSE CAOS (ATIRE NOS NPCS)";
+                scene.remove(missionMarker); missionMarker = null;
+            } else if(currentMissionStep == 2) {
+                playerStats.money += 2000;
+                document.getElementById('mission-text').innerText = "MISSÃO COMPLETA! +$2000";
+                saveGame();
+                setTimeout(() => createMissionMarker(-50, 100), 5000);
+            }
+        }
+
         function updateHUD() {
-            document.getElementById('money-ui').innerText = `💰 $ ${playerObj.money}`;
-            document.getElementById('hp-fill').style.width = playerObj.hp + "%";
-            document.getElementById('wanted-ui').innerText = "⭐".repeat(playerObj.wanted);
-            document.getElementById('weapon-ui').innerText = `🔫 ${weapons[playerObj.weapon]}`;
-            if(playerObj.hp <= 0) location.reload();
+            document.getElementById('money-ui').innerText = `💰 $ ${playerStats.money}`;
+            document.getElementById('hp-fill').style.width = playerStats.hp + "%";
+            document.getElementById('wanted-ui').innerText = "⭐".repeat(playerStats.wanted);
+            if(playerStats.hp <= 0) { alert("VOCÊ FOI PRESO!"); location.reload(); }
+        }
+
+        function saveGame() {
+            localStorage.setItem('cityNightsMoney', playerStats.money);
         }
 
         // --- AÇÕES ---
         document.getElementById('btn-shoot').addEventListener('touchstart', () => {
-            const flash = new THREE.PointLight(0xffff00, 10, 10);
-            flash.position.copy(player.position).add(new THREE.Vector3(0, 1, -2).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY));
-            scene.add(flash); setTimeout(() => scene.remove(flash), 50);
-
+            playSound(150, 'square', 0.1);
             const ray = new THREE.Raycaster(player.position, new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), playerRotY));
             const hits = ray.intersectObjects(npcs.map(n => n.mesh));
             if(hits.length > 0) {
-                hits[0].object.position.y = -10;
-                playerObj.money += 50;
-                playerObj.wanted = Math.min(5, playerObj.wanted + 1);
+                hits[0].object.position.y = -20;
+                playerStats.money += 100;
+                playerStats.wanted = Math.min(5, playerStats.wanted + 1);
                 spawnPolice();
+                if(currentMissionStep == 1) completeStep();
                 updateHUD();
+                saveGame();
             }
         });
 
         document.getElementById('btn-v').addEventListener('touchstart', () => {
-            isInCar = !isInCar;
-            player.visible = !isInCar;
-            if(isInCar) {
-                car.add(player); player.position.set(0,0,0);
-            } else {
-                scene.add(player); 
-                player.position.copy(car.position).add(new THREE.Vector3(4, 1, 0));
-            }
-        });
-
-        document.getElementById('btn-weapon').addEventListener('touchstart', () => {
-            playerObj.weapon = (playerObj.weapon + 1) % weapons.length;
-            updateHUD();
+            isInCar = !isInCar; player.visible = !isInCar;
+            playSound(300, 'sine', 0.1);
+            if(isInCar) { car.add(player); player.position.set(0,0,0); }
+            else { scene.add(player); player.position.copy(car.position).add(new THREE.Vector3(5, 1, 0)); }
         });
 
         function start() {
+            audioCtx.resume();
             document.getElementById('menu').classList.add('hidden');
             document.getElementById('hud').classList.remove('hidden');
             document.getElementById('controls').classList.remove('hidden');
             document.getElementById('minimap').classList.remove('hidden');
             initWorld();
-            scene.add(player);
-            scene.add(car);
-            for(let i=0; i<15; i++) spawnNPC();
-            setupJoy('left-zone', 'move');
-            setupJoy('right-zone', 'look');
+            scene.add(player, car);
+            for(let i=0; i<20; i++) {
+                const n = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, 1.2), new THREE.MeshStandardMaterial({color: 0x777777}));
+                n.position.set((Math.random()-0.5)*300, 1, (Math.random()-0.5)*300);
+                scene.add(n); npcs.push({mesh: n});
+            }
+            setupJoy('left-zone', 'move'); setupJoy('right-zone', 'look');
             update();
         }
-
     </script>
 </body>
 </html>
