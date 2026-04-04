@@ -1,434 +1,96 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Open World 2D Mobile</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html {
-            width: 100%; height: 100%;
-            background-color: #000;
-            overflow: hidden;
-            touch-action: none; /* Previne zoom e scroll no mobile */
-            font-family: monospace;
-            user-select: none;
-        }
-        #gameCanvas {
-            display: block;
-            width: 100%; height: 100%;
-        }
-        /* Interface Mobile */
-        #uiLayer {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none; /* Deixa os toques passarem para o canvas */
-        }
-        /* Botões de Ação (Direita) */
-        #actionButtons {
-            position: absolute; bottom: 20px; right: 20px;
-            display: flex; flex-direction: column; gap: 15px;
-            pointer-events: auto;
-        }
-        .btn {
-            width: 60px; height: 60px;
-            border-radius: 50%;
-            background-color: rgba(50, 50, 50, 0.7);
-            border: 2px solid #fff;
-            color: #fff; font-size: 12px; font-weight: bold;
-            display: flex; justify-content: center; align-items: center;
-            text-transform: uppercase;
-        }
-        .btn:active { background-color: rgba(200, 200, 200, 0.7); color: #000; }
-        
-        /* HUD (Esquerda/Topo) */
-        #hud {
-            position: absolute; top: 20px; left: 20px;
-            color: #fff; text-shadow: 1px 1px 0 #000;
-        }
-        .bar-container { width: 150px; height: 15px; background: #333; border: 1px solid #fff; margin-bottom: 5px; }
-        #healthBar { width: 100%; height: 100%; background: #e74c3c; transition: width 0.2s; }
-        #moneyDisplay { font-size: 18px; color: #2ecc71; }
-    </style>
+<meta charset="UTF-8">
+<title>Mod Menu</title>
+<style>
+body {
+    margin: 0;
+    background: #0d0d0d;
+    font-family: Arial;
+    color: white;
+}
+
+.menu {
+    width: 300px;
+    background: #1a1a1a;
+    border-radius: 15px;
+    padding: 15px;
+    margin: 50px auto;
+    box-shadow: 0 0 20px red;
+}
+
+h2 {
+    text-align: center;
+    color: red;
+}
+
+.option {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+
+button {
+    background: red;
+    border: none;
+    padding: 5px 10px;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.active {
+    background: limegreen;
+}
+
+.slider {
+    width: 100%;
+}
+</style>
 </head>
+
 <body>
 
-    <canvas id="gameCanvas"></canvas>
-    
-    <div id="uiLayer">
-        <div id="hud">
-            <div class="bar-container"><div id="healthBar"></div></div>
-            <div id="moneyDisplay">$ 500</div>
-        </div>
-        
-        <div id="actionButtons">
-            <div class="btn" id="btnCar">Carro</div>
-            <div class="btn" id="btnAction">Ação</div>
-            <div class="btn" id="btnRun">Correr</div>
-        </div>
+<div class="menu">
+    <h2>MOD MENU</h2>
+
+    <div class="option">
+        <span>Aimbot</span>
+        <button onclick="toggle(this)">OFF</button>
     </div>
 
+    <div class="option">
+        <span>Wallhack</span>
+        <button onclick="toggle(this)">OFF</button>
+    </div>
+
+    <div class="option">
+        <span>Speed</span>
+        <button onclick="toggle(this)">OFF</button>
+    </div>
+
+    <div class="option">
+        <span>FPS Boost</span>
+        <button onclick="toggle(this)">OFF</button>
+    </div>
+
+    <p>Velocidade:</p>
+    <input type="range" min="1" max="100" class="slider">
+
+</div>
+
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // Ajusta o canvas para a tela
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+function toggle(btn) {
+    if (btn.classList.contains("active")) {
+        btn.classList.remove("active");
+        btn.innerText = "OFF";
+    } else {
+        btn.classList.add("active");
+        btn.innerText = "ON";
     }
-    window.addEventListener('resize', resize);
-    resize();
-
-    // --- Configurações do Mundo ---
-    const WORLD_SIZE = 3000;
-    const camera = { x: 0, y: 0, zoom: 1 };
-
-    // --- Controles Mobile (Touch) ---
-    const joystick = { active: false, id: null, startX: 0, startY: 0, x: 0, y: 0, dx: 0, dy: 0, maxRadius: 50 };
-    const buttons = { run: false, action: false };
-
-    // Gerencia o Joystick Virtual (Lado Esquerdo)
-    window.addEventListener('touchstart', (e) => {
-        for (let i = 0; i < e.changedTouches.length; i++) {
-            let touch = e.changedTouches[i];
-            // Se tocar na metade esquerda da tela e o joystick não estiver ativo
-            if (touch.clientX < window.innerWidth / 2 && !joystick.active) {
-                joystick.active = true;
-                joystick.id = touch.identifier;
-                joystick.startX = touch.clientX;
-                joystick.startY = touch.clientY;
-                joystick.x = touch.clientX;
-                joystick.y = touch.clientY;
-            }
-        }
-    }, {passive: false});
-
-    window.addEventListener('touchmove', (e) => {
-        for (let i = 0; i < e.changedTouches.length; i++) {
-            let touch = e.changedTouches[i];
-            if (joystick.active && touch.identifier === joystick.id) {
-                joystick.x = touch.clientX;
-                joystick.y = touch.clientY;
-                
-                let dx = joystick.x - joystick.startX;
-                let dy = joystick.y - joystick.startY;
-                let distance = Math.hypot(dx, dy);
-                
-                if (distance > joystick.maxRadius) {
-                    dx = (dx / distance) * joystick.maxRadius;
-                    dy = (dy / distance) * joystick.maxRadius;
-                    joystick.x = joystick.startX + dx;
-                    joystick.y = joystick.startY + dy;
-                }
-                
-                joystick.dx = dx / joystick.maxRadius;
-                joystick.dy = dy / joystick.maxRadius;
-            }
-        }
-    }, {passive: false});
-
-    window.addEventListener('touchend', (e) => {
-        for (let i = 0; i < e.changedTouches.length; i++) {
-            let touch = e.changedTouches[i];
-            if (joystick.active && touch.identifier === joystick.id) {
-                joystick.active = false;
-                joystick.id = null;
-                joystick.dx = 0;
-                joystick.dy = 0;
-            }
-        }
-    });
-
-    // Eventos dos Botões DOM
-    document.getElementById('btnRun').addEventListener('touchstart', () => buttons.run = true);
-    document.getElementById('btnRun').addEventListener('touchend', () => buttons.run = false);
-    document.getElementById('btnAction').addEventListener('touchstart', () => { buttons.action = true; collectMoney(); });
-    document.getElementById('btnAction').addEventListener('touchend', () => buttons.action = false);
-    
-    document.getElementById('btnCar').addEventListener('touchstart', () => toggleVehicle());
-
-    // --- Entidades do Jogo ---
-    const player = {
-        x: WORLD_SIZE / 2, y: WORLD_SIZE / 2,
-        radius: 12, angle: 0,
-        speed: 3, runSpeed: 6,
-        health: 100, money: 500,
-        color: '#f1c40f',
-        vehicle: null // Null se a pé, referência ao objeto do carro se dirigindo
-    };
-
-    const buildings = [];
-    const vehicles = [];
-    const npcs = [];
-    const pickups = []; // Dinheiro no chão
-
-    // Gerador de Mapa Simples (Quarteirões e Prédios)
-    function generateWorld() {
-        const blockSize = 300;
-        const roadWidth = 80;
-        for (let x = 0; x < WORLD_SIZE; x += blockSize) {
-            for (let y = 0; y < WORLD_SIZE; y += blockSize) {
-                // Não cria prédio em todos os blocos (deixa espaços vazios)
-                if (Math.random() > 0.2) {
-                    buildings.push({
-                        x: x + roadWidth/2, y: y + roadWidth/2,
-                        w: blockSize - roadWidth, h: blockSize - roadWidth,
-                        color: '#1a1a1a', border: '#333' // Cores noturnas
-                    });
-                }
-            }
-        }
-
-        // Spawn de Veículos
-        for(let i=0; i < 20; i++) {
-            vehicles.push({
-                x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE,
-                w: 24, h: 48, angle: Math.random() * Math.PI * 2,
-                color: ['#e74c3c', '#3498db', '#9b59b6', '#ecf0f1'][Math.floor(Math.random()*4)],
-                speed: 0, maxSpeed: 12, turnSpeed: 0.08
-            });
-        }
-
-        // Spawn de NPCs
-        for(let i=0; i < 40; i++) {
-            npcs.push({
-                x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE,
-                radius: 10, angle: Math.random() * Math.PI * 2, speed: 1,
-                timer: 0
-            });
-        }
-        
-        // Dinheiro espalhado
-        for(let i=0; i < 30; i++) {
-            pickups.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, value: 50 });
-        }
-    }
-
-    // --- Lógica Principal ---
-    function toggleVehicle() {
-        if (player.vehicle) {
-            // Sair do carro
-            player.x = player.vehicle.x + 30; // Sai do lado
-            player.y = player.vehicle.y;
-            player.vehicle.speed = 0;
-            player.vehicle = null;
-        } else {
-            // Entrar no carro mais próximo
-            for (let car of vehicles) {
-                let dist = Math.hypot(player.x - car.x, player.y - car.y);
-                if (dist < 50) {
-                    player.vehicle = car;
-                    break;
-                }
-            }
-        }
-    }
-
-    function collectMoney() {
-        if(player.vehicle) return; // Não coleta de dentro do carro
-        for (let i = pickups.length - 1; i >= 0; i--) {
-            let p = pickups[i];
-            if (Math.hypot(player.x - p.x, player.y - p.y) < 30) {
-                player.money += p.value;
-                document.getElementById('moneyDisplay').innerText = '$ ' + player.money;
-                pickups.splice(i, 1);
-            }
-        }
-    }
-
-    // Colisão simples (Círculo/Ponto com Retângulo)
-    function checkCollision(x, y, radius) {
-        if (x - radius < 0 || x + radius > WORLD_SIZE || y - radius < 0 || y + radius > WORLD_SIZE) return true;
-        for (let b of buildings) {
-            if (x + radius > b.x && x - radius < b.x + b.w && 
-                y + radius > b.y && y - radius < b.y + b.h) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function update() {
-        // Movimentação
-        let moveX = joystick.dx;
-        let moveY = joystick.dy;
-
-        if (player.vehicle) {
-            // Lógica de Carro (Simplificada para controle de joystick)
-            let car = player.vehicle;
-            if (moveX !== 0 || moveY !== 0) {
-                car.angle = Math.atan2(moveY, moveX); // Vira instantaneamente para simplificar no mobile
-                car.speed = buttons.run ? car.maxSpeed : car.maxSpeed * 0.5;
-            } else {
-                car.speed *= 0.9; // Fricção
-            }
-            
-            let nx = car.x + Math.cos(car.angle) * car.speed;
-            let ny = car.y + Math.sin(car.angle) * car.speed;
-            
-            // Colisão carro (usando o centro como ponto grosso para simplificar)
-            if (!checkCollision(nx, ny, car.w/2)) {
-                car.x = nx; car.y = ny;
-            } else {
-                car.speed = 0; // Bateu
-            }
-            // Sincroniza player com carro
-            player.x = car.x; player.y = car.y;
-
-        } else {
-            // Lógica a pé
-            let currentSpeed = buttons.run ? player.runSpeed : player.speed;
-            if (moveX !== 0 || moveY !== 0) {
-                player.angle = Math.atan2(moveY, moveX);
-                let nx = player.x + moveX * currentSpeed;
-                let ny = player.y + moveY * currentSpeed;
-
-                // Teste de colisão nos eixos separados para deslizar nas paredes
-                if (!checkCollision(nx, player.y, player.radius)) player.x = nx;
-                if (!checkCollision(player.x, ny, player.radius)) player.y = ny;
-            }
-        }
-
-        // Update NPCs (Comportamento Básico de Caminhar Randomicamente)
-        for (let npc of npcs) {
-            npc.timer--;
-            if (npc.timer <= 0) {
-                npc.angle += (Math.random() - 0.5); // Muda de direção um pouco
-                npc.timer = Math.random() * 60 + 30;
-            }
-            let nx = npc.x + Math.cos(npc.angle) * npc.speed;
-            let ny = npc.y + Math.sin(npc.angle) * npc.speed;
-            
-            if (!checkCollision(nx, ny, npc.radius)) {
-                npc.x = nx; npc.y = ny;
-            } else {
-                npc.angle += Math.PI; // Vira 180 graus se bater
-            }
-        }
-
-        // Update Camera (Segue o jogador suavemente)
-        camera.x = player.x - canvas.width / 2;
-        camera.y = player.y - canvas.height / 2;
-    }
-
-    // --- Renderização ---
-    function draw() {
-        // Limpa a tela (Cor do asfalto / Fundo)
-        ctx.fillStyle = '#111';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.save();
-        ctx.translate(-camera.x, -camera.y);
-
-        // Desenha Chão (Grade decorativa opcional)
-        ctx.strokeStyle = '#1a1a1a';
-        ctx.lineWidth = 1;
-        for(let i=0; i<WORLD_SIZE; i+=100) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, WORLD_SIZE); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(WORLD_SIZE, i); ctx.stroke();
-        }
-
-        // Desenha Pickups (Dinheiro)
-        for (let p of pickups) {
-            ctx.fillStyle = '#2ecc71';
-            ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill();
-        }
-
-        // Desenha Prédios
-        for (let b of buildings) {
-            ctx.fillStyle = b.color;
-            ctx.fillRect(b.x, b.y, b.w, b.h);
-            ctx.strokeStyle = b.border;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(b.x, b.y, b.w, b.h);
-        }
-
-        // Desenha NPCs
-        for (let npc of npcs) {
-            ctx.fillStyle = '#95a5a6';
-            ctx.beginPath(); ctx.arc(npc.x, npc.y, npc.radius, 0, Math.PI*2); ctx.fill();
-        }
-
-        // Desenha Veículos
-        for (let car of vehicles) {
-            ctx.save();
-            ctx.translate(car.x, car.y);
-            ctx.rotate(car.angle);
-            ctx.fillStyle = car.color;
-            // Desenha chassi do carro
-            ctx.fillRect(-car.w/2, -car.h/2, car.w, car.h);
-            // Desenha faróis falsos
-            ctx.fillStyle = 'rgba(255, 255, 200, 0.5)';
-            ctx.fillRect(car.w/2 - 4, -car.h/2, 8, car.h); 
-            ctx.restore();
-        }
-
-        // Desenha Player (se não estiver no carro)
-        if (!player.vehicle) {
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            ctx.rotate(player.angle);
-            ctx.fillStyle = player.color;
-            ctx.beginPath(); ctx.arc(0, 0, player.radius, 0, Math.PI*2); ctx.fill();
-            // Indicador de direção (ombros/arma)
-            ctx.fillStyle = '#333';
-            ctx.fillRect(0, -player.radius+2, player.radius+4, player.radius*2-4);
-            ctx.restore();
-        }
-
-        ctx.restore(); // Restaura matriz para desenhar UI
-
-        // Desenha Joystick Base e Analógico no Canvas
-        if (joystick.active) {
-            ctx.beginPath();
-            ctx.arc(joystick.startX, joystick.startY, joystick.maxRadius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(joystick.x, joystick.y, 25, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.fill();
-        }
-
-        // Renderiza Mini-mapa (Canto superior direito)
-        drawMiniMap();
-    }
-
-    function drawMiniMap() {
-        const mapSize = 120;
-        const margin = 20;
-        const x = canvas.width - mapSize - margin;
-        const y = margin;
-        const scale = mapSize / WORLD_SIZE;
-
-        // Fundo do minimapa
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(x, y, mapSize, mapSize);
-        ctx.strokeStyle = '#fff';
-        ctx.strokeRect(x, y, mapSize, mapSize);
-
-        // Player no minimapa
-        ctx.fillStyle = '#f1c40f';
-        ctx.beginPath();
-        ctx.arc(x + (player.x * scale), y + (player.y * scale), 3, 0, Math.PI*2);
-        ctx.fill();
-    }
-
-    // Loop do Jogo
-    function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-    }
-
-    // Inicializa
-    generateWorld();
-    loop();
-
+}
 </script>
+
 </body>
 </html>
