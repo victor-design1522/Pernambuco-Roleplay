@@ -3,54 +3,110 @@
 <head>
 <meta charset="UTF-8">
 <title>Top Cassino BR</title>
+
 <style>
-    body {
-        font-family: Arial;
-        background: #0f172a;
-        color: white;
-        text-align: center;
-    }
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0b1220;
+    color: white;
+}
 
-    .box {
-        background: #1e293b;
-        padding: 20px;
-        margin: 30px auto;
-        width: 320px;
-        border-radius: 10px;
-    }
+/* TOPO */
+.topo {
+    background: #111827;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+}
 
-    button {
-        padding: 10px;
-        margin: 5px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        background: #f59e0b;
-        color: white;
-    }
+.logo {
+    color: #facc15;
+    font-weight: bold;
+}
 
-    button:hover {
-        background: #d97706;
-    }
+.saldo {
+    color: #22c55e;
+}
 
-    .slot {
-        font-size: 50px;
-        margin: 10px;
-    }
+/* BANNER */
+.banner {
+    background: linear-gradient(90deg, #1d4ed8, #9333ea);
+    padding: 20px;
+    margin: 10px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* GRID DE JOGOS */
+.games {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+.game {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.game:hover {
+    transform: scale(1.05);
+    background: #334155;
+}
+
+/* SLOT */
+.slot-box {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.slot {
+    font-size: 50px;
+    margin: 20px;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: #f59e0b;
+    color: white;
+    cursor: pointer;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🎰 Top Cassino BR</h1>
+<div class="topo">
+    <div class="logo">🔥 TOP BET BR</div>
+    <div class="saldo">R$ <span id="saldo">100</span></div>
+</div>
 
-<div class="box">
-    <p>Saldo: R$ <span id="saldo">100</span></p>
+<div class="banner">
+    🎁 GANHE BÔNUS TODOS OS DIAS!
+</div>
 
+<!-- JOGOS -->
+<div class="games">
+    <div class="game" onclick="abrirJogo()">🐯 Tigrinho</div>
+    <div class="game" onclick="abrirJogo()">🐰 Coelhinho</div>
+    <div class="game" onclick="abrirJogo()">🐂 Touro</div>
+    <div class="game" onclick="abrirJogo()">🐵 Macaco</div>
+</div>
+
+<!-- SLOT -->
+<div class="slot-box" id="jogo">
+    <h2>🎰 Cassino</h2>
     <div class="slot" id="slot">🐯 🐰 🐂</div>
-
     <button onclick="girar()">GIRAR</button>
-
     <p id="resultado"></p>
 </div>
 
@@ -58,28 +114,32 @@
 let saldo = 100;
 const simbolos = ["🐯","🐰","🐂","🐵","🐼","🦁"];
 
-function girar() {
-    if (saldo <= 0) {
-        alert("Sem saldo!");
-        saldo = 100;
-    }
+function abrirJogo() {
+    document.getElementById("jogo").style.display = "block";
+}
 
+function girar() {
     saldo -= 10;
 
-    let s1 = simbolos[Math.floor(Math.random() * simbolos.length)];
-    let s2 = simbolos[Math.floor(Math.random() * simbolos.length)];
-    let s3 = simbolos[Math.floor(Math.random() * simbolos.length)];
+    let s1 = simbolos[Math.floor(Math.random()*simbolos.length)];
+    let s2 = simbolos[Math.floor(Math.random()*simbolos.length)];
+    let s3 = simbolos[Math.floor(Math.random()*simbolos.length)];
 
     document.getElementById("slot").innerText = `${s1} ${s2} ${s3}`;
 
     if (s1 === s2 && s2 === s3) {
         saldo += 100;
-        document.getElementById("resultado").innerText = "🔥 JACKPOT! +100";
+        document.getElementById("resultado").innerText = "🔥 JACKPOT!";
     } else if (s1 === s2 || s2 === s3 || s1 === s3) {
         saldo += 20;
-        document.getElementById("resultado").innerText = "✨ Quase! +20";
+        document.getElementById("resultado").innerText = "✨ Ganhou!";
     } else {
         document.getElementById("resultado").innerText = "❌ Perdeu!";
+    }
+
+    if (saldo <= 0) {
+        alert("Sem saldo!");
+        saldo = 100;
     }
 
     document.getElementById("saldo").innerText = saldo;
