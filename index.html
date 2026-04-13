@@ -2,198 +2,110 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Top Cassino BR</title>
+<title>Tigrinho Slot</title>
 
 <style>
 body {
-    margin: 0;
-    font-family: Arial;
     background: #0b1220;
     color: white;
-}
-
-/* HEADER */
-.header {
-    display: flex;
-    justify-content: space-between;
-    padding: 15px;
-    background: #111827;
-}
-
-.logo {
-    color: gold;
-    font-weight: bold;
-}
-
-.saldo {
-    background: green;
-    padding: 5px 10px;
-    border-radius: 5px;
-}
-
-/* TELAS */
-.tela {
-    display: none;
-    padding-bottom: 70px;
-}
-
-.ativa {
-    display: block;
-}
-
-/* GRID */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 10px;
-    padding: 10px;
-}
-
-.card {
-    background: #1e293b;
-    padding: 20px;
-    border-radius: 12px;
     text-align: center;
-    cursor: pointer;
+    font-family: Arial;
 }
 
 /* SLOT */
-.slot {
-    font-size: 60px;
-    margin: 20px;
-}
-
-/* BOTÕES */
-button {
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background: orange;
-    color: white;
-    font-weight: bold;
-}
-
-/* MENU */
-.menu {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: #111827;
+.slot-container {
     display: flex;
-    justify-content: space-around;
-    padding: 10px;
+    justify-content: center;
+    margin-top: 50px;
 }
 
-.menu div {
-    cursor: pointer;
+.reel {
+    width: 80px;
+    height: 120px;
+    overflow: hidden;
+    border: 2px solid gold;
+    margin: 5px;
+    border-radius: 10px;
+    background: #111;
+}
+
+.reel div {
+    font-size: 50px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ANIMAÇÃO */
+.spin {
+    animation: spin 0.5s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-120px); }
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: orange;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-    <div class="logo">🔥 TOP BET BR</div>
-    <div class="saldo">R$ <span id="saldo">100</span></div>
+<h1>🐯 Tigrinho</h1>
+
+<div class="slot-container">
+    <div class="reel" id="r1"><div>🐯</div></div>
+    <div class="reel" id="r2"><div>🐰</div></div>
+    <div class="reel" id="r3"><div>🐂</div></div>
 </div>
 
-<!-- INICIO -->
-<div id="inicio" class="tela ativa">
-    <div class="grid">
-        <div class="card" onclick="abrirJogo()">🐯 Tigrinho</div>
-        <div class="card" onclick="abrirJogo()">🐰 Coelhinho</div>
-        <div class="card" onclick="abrirJogo()">🐂 Touro</div>
-        <div class="card" onclick="abrirJogo()">🐲 Dragão</div>
-    </div>
-</div>
+<button onclick="girar()">GIRAR</button>
 
-<!-- JOGO -->
-<div id="jogo" class="tela">
-    <h2 style="text-align:center;">🎰 Slot</h2>
-    <div class="slot" id="slot" style="text-align:center;">🐯 🐰 🐂</div>
-    <div style="text-align:center;">
-        <button onclick="girar()">GIRAR</button>
-        <p id="resultado"></p>
-    </div>
-</div>
-
-<!-- DEPOSITO -->
-<div id="deposito" class="tela">
-    <h2 style="text-align:center;">💰 Depósito</h2>
-    <div style="text-align:center;">
-        <button onclick="depositar(50)">+50</button>
-        <button onclick="depositar(100)">+100</button>
-        <button onclick="depositar(500)">+500</button>
-    </div>
-</div>
-
-<!-- PERFIL -->
-<div id="perfil" class="tela">
-    <h2 style="text-align:center;">👤 Perfil</h2>
-    <p style="text-align:center;">Usuário: Jogador</p>
-</div>
-
-<!-- MENU -->
-<div class="menu">
-    <div onclick="trocarTela('inicio')">🏠</div>
-    <div onclick="trocarTela('deposito')">💰</div>
-    <div onclick="trocarTela('perfil')">👤</div>
-</div>
+<p id="resultado"></p>
 
 <script>
-let saldo = localStorage.getItem("saldo") || 100;
-saldo = parseInt(saldo);
-
 const simbolos = ["🐯","🐰","🐂","🐲","🦁"];
 
-function atualizarSaldo() {
-    document.getElementById("saldo").innerText = saldo;
-    localStorage.setItem("saldo", saldo);
-}
-
-function trocarTela(tela) {
-    document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
-    document.getElementById(tela).classList.add("ativa");
-}
-
-function abrirJogo() {
-    trocarTela("jogo");
-}
-
 function girar() {
-    if (saldo < 10) {
-        alert("Sem saldo!");
-        return;
-    }
+    let reels = ["r1","r2","r3"];
 
-    saldo -= 10;
+    reels.forEach(id => {
+        document.getElementById(id).firstElementChild.classList.add("spin");
+    });
 
-    let s1 = simbolos[Math.floor(Math.random()*simbolos.length)];
-    let s2 = simbolos[Math.floor(Math.random()*simbolos.length)];
-    let s3 = simbolos[Math.floor(Math.random()*simbolos.length)];
+    setTimeout(() => {
+        reels.forEach(id => {
+            let el = document.getElementById(id).firstElementChild;
+            el.classList.remove("spin");
 
-    document.getElementById("slot").innerText = `${s1} ${s2} ${s3}`;
+            let simbolo = simbolos[Math.floor(Math.random()*simbolos.length)];
+            el.innerText = simbolo;
+        });
 
-    if (s1 === s2 && s2 === s3) {
-        saldo += 200;
+        verificar();
+    }, 1500);
+}
+
+function verificar() {
+    let r1 = document.getElementById("r1").innerText;
+    let r2 = document.getElementById("r2").innerText;
+    let r3 = document.getElementById("r3").innerText;
+
+    if (r1 === r2 && r2 === r3) {
         document.getElementById("resultado").innerText = "🔥 JACKPOT!";
-    } else if (s1 === s2 || s2 === s3 || s1 === s3) {
-        saldo += 40;
-        document.getElementById("resultado").innerText = "✨ Ganhou!";
     } else {
         document.getElementById("resultado").innerText = "❌ Perdeu!";
     }
-
-    atualizarSaldo();
 }
-
-function depositar(valor) {
-    saldo += valor;
-    atualizarSaldo();
-    alert("Depósito realizado!");
-}
-
-atualizarSaldo();
 </script>
 
 </body>
