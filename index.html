@@ -12,72 +12,79 @@ body {
     color: white;
 }
 
-/* TOPO */
-.topo {
-    background: #111827;
-    padding: 15px;
+/* HEADER */
+.header {
     display: flex;
     justify-content: space-between;
+    padding: 15px;
+    background: #111827;
 }
 
 .logo {
-    color: #facc15;
+    color: gold;
     font-weight: bold;
 }
 
 .saldo {
-    color: #22c55e;
+    background: green;
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
-/* BANNER */
-.banner {
-    background: linear-gradient(90deg, #1d4ed8, #9333ea);
-    padding: 20px;
-    margin: 10px;
-    border-radius: 10px;
-    text-align: center;
+/* TELAS */
+.tela {
+    display: none;
+    padding-bottom: 70px;
 }
 
-/* GRID DE JOGOS */
-.games {
+.ativa {
+    display: block;
+}
+
+/* GRID */
+.grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2,1fr);
     gap: 10px;
     padding: 10px;
 }
 
-.game {
+.card {
     background: #1e293b;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 12px;
     text-align: center;
     cursor: pointer;
-    transition: 0.2s;
-}
-
-.game:hover {
-    transform: scale(1.05);
-    background: #334155;
 }
 
 /* SLOT */
-.slot-box {
-    display: none;
-    text-align: center;
-    padding: 20px;
-}
-
 .slot {
-    font-size: 50px;
+    font-size: 60px;
     margin: 20px;
 }
 
+/* BOTÕES */
 button {
-    padding: 10px;
+    padding: 12px;
     border: none;
-    border-radius: 5px;
-    background: #f59e0b;
+    border-radius: 8px;
+    background: orange;
     color: white;
+    font-weight: bold;
+}
+
+/* MENU */
+.menu {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #111827;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+}
+
+.menu div {
     cursor: pointer;
 }
 </style>
@@ -85,40 +92,80 @@ button {
 
 <body>
 
-<div class="topo">
+<div class="header">
     <div class="logo">🔥 TOP BET BR</div>
     <div class="saldo">R$ <span id="saldo">100</span></div>
 </div>
 
-<div class="banner">
-    🎁 GANHE BÔNUS TODOS OS DIAS!
+<!-- INICIO -->
+<div id="inicio" class="tela ativa">
+    <div class="grid">
+        <div class="card" onclick="abrirJogo()">🐯 Tigrinho</div>
+        <div class="card" onclick="abrirJogo()">🐰 Coelhinho</div>
+        <div class="card" onclick="abrirJogo()">🐂 Touro</div>
+        <div class="card" onclick="abrirJogo()">🐲 Dragão</div>
+    </div>
 </div>
 
-<!-- JOGOS -->
-<div class="games">
-    <div class="game" onclick="abrirJogo()">🐯 Tigrinho</div>
-    <div class="game" onclick="abrirJogo()">🐰 Coelhinho</div>
-    <div class="game" onclick="abrirJogo()">🐂 Touro</div>
-    <div class="game" onclick="abrirJogo()">🐵 Macaco</div>
+<!-- JOGO -->
+<div id="jogo" class="tela">
+    <h2 style="text-align:center;">🎰 Slot</h2>
+    <div class="slot" id="slot" style="text-align:center;">🐯 🐰 🐂</div>
+    <div style="text-align:center;">
+        <button onclick="girar()">GIRAR</button>
+        <p id="resultado"></p>
+    </div>
 </div>
 
-<!-- SLOT -->
-<div class="slot-box" id="jogo">
-    <h2>🎰 Cassino</h2>
-    <div class="slot" id="slot">🐯 🐰 🐂</div>
-    <button onclick="girar()">GIRAR</button>
-    <p id="resultado"></p>
+<!-- DEPOSITO -->
+<div id="deposito" class="tela">
+    <h2 style="text-align:center;">💰 Depósito</h2>
+    <div style="text-align:center;">
+        <button onclick="depositar(50)">+50</button>
+        <button onclick="depositar(100)">+100</button>
+        <button onclick="depositar(500)">+500</button>
+    </div>
+</div>
+
+<!-- PERFIL -->
+<div id="perfil" class="tela">
+    <h2 style="text-align:center;">👤 Perfil</h2>
+    <p style="text-align:center;">Usuário: Jogador</p>
+</div>
+
+<!-- MENU -->
+<div class="menu">
+    <div onclick="trocarTela('inicio')">🏠</div>
+    <div onclick="trocarTela('deposito')">💰</div>
+    <div onclick="trocarTela('perfil')">👤</div>
 </div>
 
 <script>
-let saldo = 100;
-const simbolos = ["🐯","🐰","🐂","🐵","🐼","🦁"];
+let saldo = localStorage.getItem("saldo") || 100;
+saldo = parseInt(saldo);
+
+const simbolos = ["🐯","🐰","🐂","🐲","🦁"];
+
+function atualizarSaldo() {
+    document.getElementById("saldo").innerText = saldo;
+    localStorage.setItem("saldo", saldo);
+}
+
+function trocarTela(tela) {
+    document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
+    document.getElementById(tela).classList.add("ativa");
+}
 
 function abrirJogo() {
-    document.getElementById("jogo").style.display = "block";
+    trocarTela("jogo");
 }
 
 function girar() {
+    if (saldo < 10) {
+        alert("Sem saldo!");
+        return;
+    }
+
     saldo -= 10;
 
     let s1 = simbolos[Math.floor(Math.random()*simbolos.length)];
@@ -128,22 +175,25 @@ function girar() {
     document.getElementById("slot").innerText = `${s1} ${s2} ${s3}`;
 
     if (s1 === s2 && s2 === s3) {
-        saldo += 100;
+        saldo += 200;
         document.getElementById("resultado").innerText = "🔥 JACKPOT!";
     } else if (s1 === s2 || s2 === s3 || s1 === s3) {
-        saldo += 20;
+        saldo += 40;
         document.getElementById("resultado").innerText = "✨ Ganhou!";
     } else {
         document.getElementById("resultado").innerText = "❌ Perdeu!";
     }
 
-    if (saldo <= 0) {
-        alert("Sem saldo!");
-        saldo = 100;
-    }
-
-    document.getElementById("saldo").innerText = saldo;
+    atualizarSaldo();
 }
+
+function depositar(valor) {
+    saldo += valor;
+    atualizarSaldo();
+    alert("Depósito realizado!");
+}
+
+atualizarSaldo();
 </script>
 
 </body>
