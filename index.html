@@ -1,112 +1,63 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Tigrinho Slot</title>
+<title>Victor Invencível Supremo - Anime</title>
 
 <style>
 body {
-    background: #0b1220;
+    margin: 0;
+    background: black;
     color: white;
-    text-align: center;
     font-family: Arial;
+    text-align: center;
 }
 
-/* SLOT */
-.slot-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 50px;
-}
-
-.reel {
-    width: 80px;
-    height: 120px;
-    overflow: hidden;
-    border: 2px solid gold;
-    margin: 5px;
-    border-radius: 10px;
-    background: #111;
-}
-
-.reel div {
-    font-size: 50px;
-    height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* ANIMAÇÃO */
-.spin {
-    animation: spin 0.5s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-120px); }
-}
-
-button {
+h1 {
+    color: #a855f7;
     margin-top: 20px;
-    padding: 10px 20px;
-    background: orange;
-    border: none;
-    border-radius: 10px;
-    font-weight: bold;
+}
+
+.video-container {
+    margin-top: 20px;
+}
+
+.texto {
+    max-width: 800px;
+    margin: 20px auto;
+    font-size: 18px;
+    line-height: 1.6;
 }
 </style>
+
 </head>
 
 <body>
 
-<h1>🐯 Tigrinho</h1>
+<h1>Victor Invencível Supremo</h1>
 
-<div class="slot-container">
-    <div class="reel" id="r1"><div>🐯</div></div>
-    <div class="reel" id="r2"><div>🐰</div></div>
-    <div class="reel" id="r3"><div>🐂</div></div>
+<div class="video-container">
+    <video width="80%" controls autoplay loop>
+        <source src="anime.mp4" type="video/mp4">
+        Seu navegador não suporta vídeo.
+    </video>
 </div>
 
-<button onclick="girar()">GIRAR</button>
+<div class="texto">
+    <p>
+    Num vazio onde nem o tempo ousava existir... surgiu Victor Invencível Supremo.
+    Ele não nasceu... não foi criado... ele sempre foi.
+    </p>
 
-<p id="resultado"></p>
+    <p>
+    Universos inteiros tremem diante de sua presença,
+    e o infinito se curva ao seu olhar absoluto.
+    </p>
+</div>
 
-<script>
-const simbolos = ["🐯","🐰","🐂","🐲","🦁"];
-
-function girar() {
-    let reels = ["r1","r2","r3"];
-
-    reels.forEach(id => {
-        document.getElementById(id).firstElementChild.classList.add("spin");
-    });
-
-    setTimeout(() => {
-        reels.forEach(id => {
-            let el = document.getElementById(id).firstElementChild;
-            el.classList.remove("spin");
-
-            let simbolo = simbolos[Math.floor(Math.random()*simbolos.length)];
-            el.innerText = simbolo;
-        });
-
-        verificar();
-    }, 1500);
-}
-
-function verificar() {
-    let r1 = document.getElementById("r1").innerText;
-    let r2 = document.getElementById("r2").innerText;
-    let r3 = document.getElementById("r3").innerText;
-
-    if (r1 === r2 && r2 === r3) {
-        document.getElementById("resultado").innerText = "🔥 JACKPOT!";
-    } else {
-        document.getElementById("resultado").innerText = "❌ Perdeu!";
-    }
-}
-</script>
+<audio autoplay loop>
+    <source src="musica.mp3" type="audio/mpeg">
+</audio>
 
 </body>
 </html>
