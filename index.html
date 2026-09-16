@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FF SENSI PRO IA 2.0 - Por VYTOR FF</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+:root{--red:#ff003c;--darkred:#8a0020;--bg:#050505;--glass:rgba(20,20,25,.76);--text:#f0f0f0;--cyan:#00d2ff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;min-height:100vh;background-image:radial-gradient(circle at 50% 0,#2a000a 0,var(--bg) 60%);overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--red);border-radius:5px}
+.title{font-family:Orbitron,sans-serif;text-transform:uppercase;color:#fff;text-shadow:0 0 5px var(--red),0 0 15px var(--red)}
+.red{color:var(--red)!important}.muted{color:#aaa}.glass{background:var(--glass);backdrop-filter:blur(12px);border:1px solid rgba(255,0,60,.22);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 4px 30px #0008}
+.btn{width:100%;padding:14px;border-radius:12px;border:0;font:700 .9rem Orbitron,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+.btn:active{transform:scale(.97)}.primary{background:linear-gradient(45deg,var(--darkred),var(--red));color:#fff;box-shadow:0 0 10px #ff003c80}.outline{background:transparent;border:2px solid var(--red);color:var(--red)}
+.input{width:100%;padding:12px 14px;background:#0009;border:1px solid #ffffff18;border-radius:8px;color:#fff;outline:0}.input:focus{border-color:var(--red);box-shadow:0 0 8px #ff003c4d}
+.group{margin-bottom:14px}.group label{display:block;margin-bottom:6px;font-size:.85rem;color:#aaa}
+#splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:.5s}.spinner{width:48px;height:48px;border:3px solid #ff003c44;border-top-color:var(--red);border-radius:50%;animation:spin 1s linear infinite;margin-top:20px}@keyframes spin{to{transform:rotate(360deg)}}
+header{position:sticky;top:0;z-index:100;background:#050505dd;backdrop-filter:blur(10px);padding:14px 18px;border-bottom:1px solid #ff003c4d;display:flex;justify-content:space-between;align-items:center}.logo{cursor:pointer}.sub{font-size:.68rem;color:#888;letter-spacing:1px}
+main{padding:20px;padding-bottom:90px}.view{display:none;animation:fade .3s ease}.view.active{display:block}@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+nav{position:fixed;bottom:0;left:0;width:100%;z-index:100;background:#0a0a0af5;backdrop-filter:blur(10px);border-top:1px solid #ff003c4d;display:flex;justify-content:space-around;padding:9px 0}.nav{width:25%;color:#666;text-align:center;font-size:.72rem;cursor:pointer}.nav i{display:block;font-size:1.1rem;margin-bottom:3px}.nav.active{color:var(--red);text-shadow:0 0 10px #ff003c80}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sensi{background:#0009;border:1px solid #ff003c33;padding:11px;border-radius:9px;text-align:center}.value{font:700 1.45rem Orbitron;color:var(--red)}.label{font-size:.75rem;color:#ccc}
+.modal{position:fixed;inset:0;background:#000c;backdrop-filter:blur(5px);z-index:2000;display:none;align-items:center;justify-content:center}.modal .glass{width:90%;max-width:420px;position:relative}.close{position:absolute;right:15px;top:8px;font-size:1.6rem;cursor:pointer}
+.toast{position:fixed;top:20px;right:-100%;z-index:99999;background:var(--red);color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 4px 15px #ff003c66;transition:.3s}
+#processing{display:none;text-align:center;padding:30px}.radar{width:100px;height:100px;border-radius:50%;margin:0 auto;border:1px solid var(--red);background:#ff003c1a;position:relative;overflow:hidden}.radar:after{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,transparent 0 80%,#ff003c99);animation:spin 1.5s linear infinite}
+.admin{border-color:#00d2ff66}.adminText{color:var(--cyan)!important;text-shadow:0 0 6px #00d2ff!important}.adminBtn{background:linear-gradient(45deg,#005c8a,var(--cyan));color:#fff}
+.device{padding:15px;margin-bottom:10px}.row{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;color:#bbb;margin-top:9px}
+.history-item{background:#0008;border-left:3px solid var(--red);padding:12px;border-radius:7px;margin:8px 0;font-size:.8rem;white-space:pre-line}
+.small{font-size:.75rem}.center{text-align:center}
+</style>
+
+<style id="feature-pack-css">
+.feature-panel{background:var(--glass);border:1px solid rgba(255,0,60,.22);border-radius:16px;padding:18px;margin:0 0 18px;box-shadow:0 4px 25px #0006}
+.feature-panel h3{margin-bottom:12px}.feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.feature-chip,.device-card,.stat{padding:12px;border:1px solid #ffffff16;border-radius:10px;background:#0007;color:#ddd;font-size:.78rem}
+.device-card{margin:8px 0}.device-actions{display:flex;gap:7px;margin-top:9px}.device-actions button{flex:1;padding:8px;border-radius:8px;border:1px solid #ffffff18;background:#111;color:#fff}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{text-align:center}.stat strong{display:block;font-size:1.3rem;color:var(--red)}
+@media(max-width:520px){.feature-grid{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+
+<style id="v2-css">
+.v2-panel{background:var(--glass);border:1px solid rgba(255,0,60,.28);border-radius:16px;padding:18px;margin:0 0 18px;box-shadow:0 4px 25px #0006}
+.v2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v2-chip{padding:12px;border:1px solid #ffffff16;border-radius:10px;background:#0007;color:#ddd;font-size:.8rem}
+.v2-result{margin-top:12px;padding:12px;border-radius:10px;background:#0008;border-left:3px solid var(--red)}
+.v2-meter{height:9px;background:#ffffff12;border-radius:99px;overflow:hidden;margin-top:8px}
+.v2-meter span{display:block;height:100%;background:var(--red);width:0;transition:.35s}
+.v2-inline{display:flex;gap:8px;align-items:center}
+.v2-inline>*{flex:1}
+.v2-small{font-size:.72rem;color:#aaa}
+.v2-tag{display:inline-block;padding:5px 8px;border-radius:99px;border:1px solid #ffffff18;margin:3px;font-size:.7rem}
+@media(max-width:520px){.v2-grid{grid-template-columns:1fr}.v2-inline{flex-direction:column}.v2-inline>*{width:100%}}
+</style>
+
+</head>
+<body>
+<div id="splash"><h1 class="title">FF SENSI</h1><h1 class="title">PRO <span>IA</span></h1><div class="sub" style="margin-top:10px;font-size:.9rem">CRIADO POR VYTOR FF</div><div class="spinner"></div></div>
+<div id="toast" class="toast"></div>
+
+<header>
+  <div class="logo" id="main-logo"><h2 class="title" style="font-size:1.15rem">FF SENSI PRO IA</h2><span class="sub">Por VYTOR FF</span></div>
+  <div onclick="openAuth()" style="cursor:pointer"><i class="fas fa-user-circle" style="font-size:1.5rem;color:var(--red)"></i></div>
+</header>
+
+<main>
+
+<section id="feature-pack" class="feature-panel">
+<h3 class="title"><i class="fas fa-layer-group red"></i> CENTRAL DE RECURSOS</h3>
+<p class="small muted" style="margin-bottom:12px">Pacote expandido com ferramentas, presets, análise, favoritos e backup.</p>
+<div class="feature-grid">
+<button class="btn outline" onclick="openFeature('compare')">⚖️ Comparar</button>
+<button class="btn outline" onclick="openFeature('custom')">🎛️ Personalizar</button>
+<button class="btn outline" onclick="openFeature('stats')">📊 Estatísticas</button>
+<button class="btn outline" onclick="openFeature('presets')">⭐ Presets</button>
+<button class="btn outline" onclick="openFeature('tools')">🧰 Ferramentas</button>
+<button class="btn outline" onclick="openFeature('achievements')">🏆 Conquistas</button>
+</div><div id="feature-content" style="margin-top:15px"></div>
+</section>
+<section id="feature-database" class="feature-panel">
+<h3 class="title"><i class="fas fa-database red"></i> BANCO EXPANDIDO</h3>
+<input id="featureDeviceSearch" class="input" placeholder="Buscar aparelho..." oninput="featureFilterDevices()">
+<div id="featureDeviceList"></div>
+</section>
+
+<section id="view-home" class="view active">
+  <div class="glass">
+    <h3><i class="fas fa-bolt red"></i> Acesso Rápido</h3>
+    <div class="grid" style="margin-top:15px">
+      <button class="btn outline" onclick="quick('equilibrada')">Equilibrada</button>
+      <button class="btn outline" onclick="quick('precisa')">Foco em Capa</button>
+      <button class="btn outline" onclick="quick('dpi_alto')">DPI Alto</button>
+      <button class="btn outline" onclick="quick('dpi_baixo')">DPI Baixo</button>
+    </div>
+  </div>
+  <div class="glass">
+    <h3><i class="fas fa-robot red"></i> Gerador Inteligente</h3>
+    <p class="small muted" style="margin:10px 0 15px">Calcula uma configuração de 0 a 200 usando marca, DPI, estilo e preferência de controle.</p>
+    <button class="btn primary" onclick="navTo('generate')">🤖 ABRIR GERADOR</button>
+  </div>
+  <div id="notice" class="glass" style="display:none"></div>
+</section>
+
+<section id="view-generate" class="view">
+  <div class="glass" id="form">
+    <h3 class="title center" style="margin-bottom:20px">Configurar IA</h3>
+    <div class="group"><label>Marca / modelo</label><input id="marca" class="input" placeholder="Ex.: Samsung Galaxy A55"></div>
+    <div class="group"><label>DPI atual</label><input id="dpi" type="number" min="1" max="2000" class="input" placeholder="Ex.: 600"></div>
+    <div class="group"><label>Estilo de jogo</label><select id="estilo" class="input"><option value="camper">Estratégico / Posicionamento</option><option value="rusher" selected>Rushadão / Movimentação</option><option value="suporte">Suporte / Longa Distância</option></select></div>
+    <div class="group"><label>Preferência de controle</label><select id="controle" class="input"><option value="velocidade">Foco em Velocidade</option><option value="precisao" selected>Foco em Precisão (Capa)</option></select></div>
+    <button class="btn primary" onclick="processAI()">🤖 GERAR CONFIGURAÇÃO</button>
+  </div>
+
+  <div id="processing"><h3 class="red" style="margin-bottom:20px">CALCULANDO PARÂMETROS...</h3><div class="radar"></div><p id="log" class="small muted" style="margin-top:18px">Analisando aparelho...</p></div>
+
+  <div class="glass" id="result" style="display:none">
+    <h3 class="title center">CONFIGURAÇÃO GERADA!</h3>
+    <p class="center small muted" style="margin:8px 0 15px">Escala do Free Fire: 0–200</p>
+    <div id="resultGrid" class="grid"></div>
+    <div style="background:#0008;padding:14px;border-radius:8px;margin-top:15px;border-left:3px solid var(--red)">
+      <p class="small"><b>DPI recomendado:</b> <span id="resDpi" class="red"></span></p>
+      <p class="small"><b>Tamanho do botão:</b> <span id="resBtn" class="red"></span></p>
+      <p class="small"><b>Perfil:</b> <span id="resProfile" class="red"></span></p>
+    </div>
+    <div class="grid" style="margin-top:18px">
+      <button class="btn primary" onclick="copyConfig()"><i class="fas fa-copy"></i> COPIAR</button>
+      <button class="btn outline" onclick="saveConfig()"><i class="fas fa-star"></i> SALVAR</button>
+      <button class="btn outline" style="grid-column:1/3" onclick="resetGenerator()"><i class="fas fa-sync"></i> GERAR NOVAMENTE</button>
+    </div>
+  </div>
+</section>
+
+<section id="view-devices" class="view">
+  <div class="glass"><h3><i class="fas fa-mobile-alt red"></i> Banco de Dispositivos</h3><input id="search" class="input" style="margin-top:15px" placeholder="Pesquisar aparelho..." oninput="filterDevices()"></div>
+  <div id="deviceList"><div class="center muted">Carregando...</div></div>
+</section>
+
+<section id="view-profile" class="view">
+  <div id="unauth" class="glass center"><i class="fas fa-lock" style="font-size:3rem;color:#555"></i><h3 style="margin-top:12px">Faça Login</h3><p class="small muted" style="margin:10px 0 20px">Salve configurações e veja seu histórico.</p><button class="btn primary" onclick="openAuth()">ENTRAR / CADASTRAR</button></div>
+  <div id="authProfile" class="glass" style="display:none">
+    <div class="center"><i class="fas fa-user-circle red" style="font-size:4rem"></i><h3 id="userEmail" style="margin-top:10px"></h3></div>
+    <h4 style="margin-top:20px"><i class="fas fa-star red"></i> Minhas configurações</h4>
+    <div id="history" style="margin-top:10px">Nenhuma configuração salva.</div>
+    <button class="btn outline" style="margin-top:15px" onclick="logout()">SAIR DA CONTA</button>
+  </div>
+</section>
+
+<section id="view-admin" class="view">
+  <div class="glass admin center"><h2 class="title adminText">PAINEL ADMINISTRATIVO</h2><p class="small muted">Acesso restrito</p></div>
+  <div class="glass admin"><h3>📊 Dashboard</h3><div class="grid" style="margin-top:15px"><div class="sensi admin"><div class="value adminText" id="admUsers">0</div><div class="label">Usuários</div></div><div class="sensi admin"><div class="value adminText" id="admConfigs">0</div><div class="label">Configurações</div></div></div></div>
+  <div class="glass admin"><h3>📦 Administração</h3><button class="btn adminBtn" style="margin-top:15px" onclick="downloadHTML()">⬇️ BAIXAR INDEX.HTML</button><button class="btn outline adminText" style="margin-top:10px;border-color:var(--cyan)" onclick="copyHTML()">📋 COPIAR CÓDIGO</button></div>
+</section>
+
+<section id="v2-panel" class="v2-panel">
+  <h3 class="title"><i class="fas fa-microchip red"></i> FF SENSI PRO IA 2.0</h3>
+  <p class="small muted" style="margin:8px 0 14px">Calibração, ajuste por aparelho, armas, feedback e ferramentas novas.</p>
+
+  <div class="v2-grid">
+    <button class="btn outline" onclick="openV2('calibrate')">🎯 Calibrar</button>
+    <button class="btn outline" onclick="openV2('weapons')">🔫 Por arma</button>
+    <button class="btn outline" onclick="openV2('exact')">📱 Meu aparelho</button>
+    <button class="btn outline" onclick="openV2('favorites')">⭐ Favoritos</button>
+    <button class="btn outline" onclick="openV2('sharecard')">🖼️ Cartão</button>
+    <button class="btn outline" onclick="installV2()">📲 Instalar</button>
+  </div>
+
+  <div id="v2-content" style="margin-top:14px">
+    <div class="v2-chip">
+      <b>Novidades da 2.0</b>
+      <div style="margin-top:8px">
+        <span class="v2-tag">Calibração</span><span class="v2-tag">Armas</span>
+        <span class="v2-tag">Aparelho exato</span><span class="v2-tag">Feedback</span>
+        <span class="v2-tag">Cartão</span><span class="v2-tag">PWA</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav>
+  <div class="nav active" id="nav-home" onclick="navTo('home')"><i class="fas fa-home"></i>Início</div>
+  <div class="nav" id="nav-generate" onclick="navTo('generate')"><i class="fas fa-robot"></i>Gerar</div>
+  <div class="nav" id="nav-devices" onclick="navTo('devices')"><i class="fas fa-mobile-alt"></i>Dispositivos</div>
+  <div class="nav" id="nav-profile" onclick="navTo('profile')"><i class="fas fa-user"></i>Perfil</div>
+</nav>
+
+<div id="modal" class="modal"><div class="glass"><span class="close" onclick="closeAuth()">&times;</span><h3 class="title center" style="margin-bottom:20px">AUTENTICAÇÃO</h3>
+  <div class="group"><label>E-mail</label><input id="email" type="email" class="input" placeholder="Seu e-mail"></div>
+  <div class="group"><label>Senha</label><input id="pass" type="password" class="input" placeholder="Mínimo recomendado: 6 caracteres"></div>
+  <button class="btn primary" onclick="login()">ENTRAR</button><button class="btn outline" style="margin-top:10px" onclick="register()">CADASTRAR</button>
+  <p id="setupWarn" class="small" style="display:none;color:#ff5555;text-align:center;margin-top:12px">Firebase ainda não foi configurado neste arquivo.</p>
+</div></div>
+
+<script>
+/* =========================
+   COLE A CONFIGURAÇÃO DO SEU APP WEB FIREBASE AQUI.
+   Firebase Console > Configurações do projeto > Seus apps > Configuração.
+   ========================= */
+const firebaseConfig={
+  apiKey:"AIzaSyD6VGc-pXOXIKsLTTHeBhnyEfxKbjxn9oo",
+  authDomain:"ff-sensi-pro-ai-ac315.firebaseapp.com",
+  projectId:"ff-sensi-pro-ai-ac315",
+  storageBucket:"ff-sensi-pro-ai-ac315.firebasestorage.app",
+  messagingSenderId:"478244223563",
+  appId:"1:478244223563:web:356051143399959132ebce",
+  measurementId:"G-034G409TCW"
+};
+
+let db=null,auth=null,currentUser=null,isFirebase=false,isAdmin=false,lastConfig="",pressTimer=null;
+
+const mockDevices=[
+ {marca:"Apple",modelo:"iPhone 13 Pro Max",dpi:120,geral:190,botao:"55%"},
+ {marca:"Samsung",modelo:"Galaxy S23 Ultra",dpi:600,geral:185,botao:"50%"},
+ {marca:"Xiaomi",modelo:"Poco X5 Pro",dpi:550,geral:195,botao:"48%"},
+ {marca:"Motorola",modelo:"Moto E13",dpi:420,geral:180,botao:"52%"}
+];
+
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.right="20px";setTimeout(()=>t.style.right="-100%",3000)}
+function navTo(id){
+ if(id==="admin"&&!isAdmin){toast("Acesso negado");return}
+ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+ document.getElementById("view-"+id).classList.add("active");
+ document.querySelectorAll(".nav").forEach(n=>n.classList.remove("active"));
+ const n=document.getElementById("nav-"+id);if(n)n.classList.add("active");
+ if(id==="devices")loadDevices();
+ if(id==="profile"&&currentUser)loadHistory();
+ if(id==="admin"&&isAdmin)loadAdmin();
+}
+function openAuth(){document.getElementById("modal").style.display="flex";if(!isFirebase)document.getElementById("setupWarn").style.display="block"}
+function closeAuth(){document.getElementById("modal").style.display="none"}
+
+function initFirebase(){
+ if(!firebaseConfig.apiKey||!firebaseConfig.projectId){console.warn("Firebase não configurado");return}
+ try{
+   firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();isFirebase=true;
+   auth.onAuthStateChanged(async u=>{
+     currentUser=u;updateProfile();
+     if(u){await createUserDoc(u);await checkAdmin(u.uid)}
+     else{isAdmin=false;removeAdminNav()}
+   });
+ }catch(e){console.error(e);toast("Erro ao iniciar Firebase")}
+}
+async function createUserDoc(u){
+ try{await db.collection("users").doc(u.uid).set({email:u.email||"",createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}catch(e){console.error(e)}
+}
+async function checkAdmin(uid){
+ try{const d=await db.collection("admin").doc(uid).get();isAdmin=d.exists;if(isAdmin)addAdminNav()}catch(e){isAdmin=false;console.error(e)}
+}
+function addAdminNav(){
+ if(document.getElementById("nav-admin"))return;
+ const el=document.createElement("div");el.className="nav adminText";el.id="nav-admin";el.innerHTML='<i class="fas fa-lock"></i>ADM';el.onclick=()=>navTo("admin");document.querySelector("nav").appendChild(el);
+ document.querySelectorAll(".nav").forEach(x=>x.style.width=(100/document.querySelectorAll(".nav").length)+"%");
+}
+function removeAdminNav(){const e=document.getElementById("nav-admin");if(e)e.remove();document.querySelectorAll(".nav").forEach(x=>x.style.width="25%")}
+function updateProfile(){
+ document.getElementById("unauth").style.display=currentUser?"none":"block";
+ document.getElementById("authProfile").style.display=currentUser?"block":"none";
+ if(currentUser){document.getElementById("userEmail").textContent=currentUser.email||"Usuário";loadHistory()}
+}
+
+async function login(){
+ if(!isFirebase)return toast("Configure o Firebase primeiro.");
+ const e=document.getElementById("email").value.trim(),p=document.getElementById("pass").value;
+ if(!e||!p)return toast("Preencha e-mail e senha.");
+ try{await auth.signInWithEmailAndPassword(e,p);toast("Login realizado!");closeAuth()}catch(err){toast("Erro: "+friendlyAuthError(err))}
+}
+async function register(){
+ if(!isFirebase)return toast("Configure o Firebase primeiro.");
+ const e=document.getElementById("email").value.trim(),p=document.getElementById("pass").value;
+ if(!e||p.length<6)return toast("Use e-mail e senha com pelo menos 6 caracteres.");
+ try{await auth.createUserWithEmailAndPassword(e,p);toast("Conta criada!");closeAuth()}catch(err){toast("Erro: "+friendlyAuthError(err))}
+}
+function friendlyAuthError(e){return e.code==="auth/email-already-in-use"?"E-mail já cadastrado.":e.code==="auth/invalid-email"?"E-mail inválido.":e.code==="auth/weak-password"?"Senha muito fraca.":e.code==="auth/invalid-credential"?"E-mail ou senha incorretos.":e.message}
+function logout(){if(auth)auth.signOut();navTo("home");toast("Desconectado.")}
+
+function clamp(v){return Math.max(0,Math.min(200,Math.round(v)))}
+function generateMath(){
+ const marca=(document.getElementById("marca").value||"genérico").toLowerCase();
+ let dpi=parseInt(document.getElementById("dpi").value,10)||500;
+ dpi=Math.max(100,Math.min(1000,dpi));
+ const estilo=document.getElementById("estilo").value,controle=document.getElementById("controle").value;
+ let base=styleBase(estilo);
+ if(controle==="velocidade")base+=8;else base-=3;
+ const dpiFactor=(600-dpi)/18;
+ if(/iphone|apple/.test(marca))base-=4;
+ if(/samsung|xiaomi|poco|redmi|motorola|moto|realme|infinix|tecno/.test(marca))base+=2;
+ base+=dpiFactor;
+ const jitter=()=>Math.floor(Math.random()*7)-3;
+ const s={
+   Geral:clamp(base+18+jitter()),
+   RedDot:clamp(base+8+jitter()),
+   "Mira 2x":clamp(base-2+jitter()),
+   "Mira 4x":clamp(base-15+jitter()),
+   AWM:clamp(55+(controle==="precisao"?-8:5)+jitter()),
+   Olhadinha:clamp(base-5+jitter())
+ };
+ const recDpi=Math.round(Math.max(300,Math.min(800,dpi+(estilo==="rusher"?25:estilo==="suporte"?-20:0))));
+ const botao=Math.round(Math.max(42,Math.min(60,52+(controle==="velocidade"?4:-2)+(estilo==="rusher"?2:0))));
+ const profile=estilo==="rusher"?"Rush / capa":estilo==="suporte"?"Longa distância":"Equilibrado";
+ const grid=document.getElementById("resultGrid");grid.innerHTML="";
+ Object.entries(s).forEach(([k,v])=>grid.innerHTML+=`<div class="sensi"><div class="value">${v}</div><div class="label">${k}</div></div>`);
+ document.getElementById("resDpi").textContent=recDpi;
+ document.getElementById("resBtn").textContent=botao+"%";
+ document.getElementById("resProfile").textContent=profile;
+ lastConfig=`🔥 FF SENSI PRO IA 🔥\\nAparelho: ${marca}\\nGeral: ${s.Geral}\\nRed Dot: ${s.RedDot}\\n2x: ${s["Mira 2x"]}\\n4x: ${s["Mira 4x"]}\\nAWM: ${s.AWM}\\nOlhadinha: ${s.Olhadinha}\\nBotão: ${botao}%\\nDPI recomendado: ${recDpi}\\nPerfil: ${profile}\\nCriado por VYTOR FF`;
+}
+function styleBase(s){return s==="rusher"?145:s==="suporte"?105:125}
+function processAI(){
+ if(!document.getElementById("marca").value.trim())return toast("Informe a marca/modelo.");
+ if(!document.getElementById("dpi").value)return toast("Informe o DPI.");
+ document.getElementById("form").style.display="none";document.getElementById("processing").style.display="block";document.getElementById("result").style.display="none";
+ const logs=["Lendo aparelho...","Calibrando DPI...","Ajustando mira...","Finalizando cálculo..."];let i=0;document.getElementById("log").textContent=logs[0];
+ const timer=setInterval(()=>{i++;if(i<logs.length)document.getElementById("log").textContent=logs[i];else clearInterval(timer)},500);
+ setTimeout(()=>{generateMath();document.getElementById("processing").style.display="none";document.getElementById("result").style.display="block";toast("Configuração gerada!")},2300)
+}
+function resetGenerator(){document.getElementById("result").style.display="none";document.getElementById("form").style.display="block"}
+function quick(type){navTo("generate");setTimeout(()=>{if(type==="dpi_alto")document.getElementById("dpi").value=750;if(type==="dpi_baixo")document.getElementById("dpi").value=350;if(type==="precisa")document.getElementById("controle").value="precisao";if(type==="equilibrada")document.getElementById("estilo").value="camper";if(!document.getElementById("marca").value)document.getElementById("marca").value="Samsung";if(!document.getElementById("dpi").value)document.getElementById("dpi").value=600;processAI()},250)}
+async function copyConfig(){try{await navigator.clipboard.writeText(lastConfig);toast("Configuração copiada!")}catch(e){toast("Não foi possível copiar.")}}
+async function saveConfig(){
+ if(!currentUser)return toast("Faça login para salvar.");
+ if(!lastConfig)return toast("Gere uma configuração primeiro.");
+ try{await db.collection("history").add({uid:currentUser.uid,config:lastConfig,createdAt:firebase.firestore.FieldValue.serverTimestamp()});toast("Configuração salva!");loadHistory()}catch(e){console.error(e);toast("Erro ao salvar.")}
+}
+
+async function loadHistory(){
+ if(!currentUser||!db)return;
+ const box=document.getElementById("history");box.innerHTML="Carregando...";
+ try{
+   const snap=await db.collection("history").where("uid","==",currentUser.uid).limit(30).get();
+   if(snap.empty){box.textContent="Nenhuma configuração salva.";return}
+   const docs=snap.docs.sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+   box.innerHTML=docs.map(d=>`<div class="history-item">${escapeHtml(d.data().config||"")}</div>`).join("");
+ }catch(e){console.error(e);box.textContent="Não foi possível carregar o histórico."}
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+async function loadDevices(){
+ const list=document.getElementById("deviceList");list.innerHTML='<div class="center muted">Carregando banco...</div>';
+ if(isFirebase&&db){
+   try{
+     const snap=await db.collection("devices").limit(100).get();
+     if(!snap.empty){renderDevices(snap.docs.map(d=>d.data()));return}
+   }catch(e){console.warn(e)}
+ }
+ renderDevices(mockDevices)
+}
+function renderDevices(devs){document.getElementById("deviceList").innerHTML=devs.map(d=>`<div class="glass device"><h4 class="red">${escapeHtml(d.marca||"")} ${escapeHtml(d.modelo||"")}</h4><div class="row"><span>DPI: ${d.dpi||"-"}</span><span>Geral: <b style="color:#fff">${d.geral||"-"}</b></span><span>Botão: ${d.botao||d["botão"]||"-"}</span></div></div>`).join("")}
+function filterDevices(){const q=document.getElementById("search").value.toLowerCase();document.querySelectorAll("#deviceList .device").forEach(c=>c.style.display=c.innerText.toLowerCase().includes(q)?"block":"none")}
+
+async function loadAdmin(){
+ if(!isAdmin||!db)return;
+ try{
+  const users=await db.collection("users").get(),configs=await db.collection("history").get();
+  document.getElementById("admUsers").textContent=users.size;document.getElementById("admConfigs").textContent=configs.size;
+ }catch(e){console.error(e);toast("Não foi possível carregar o dashboard.")}
+}
+function downloadHTML(){if(!isAdmin)return toast("Acesso negado.");const text="<!DOCTYPE html>\\n"+document.documentElement.outerHTML;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/html"}));a.download="ff_sensi_pro_ia.html";a.click();toast("Download iniciado.")}
+async function copyHTML(){if(!isAdmin)return toast("Acesso negado.");try{await navigator.clipboard.writeText("<!DOCTYPE html>\\n"+document.documentElement.outerHTML);toast("Código copiado!")}catch(e){toast("Não foi possível copiar.")}}
+
+document.getElementById("main-logo").addEventListener("touchstart",()=>pressTimer=setTimeout(()=>openAuth(),1800));
+document.getElementById("main-logo").addEventListener("touchend",()=>clearTimeout(pressTimer));
+window.addEventListener("load",()=>{initFirebase();loadDevices();setTimeout(()=>{document.getElementById("splash").style.opacity="0";setTimeout(()=>document.getElementById("splash").remove(),500)},900)});
+</script>
+
+<script id="feature-pack-js">
+const featureDevices = [
+{"marca":"Apple","modelo":"iPhone 11","dpi":326,"geral":185,"botao":"52%"},
+{"marca":"Apple","modelo":"iPhone 12","dpi":460,"geral":188,"botao":"52%"},
+{"marca":"Apple","modelo":"iPhone 13","dpi":460,"geral":190,"botao":"53%"},
+{"marca":"Apple","modelo":"iPhone 14","dpi":460,"geral":192,"botao":"53%"},
+{"marca":"Apple","modelo":"iPhone 15","dpi":460,"geral":194,"botao":"54%"},
+{"marca":"Apple","modelo":"iPhone 15 Pro","dpi":460,"geral":196,"botao":"54%"},
+{"marca":"Samsung","modelo":"Galaxy A14","dpi":420,"geral":178,"botao":"52%"},
+{"marca":"Samsung","modelo":"Galaxy A24","dpi":450,"geral":182,"botao":"52%"},
+{"marca":"Samsung","modelo":"Galaxy A34","dpi":480,"geral":185,"botao":"51%"},
+{"marca":"Samsung","modelo":"Galaxy A54","dpi":500,"geral":188,"botao":"51%"},
+{"marca":"Samsung","modelo":"Galaxy A55","dpi":500,"geral":190,"botao":"51%"},
+{"marca":"Samsung","modelo":"Galaxy S21","dpi":550,"geral":190,"botao":"50%"},
+{"marca":"Samsung","modelo":"Galaxy S22","dpi":550,"geral":192,"botao":"50%"},
+{"marca":"Samsung","modelo":"Galaxy S23","dpi":550,"geral":194,"botao":"50%"},
+{"marca":"Samsung","modelo":"Galaxy S24","dpi":550,"geral":196,"botao":"49%"},
+{"marca":"Xiaomi","modelo":"Redmi Note 10","dpi":440,"geral":182,"botao":"52%"},
+{"marca":"Xiaomi","modelo":"Redmi Note 11","dpi":450,"geral":185,"botao":"51%"},
+{"marca":"Xiaomi","modelo":"Redmi Note 12","dpi":460,"geral":188,"botao":"51%"},
+{"marca":"Xiaomi","modelo":"Redmi Note 13","dpi":480,"geral":191,"botao":"50%"},
+{"marca":"Xiaomi","modelo":"Poco X3 Pro","dpi":500,"geral":190,"botao":"49%"},
+{"marca":"Xiaomi","modelo":"Poco X4 Pro","dpi":510,"geral":192,"botao":"49%"},
+{"marca":"Xiaomi","modelo":"Poco X5 Pro","dpi":550,"geral":195,"botao":"48%"},
+{"marca":"Xiaomi","modelo":"Poco X6 Pro","dpi":560,"geral":197,"botao":"48%"},
+{"marca":"Motorola","modelo":"Moto G32","dpi":450,"geral":185,"botao":"51%"},
+{"marca":"Motorola","modelo":"Moto G52","dpi":480,"geral":188,"botao":"51%"},
+{"marca":"Motorola","modelo":"Moto G54","dpi":500,"geral":190,"botao":"50%"},
+{"marca":"Motorola","modelo":"Moto G84","dpi":520,"geral":193,"botao":"50%"},
+{"marca":"Realme","modelo":"C35","dpi":430,"geral":180,"botao":"52%"},
+{"marca":"Realme","modelo":"C55","dpi":450,"geral":185,"botao":"51%"},
+{"marca":"Realme","modelo":"C67","dpi":480,"geral":188,"botao":"51%"},
+{"marca":"Realme","modelo":"11 Pro","dpi":520,"geral":193,"botao":"50%"},
+{"marca":"Infinix","modelo":"Hot 30","dpi":450,"geral":182,"botao":"52%"},
+{"marca":"Infinix","modelo":"Hot 40","dpi":480,"geral":186,"botao":"51%"},
+{"marca":"Infinix","modelo":"Note 30","dpi":500,"geral":190,"botao":"50%"},
+{"marca":"Tecno","modelo":"Pova 5","dpi":500,"geral":190,"botao":"50%"},
+{"marca":"Tecno","modelo":"Pova 6","dpi":520,"geral":194,"botao":"49%"},
+{"marca":"Asus","modelo":"ROG Phone 6","dpi":600,"geral":198,"botao":"46%"},
+{"marca":"Asus","modelo":"ROG Phone 7","dpi":650,"geral":199,"botao":"46%"},
+{"marca":"OnePlus","modelo":"Nord 2","dpi":520,"geral":190,"botao":"50%"},
+{"marca":"OnePlus","modelo":"Nord 3","dpi":550,"geral":194,"botao":"49%"},
+{"marca":"Google","modelo":"Pixel 7","dpi":480,"geral":190,"botao":"51%"},
+{"marca":"Google","modelo":"Pixel 8","dpi":500,"geral":193,"botao":"50%"}
+];
+let featureState=JSON.parse(localStorage.getItem("ffFeatureState")||"{}");
+featureState.favorites=featureState.favorites||[];featureState.saved=featureState.saved||[];
+featureState.presets=featureState.presets||[];featureState.xp=featureState.xp||0;
+featureState.generations=featureState.generations||0;featureState.feedback=featureState.feedback||[];
+function persistFeature(){localStorage.setItem("ffFeatureState",JSON.stringify(featureState))}
+function fEsc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function allFeatureDevices(){let a=[...(typeof mockDevices!="undefined"?mockDevices:[]),...featureDevices],seen=new Set();return a.filter(d=>{let k=(d.marca+"|"+d.modelo).toLowerCase();if(seen.has(k))return false;seen.add(k);return true})}
+function featureFilterDevices(){
+ let q=(document.getElementById("featureDeviceSearch")?.value||"").toLowerCase();
+ let list=allFeatureDevices().filter(d=>(d.marca+" "+d.modelo).toLowerCase().includes(q));
+ document.getElementById("featureDeviceList").innerHTML=list.map((d,i)=>`
+ <div class="device-card"><b>${fEsc(d.marca)} ${fEsc(d.modelo)}</b>
+ <div class="row"><span>DPI ${d.dpi||"-"}</span><span>Geral ${d.geral||"-"}</span><span>Botão ${fEsc(d.botao||"-")}</span></div>
+ <div class="device-actions"><button onclick="useFeatureDevice(${i})">Usar</button>
+ <button onclick="showDeviceInfo(${i})">Detalhes</button><button onclick="toggleFavoriteDevice(${i})">⭐</button></div></div>`).join("");
+ window._featureFiltered=list;
+}
+function useFeatureDevice(i){let d=(window._featureFiltered||allFeatureDevices())[i];if(!d)return;
+ document.getElementById("marca").value=d.marca+" "+d.modelo;document.getElementById("dpi").value=d.dpi||600;
+ if(typeof navTo=="function")navTo("generate");featureToast("Aparelho carregado.");}
+function showDeviceInfo(i){let d=(window._featureFiltered||allFeatureDevices())[i];if(!d)return;
+ document.getElementById("feature-content").innerHTML=`<div class="feature-chip"><b>${fEsc(d.marca)} ${fEsc(d.modelo)}</b><br>DPI: ${d.dpi||"-"} · Geral: ${d.geral||"-"} · Botão: ${fEsc(d.botao||"-")}</div>`}
+function toggleFavoriteDevice(i){let d=(window._featureFiltered||allFeatureDevices())[i];if(!d)return;
+ let k=d.marca+" "+d.modelo,p=featureState.favorites.indexOf(k);
+ if(p>=0){featureState.favorites.splice(p,1);featureToast("Removido dos favoritos.")}else{featureState.favorites.push(k);featureToast("Adicionado aos favoritos.")}
+ persistFeature();}
+function featureToast(m){if(typeof toast=="function")toast(m);else alert(m)}
+function openFeature(t){
+ let c=document.getElementById("feature-content");
+ if(t=="compare")c.innerHTML=`<h4>⚖️ Comparar configurações</h4><textarea id="cmpA" class="input" rows="5" placeholder="Configuração A"></textarea><textarea id="cmpB" class="input" rows="5" style="margin-top:8px" placeholder="Configuração B"></textarea><button class="btn primary" style="margin-top:8px" onclick="compareFeature()">COMPARAR</button><div id="cmpResult"></div>`;
+ if(t=="custom")c.innerHTML=`<h4>🎛️ Configuração personalizada</h4>`+["Geral","Red Dot","Mira 2x","Mira 4x","AWM","Olhadinha"].map((n,i)=>`<div class="group"><label>${n}</label><input id="custom${i}" type="range" min="0" max="200" value="${[190,180,165,145,65,175][i]}" style="width:100%"></div>`).join("")+`<button class="btn primary" onclick="saveCustomFeature()">SALVAR</button>`;
+ if(t=="stats"){let l=Math.floor(featureState.xp/100)+1;c.innerHTML=`<div class="stat-grid"><div class="stat"><strong>${featureState.generations}</strong>Gerações</div><div class="stat"><strong>${featureState.saved.length}</strong>Salvas</div><div class="stat"><strong>${featureState.favorites.length}</strong>Favoritos</div><div class="stat"><strong>${featureState.xp}</strong>XP</div><div class="stat"><strong>${l}</strong>Nível</div><div class="stat"><strong>${featureState.presets.length}</strong>Presets</div></div>`}
+ if(t=="presets")c.innerHTML=`<h4>⭐ Presets rápidos</h4><div class="feature-grid">`+
+ [["Capa",[195,185,170,145,65,180]],["Rush",[200,190,175,150,70,190]],["Precisão",[180,170,155,135,55,165]],["Equilibrado",[190,180,165,145,60,175]]].map(p=>`<button class="btn outline" onclick='applyFeaturePreset("${p[0]}",${JSON.stringify(p[1])})'>${p[0]}</button>`).join("")+`</div>`;
+ if(t=="tools")c.innerHTML=`<button class="btn outline" onclick="exportFeatureJSON()">📤 Exportar JSON</button><button class="btn outline" style="margin-top:8px" onclick="importFeatureJSON()">📥 Importar JSON</button><button class="btn outline" style="margin-top:8px" onclick="copyFeatureState()">📋 Copiar dados</button><button class="btn outline" style="margin-top:8px" onclick="resetFeatureState()">♻️ Restaurar</button>`;
+ if(t=="achievements"){let a=[["Primeira geração",featureState.generations>=1],["10 gerações",featureState.generations>=10],["Primeiro favorito",featureState.favorites.length>=1],["Primeiro preset",featureState.presets.length>=1],["100 XP",featureState.xp>=100]];c.innerHTML=a.map(x=>`<span class="badge">${x[1]?"🏆":"🔒"} ${x[0]}</span>`).join("")}
+}
+function compareFeature(){let a=document.getElementById("cmpA").value,b=document.getElementById("cmpB").value;
+ let nums=x=>[...x.matchAll(/(?:Geral|Red Dot|2x|4x|AWM|Olhadinha)\D+(\d+)/gi)].map(m=>+m[1]),A=nums(a),B=nums(b);
+ let av=x=>x.length?Math.round(x.reduce((p,v)=>p+v,0)/x.length):0;
+ document.getElementById("cmpResult").innerHTML=`<div class="feature-chip" style="margin-top:8px">Média A: <b>${av(A)}</b> · Média B: <b>${av(B)}</b> · Diferença: <b>${Math.abs(av(A)-av(B))}</b></div>`}
+function saveCustomFeature(){let v=[0,1,2,3,4,5].map(i=>+document.getElementById("custom"+i).value);
+ featureState.saved.unshift({type:"custom",values:v,at:new Date().toISOString()});featureState.saved=featureState.saved.slice(0,100);featureState.xp+=10;persistFeature();featureToast("Salvo!")}
+function applyFeaturePreset(name,v){featureState.presets.push({name,values:v,at:new Date().toISOString()});featureState.saved.unshift({type:"preset",name,values:v,at:new Date().toISOString()});featureState.xp+=5;persistFeature();featureToast("Preset aplicado e salvo.")}
+function exportFeatureJSON(){let b=new Blob([JSON.stringify(featureState,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="ff-sensi-backup.json";a.click()}
+function importFeatureJSON(){let i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=async()=>{try{featureState={...featureState,...JSON.parse(await i.files[0].text())};persistFeature();featureToast("Backup importado.")}catch(e){featureToast("Arquivo inválido.")}};i.click()}
+async function copyFeatureState(){try{await navigator.clipboard.writeText(JSON.stringify(featureState));featureToast("Dados copiados.")}catch(e){featureToast("Não foi possível copiar.")}}
+function resetFeatureState(){if(confirm("Restaurar dados locais?")){localStorage.removeItem("ffFeatureState");location.reload()}}
+const originalProcessAI=window.processAI;
+if(typeof originalProcessAI=="function")window.processAI=function(){featureState.generations++;featureState.xp+=10;persistFeature();return originalProcessAI.apply(this,arguments)};
+window.addEventListener("load",()=>setTimeout(featureFilterDevices,600));
+</script>
+
+
+<script id="v2-js">
+(function(){
+  const V2KEY="ffSensiV2State";
+  let v2=JSON.parse(localStorage.getItem(V2KEY)||"{}");
+  v2.feedback=v2.feedback||[];
+  v2.calibrations=v2.calibrations||0;
+  v2.weaponHistory=v2.weaponHistory||[];
+  v2.cardCount=v2.cardCount||0;
+  function saveV2(){localStorage.setItem(V2KEY,JSON.stringify(v2));}
+  function v2toast(m){if(typeof toast==="function")toast(m);else alert(m)}
+  function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+  function currentNumbers(){
+    const text=typeof lastConfig==="string"?lastConfig:"";
+    const get=(label)=>{let m=text.match(new RegExp(label+"\\D+(\\d+)","i"));return m?+m[1]:0};
+    return {Geral:get("Geral"),RedDot:get("Red Dot"),Mira2x:get("2x"),Mira4x:get("4x"),AWM:get("AWM"),Olhadinha:get("Olhadinha")};
+  }
+
+  window.openV2=function(type){
+    const c=document.getElementById("v2-content");
+    if(type==="calibrate"){
+      c.innerHTML=`
+        <h4>🎯 Calibração inteligente</h4>
+        <p class="v2-small" style="margin:7px 0">Gere uma configuração e diga como ela ficou. O ajuste usa o resultado anterior como ponto de partida.</p>
+        <div class="v2-grid">
+          <button class="btn outline" onclick="v2Feedback('rapida')">🔴 Muito rápida</button>
+          <button class="btn outline" onclick="v2Feedback('lenta')">🔵 Muito lenta</button>
+          <button class="btn outline" onclick="v2Feedback('boa')">🟢 Boa</button>
+          <button class="btn outline" onclick="v2Feedback('media')">🟡 Mais ou menos</button>
+        </div>
+        <div id="v2-cal-result" class="v2-result">Gere uma configuração primeiro para calibrar.</div>`;
+    }
+    if(type==="weapons"){
+      c.innerHTML=`
+        <h4>🔫 Ajuste por categoria de arma</h4>
+        <div class="group"><label>Categoria</label>
+          <select id="v2Weapon" class="input">
+            <option value="smg">SMG / curta distância</option>
+            <option value="shotgun">Shotgun</option>
+            <option value="rifle">Rifle / AR</option>
+            <option value="sniper">Sniper / AWM</option>
+            <option value="balanced">Equilibrado</option>
+          </select>
+        </div>
+        <button class="btn primary" onclick="generateWeaponV2()">GERAR AJUSTE</button>
+        <div id="v2-weapon-result" class="v2-result"></div>`;
+    }
+    if(type==="exact"){
+      const q=(document.getElementById("marca")?.value||"").trim();
+      c.innerHTML=`
+        <h4>📱 Análise do aparelho</h4>
+        <p class="v2-small" style="margin:7px 0">Busca pelo modelo digitado no banco local. Se houver correspondência, os dados do aparelho entram no cálculo.</p>
+        <div class="v2-inline"><input id="v2ExactSearch" class="input" value="${esc(q)}" placeholder="Ex.: Galaxy S23"></div>
+        <button class="btn primary" style="margin-top:8px" onclick="findExactV2()">BUSCAR APARELHO</button>
+        <div id="v2-exact-result" class="v2-result"></div>`;
+    }
+    if(type==="favorites"){
+      const fav=featureState?.favorites||[];
+      c.innerHTML=`<h4>⭐ Aparelhos favoritos</h4>`+
+        (fav.length?fav.map(x=>`<div class="v2-chip" style="margin-top:7px">${esc(x)}</div>`).join(""):`<div class="v2-result">Nenhum aparelho favorito ainda.</div>`);
+    }
+    if(type==="sharecard"){
+      c.innerHTML=`
+        <h4>🖼️ Cartão da configuração</h4>
+        <p class="v2-small" style="margin:7px 0">Cria uma imagem simples com os valores da última configuração gerada.</p>
+        <button class="btn primary" onclick="createV2Card()">CRIAR CARTÃO</button>
+        <div id="v2-card-result" class="v2-result"></div>`;
+    }
+  };
+
+  window.v2Feedback=function(kind){
+    const n=currentNumbers();
+    if(!Object.values(n).some(Boolean))return v2toast("Gere uma configuração primeiro.");
+    const delta=kind==="rapida"?-6:kind==="lenta"?6:kind==="media"?2:0;
+    const adjusted={};
+    Object.keys(n).forEach(k=>adjusted[k]=Math.max(0,Math.min(200,n[k]+delta)));
+    v2.feedback.push({kind,base:n,adjusted,at:new Date().toISOString()});
+    v2.calibrations++; saveV2();
+    const c=document.getElementById("v2-cal-result");
+    if(c)c.innerHTML=`<b>Ajuste ${kind==="boa"?"mantido":"calculado"}.</b><br>Mudança sugerida: ${delta>0?"+":""}${delta} pontos nas sensibilidades.`;
+    v2toast("Calibração registrada.");
+  };
+
+  window.generateWeaponV2=function(){
+    const n=currentNumbers();
+    if(!Object.values(n).some(Boolean))return v2toast("Gere uma configuração primeiro.");
+    const type=document.getElementById("v2Weapon").value;
+    const mods={smg:5,shotgun:8,rifle:0,sniper:-12,balanced:0};
+    const m=mods[type]||0;
+    const out={}; Object.keys(n).forEach(k=>out[k]=Math.max(0,Math.min(200,n[k]+m)));
+    v2.weaponHistory.push({type,out,at:new Date().toISOString()});v2.weaponHistory=v2.weaponHistory.slice(-50);saveV2();
+    document.getElementById("v2-weapon-result").innerHTML=
+      `<b>Ajuste:</b> ${esc(type)}<br>Geral ${out.Geral} · Red Dot ${out.RedDot} · 2x ${out.Mira2x} · 4x ${out.Mira4x} · AWM ${out.AWM}`;
+  };
+
+  window.findExactV2=function(){
+    const q=(document.getElementById("v2ExactSearch").value||"").toLowerCase().trim();
+    const list=typeof allFeatureDevices==="function"?allFeatureDevices():[];
+    const found=list.find(d=>(d.marca+" "+d.modelo).toLowerCase().includes(q));
+    const r=document.getElementById("v2-exact-result");
+    if(!found){r.innerHTML="Aparelho não encontrado no banco local.";return;}
+    r.innerHTML=`<b>${esc(found.marca)} ${esc(found.modelo)}</b><br>DPI base: ${found.dpi||"-"} · Geral base: ${found.geral||"-"} · Botão: ${esc(found.botao||"-")}
+      <button class="btn primary" style="margin-top:8px" onclick='useExactV2(${JSON.stringify(found)})'>USAR ESTE APARELHO</button>`;
+  };
+  window.useExactV2=function(d){
+    document.getElementById("marca").value=d.marca+" "+d.modelo;
+    if(d.dpi)document.getElementById("dpi").value=d.dpi;
+    window._v2ExactDevice=d;
+    v2toast("Aparelho exato carregado.");
+  };
+
+  window.createV2Card=function(){
+    const n=currentNumbers();
+    if(!Object.values(n).some(Boolean))return v2toast("Gere uma configuração primeiro.");
+    const canvas=document.createElement("canvas");canvas.width=900;canvas.height=560;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#080808";ctx.fillRect(0,0,900,560);
+    ctx.fillStyle="#ff003c";ctx.fillRect(0,0,900,10);
+    ctx.fillStyle="#ffffff";ctx.font="bold 38px Arial";ctx.fillText("FF SENSI PRO IA 2.0",40,65);
+    ctx.font="22px Arial";ctx.fillStyle="#aaaaaa";ctx.fillText((document.getElementById("marca")?.value||"Aparelho"),40,100);
+    const rows=[["Geral",n.Geral],["Red Dot",n.RedDot],["Mira 2x",n.Mira2x],["Mira 4x",n.Mira4x],["AWM",n.AWM],["Olhadinha",n.Olhadinha]];
+    rows.forEach((r,i)=>{let x=i%2?470:40,y=155+Math.floor(i/2)*100;ctx.fillStyle="#171717";ctx.fillRect(x,y,390,75);ctx.fillStyle="#ff003c";ctx.font="bold 28px Arial";ctx.fillText(String(r[1]),x+18,y+48);ctx.fillStyle="#ffffff";ctx.font="20px Arial";ctx.fillText(r[0],x+110,y+45)});
+    ctx.fillStyle="#888";ctx.font="16px Arial";ctx.fillText("Criado por VYTOR FF",40,525);
+    const a=document.createElement("a");a.download="ff-sensi-configuracao.png";a.href=canvas.toDataURL("image/png");a.click();
+    v2.cardCount++;saveV2();v2toast("Cartão criado.");
+  };
+
+  let deferredPrompt=null;
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e});
+  window.installV2=async function(){
+    if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;return}
+    v2toast("No navegador, use o menu 'Adicionar à tela inicial' para instalar.");
+  };
+
+  // Integração do aparelho exato ao gerador existente.
+  const oldGenerate=window.generateMath;
+  if(typeof oldGenerate==="function"){
+    window.generateMath=function(){
+      oldGenerate.apply(this,arguments);
+      const d=window._v2ExactDevice;
+      if(!d || !lastConfig)return;
+      const current=currentNumbers();
+      const target=d.geral||current.Geral;
+      const delta=Math.round((target-current.Geral)*0.45);
+      const vals={
+        Geral:Math.max(0,Math.min(200,current.Geral+delta)),
+        RedDot:Math.max(0,Math.min(200,current.RedDot+delta)),
+        "Mira 2x":Math.max(0,Math.min(200,current.Mira2x+delta)),
+        "Mira 4x":Math.max(0,Math.min(200,current.Mira4x+delta)),
+        AWM:current.AWM,
+        Olhadinha:Math.max(0,Math.min(200,current.Olhadinha+delta))
+      };
+      const grid=document.getElementById("resultGrid");
+      if(grid){
+        grid.innerHTML="";
+        Object.entries(vals).forEach(([k,v])=>grid.innerHTML+=`<div class="sensi"><div class="value">${v}</div><div class="label">${k}</div></div>`);
+      }
+      lastConfig=`🔥 FF SENSI PRO IA 🔥\nAparelho: ${d.marca} ${d.modelo}\nGeral: ${vals.Geral}\nRed Dot: ${vals.RedDot}\n2x: ${vals["Mira 2x"]}\n4x: ${vals["Mira 4x"]}\nAWM: ${vals.AWM}\nOlhadinha: ${vals.Olhadinha}\nBotão: ${d.botao||"52%"}\nDPI recomendado: ${d.dpi||document.getElementById("dpi").value}\nPerfil: Ajustado por aparelho\nCriado por VYTOR FF`;
+    };
+  }
+
+  // Corrige o fluxo de favorito: agora a configuração atual também pode ser marcada.
+  window.favoriteCurrentV2=function(){
+    if(!lastConfig)return v2toast("Gere uma configuração primeiro.");
+    featureState.saved=featureState.saved||[];
+    featureState.saved.unshift({type:"favorite-config",config:lastConfig,at:new Date().toISOString()});
+    featureState.saved=featureState.saved.slice(0,100);
+    if(typeof persistFeature==="function")persistFeature();
+    v2toast("Configuração adicionada aos salvos.");
+  };
+
+  // PWA básico: cria manifesto em memória para navegadores compatíveis.
+  const manifest={
+    name:"FF SENSI PRO IA 2.0",short_name:"FF SENSI",start_url:".",display:"standalone",
+    background_color:"#050505",theme_color:"#ff003c",icons:[]
+  };
+  const blob=new Blob([JSON.stringify(manifest)],{type:"application/manifest+json"});
+  const link=document.createElement("link");link.rel="manifest";link.href=URL.createObjectURL(blob);document.head.appendChild(link);
+
+  window.addEventListener("load",()=>setTimeout(()=>{
+    const p=document.getElementById("v2-panel");
+    if(p){
+      const b=document.createElement("button");b.className="btn outline";b.style.marginTop="10px";
+      b.textContent="⭐ Salvar configuração atual";b.onclick=favoriteCurrentV2;
+      p.appendChild(b);
+    }
+  },900));
+})();
+</script>
+
+</body>
+</html>
