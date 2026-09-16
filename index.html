@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FF SENSI PRO IA - Por VYTOR FF</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+:root{--red:#ff003c;--darkred:#8a0020;--bg:#050505;--glass:rgba(20,20,25,.76);--text:#f0f0f0;--cyan:#00d2ff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;min-height:100vh;background-image:radial-gradient(circle at 50% 0,#2a000a 0,var(--bg) 60%);overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--red);border-radius:5px}
+.title{font-family:Orbitron,sans-serif;text-transform:uppercase;color:#fff;text-shadow:0 0 5px var(--red),0 0 15px var(--red)}
+.red{color:var(--red)!important}.muted{color:#aaa}.glass{background:var(--glass);backdrop-filter:blur(12px);border:1px solid rgba(255,0,60,.22);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 4px 30px #0008}
+.btn{width:100%;padding:14px;border-radius:12px;border:0;font:700 .9rem Orbitron,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+.btn:active{transform:scale(.97)}.primary{background:linear-gradient(45deg,var(--darkred),var(--red));color:#fff;box-shadow:0 0 10px #ff003c80}.outline{background:transparent;border:2px solid var(--red);color:var(--red)}
+.input{width:100%;padding:12px 14px;background:#0009;border:1px solid #ffffff18;border-radius:8px;color:#fff;outline:0}.input:focus{border-color:var(--red);box-shadow:0 0 8px #ff003c4d}
+.group{margin-bottom:14px}.group label{display:block;margin-bottom:6px;font-size:.85rem;color:#aaa}
+#splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:.5s}.spinner{width:48px;height:48px;border:3px solid #ff003c44;border-top-color:var(--red);border-radius:50%;animation:spin 1s linear infinite;margin-top:20px}@keyframes spin{to{transform:rotate(360deg)}}
+header{position:sticky;top:0;z-index:100;background:#050505dd;backdrop-filter:blur(10px);padding:14px 18px;border-bottom:1px solid #ff003c4d;display:flex;justify-content:space-between;align-items:center}.logo{cursor:pointer}.sub{font-size:.68rem;color:#888;letter-spacing:1px}
+main{padding:20px;padding-bottom:90px}.view{display:none;animation:fade .3s ease}.view.active{display:block}@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+nav{position:fixed;bottom:0;left:0;width:100%;z-index:100;background:#0a0a0af5;backdrop-filter:blur(10px);border-top:1px solid #ff003c4d;display:flex;justify-content:space-around;padding:9px 0}.nav{width:25%;color:#666;text-align:center;font-size:.72rem;cursor:pointer}.nav i{display:block;font-size:1.1rem;margin-bottom:3px}.nav.active{color:var(--red);text-shadow:0 0 10px #ff003c80}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sensi{background:#0009;border:1px solid #ff003c33;padding:11px;border-radius:9px;text-align:center}.value{font:700 1.45rem Orbitron;color:var(--red)}.label{font-size:.75rem;color:#ccc}
+.modal{position:fixed;inset:0;background:#000c;backdrop-filter:blur(5px);z-index:2000;display:none;align-items:center;justify-content:center}.modal .glass{width:90%;max-width:420px;position:relative}.close{position:absolute;right:15px;top:8px;font-size:1.6rem;cursor:pointer}
+.toast{position:fixed;top:20px;right:-100%;z-index:99999;background:var(--red);color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 4px 15px #ff003c66;transition:.3s}
+#processing{display:none;text-align:center;padding:30px}.radar{width:100px;height:100px;border-radius:50%;margin:0 auto;border:1px solid var(--red);background:#ff003c1a;position:relative;overflow:hidden}.radar:after{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,transparent 0 80%,#ff003c99);animation:spin 1.5s linear infinite}
+.admin{border-color:#00d2ff66}.adminText{color:var(--cyan)!important;text-shadow:0 0 6px #00d2ff!important}.adminBtn{background:linear-gradient(45deg,#005c8a,var(--cyan));color:#fff}
+.device{padding:15px;margin-bottom:10px}.row{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;color:#bbb;margin-top:9px}
+.history-item{background:#0008;border-left:3px solid var(--red);padding:12px;border-radius:7px;margin:8px 0;font-size:.8rem;white-space:pre-line}
+.small{font-size:.75rem}.center{text-align:center}
+</style>
+</head>
+<body>
+<div id="splash"><h1 class="title">FF SENSI</h1><h1 class="title">PRO <span>IA</span></h1><div class="sub" style="margin-top:10px;font-size:.9rem">CRIADO POR VYTOR FF</div><div class="spinner"></div></div>
+<div id="toast" class="toast"></div>
+
+<header>
+  <div class="logo" id="main-logo"><h2 class="title" style="font-size:1.15rem">FF SENSI PRO IA</h2><span class="sub">Por VYTOR FF</span></div>
+  <div onclick="openAuth()" style="cursor:pointer"><i class="fas fa-user-circle" style="font-size:1.5rem;color:var(--red)"></i></div>
+</header>
+
+<main>
+<section id="view-home" class="view active">
+  <div class="glass">
+    <h3><i class="fas fa-bolt red"></i> Acesso Rápido</h3>
+    <div class="grid" style="margin-top:15px">
+      <button class="btn outline" onclick="quick('equilibrada')">Equilibrada</button>
+      <button class="btn outline" onclick="quick('precisa')">Foco em Capa</button>
+      <button class="btn outline" onclick="quick('dpi_alto')">DPI Alto</button>
+      <button class="btn outline" onclick="quick('dpi_baixo')">DPI Baixo</button>
+    </div>
+  </div>
+  <div class="glass">
+    <h3><i class="fas fa-robot red"></i> Gerador Inteligente</h3>
+    <p class="small muted" style="margin:10px 0 15px">Calcula uma configuração de 0 a 200 usando marca, DPI, estilo e preferência de controle.</p>
+    <button class="btn primary" onclick="navTo('generate')">🤖 ABRIR GERADOR</button>
+  </div>
+  <div id="notice" class="glass" style="display:none"></div>
+</section>
+
+<section id="view-generate" class="view">
+  <div class="glass" id="form">
+    <h3 class="title center" style="margin-bottom:20px">Configurar IA</h3>
+    <div class="group"><label>Marca / modelo</label><input id="marca" class="input" placeholder="Ex.: Samsung Galaxy A55"></div>
+    <div class="group"><label>DPI atual</label><input id="dpi" type="number" min="1" max="2000" class="input" placeholder="Ex.: 600"></div>
+    <div class="group"><label>Estilo de jogo</label><select id="estilo" class="input"><option value="camper">Estratégico / Posicionamento</option><option value="rusher" selected>Rushadão / Movimentação</option><option value="suporte">Suporte / Longa Distância</option></select></div>
+    <div class="group"><label>Preferência de controle</label><select id="controle" class="input"><option value="velocidade">Foco em Velocidade</option><option value="precisao" selected>Foco em Precisão (Capa)</option></select></div>
+    <button class="btn primary" onclick="processAI()">🤖 GERAR CONFIGURAÇÃO</button>
+  </div>
+
+  <div id="processing"><h3 class="red" style="margin-bottom:20px">CALCULANDO PARÂMETROS...</h3><div class="radar"></div><p id="log" class="small muted" style="margin-top:18px">Analisando aparelho...</p></div>
+
+  <div class="glass" id="result" style="display:none">
+    <h3 class="title center">CONFIGURAÇÃO GERADA!</h3>
+    <p class="center small muted" style="margin:8px 0 15px">Escala do Free Fire: 0–200</p>
+    <div id="resultGrid" class="grid"></div>
+    <div style="background:#0008;padding:14px;border-radius:8px;margin-top:15px;border-left:3px solid var(--red)">
+      <p class="small"><b>DPI recomendado:</b> <span id="resDpi" class="red"></span></p>
+      <p class="small"><b>Tamanho do botão:</b> <span id="resBtn" class="red"></span></p>
+      <p class="small"><b>Perfil:</b> <span id="resProfile" class="red"></span></p>
+    </div>
+    <div class="grid" style="margin-top:18px">
+      <button class="btn primary" onclick="copyConfig()"><i class="fas fa-copy"></i> COPIAR</button>
+      <button class="btn outline" onclick="saveConfig()"><i class="fas fa-star"></i> SALVAR</button>
+      <button class="btn outline" style="grid-column:1/3" onclick="resetGenerator()"><i class="fas fa-sync"></i> GERAR NOVAMENTE</button>
+    </div>
+  </div>
+</section>
+
+<section id="view-devices" class="view">
+  <div class="glass"><h3><i class="fas fa-mobile-alt red"></i> Banco de Dispositivos</h3><input id="search" class="input" style="margin-top:15px" placeholder="Pesquisar aparelho..." oninput="filterDevices()"></div>
+  <div id="deviceList"><div class="center muted">Carregando...</div></div>
+</section>
+
+<section id="view-profile" class="view">
+  <div id="unauth" class="glass center"><i class="fas fa-lock" style="font-size:3rem;color:#555"></i><h3 style="margin-top:12px">Faça Login</h3><p class="small muted" style="margin:10px 0 20px">Salve configurações e veja seu histórico.</p><button class="btn primary" onclick="openAuth()">ENTRAR / CADASTRAR</button></div>
+  <div id="authProfile" class="glass" style="display:none">
+    <div class="center"><i class="fas fa-user-circle red" style="font-size:4rem"></i><h3 id="userEmail" style="margin-top:10px"></h3></div>
+    <h4 style="margin-top:20px"><i class="fas fa-star red"></i> Minhas configurações</h4>
+    <div id="history" style="margin-top:10px">Nenhuma configuração salva.</div>
+    <button class="btn outline" style="margin-top:15px" onclick="logout()">SAIR DA CONTA</button>
+  </div>
+</section>
+
+<section id="view-admin" class="view">
+  <div class="glass admin center"><h2 class="title adminText">PAINEL ADMINISTRATIVO</h2><p class="small muted">Acesso restrito</p></div>
+  <div class="glass admin"><h3>📊 Dashboard</h3><div class="grid" style="margin-top:15px"><div class="sensi admin"><div class="value adminText" id="admUsers">0</div><div class="label">Usuários</div></div><div class="sensi admin"><div class="value adminText" id="admConfigs">0</div><div class="label">Configurações</div></div></div></div>
+  <div class="glass admin"><h3>📦 Administração</h3><button class="btn adminBtn" style="margin-top:15px" onclick="downloadHTML()">⬇️ BAIXAR INDEX.HTML</button><button class="btn outline adminText" style="margin-top:10px;border-color:var(--cyan)" onclick="copyHTML()">📋 COPIAR CÓDIGO</button></div>
+</section>
+</main>
+
+<nav>
+  <div class="nav active" id="nav-home" onclick="navTo('home')"><i class="fas fa-home"></i>Início</div>
+  <div class="nav" id="nav-generate" onclick="navTo('generate')"><i class="fas fa-robot"></i>Gerar</div>
+  <div class="nav" id="nav-devices" onclick="navTo('devices')"><i class="fas fa-mobile-alt"></i>Dispositivos</div>
+  <div class="nav" id="nav-profile" onclick="navTo('profile')"><i class="fas fa-user"></i>Perfil</div>
+</nav>
+
+<div id="modal" class="modal"><div class="glass"><span class="close" onclick="closeAuth()">&times;</span><h3 class="title center" style="margin-bottom:20px">AUTENTICAÇÃO</h3>
+  <div class="group"><label>E-mail</label><input id="email" type="email" class="input" placeholder="Seu e-mail"></div>
+  <div class="group"><label>Senha</label><input id="pass" type="password" class="input" placeholder="Mínimo recomendado: 6 caracteres"></div>
+  <button class="btn primary" onclick="login()">ENTRAR</button><button class="btn outline" style="margin-top:10px" onclick="register()">CADASTRAR</button>
+  <p id="setupWarn" class="small" style="display:none;color:#ff5555;text-align:center;margin-top:12px">Firebase ainda não foi configurado neste arquivo.</p>
+</div></div>
+
+<script>
+/* =========================
+   COLE A CONFIGURAÇÃO DO SEU APP WEB FIREBASE AQUI.
+   Firebase Console > Configurações do projeto > Seus apps > Configuração.
+   ========================= */
+const firebaseConfig={
+  apiKey:"AIzaSyD6VGc-pXOXIKsLTTHeBhnyEfxKbjxn9oo",
+  authDomain:"ff-sensi-pro-ai-ac315.firebaseapp.com",
+  projectId:"ff-sensi-pro-ai-ac315",
+  storageBucket:"ff-sensi-pro-ai-ac315.firebasestorage.app",
+  messagingSenderId:"478244223563",
+  appId:"1:478244223563:web:356051143399959132ebce",
+  measurementId:"G-034G409TCW"
+};
+
+let db=null,auth=null,currentUser=null,isFirebase=false,isAdmin=false,lastConfig="",pressTimer=null;
+
+const mockDevices=[
+ {marca:"Apple",modelo:"iPhone 13 Pro Max",dpi:120,geral:190,botao:"55%"},
+ {marca:"Samsung",modelo:"Galaxy S23 Ultra",dpi:600,geral:185,botao:"50%"},
+ {marca:"Xiaomi",modelo:"Poco X5 Pro",dpi:550,geral:195,botao:"48%"},
+ {marca:"Motorola",modelo:"Moto E13",dpi:420,geral:180,botao:"52%"}
+];
+
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.style.right="20px";setTimeout(()=>t.style.right="-100%",3000)}
+function navTo(id){
+ if(id==="admin"&&!isAdmin){toast("Acesso negado");return}
+ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+ document.getElementById("view-"+id).classList.add("active");
+ document.querySelectorAll(".nav").forEach(n=>n.classList.remove("active"));
+ const n=document.getElementById("nav-"+id);if(n)n.classList.add("active");
+ if(id==="devices")loadDevices();
+ if(id==="profile"&&currentUser)loadHistory();
+ if(id==="admin"&&isAdmin)loadAdmin();
+}
+function openAuth(){document.getElementById("modal").style.display="flex";if(!isFirebase)document.getElementById("setupWarn").style.display="block"}
+function closeAuth(){document.getElementById("modal").style.display="none"}
+
+function initFirebase(){
+ if(!firebaseConfig.apiKey||!firebaseConfig.projectId){console.warn("Firebase não configurado");return}
+ try{
+   firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();isFirebase=true;
+   auth.onAuthStateChanged(async u=>{
+     currentUser=u;updateProfile();
+     if(u){await createUserDoc(u);await checkAdmin(u.uid)}
+     else{isAdmin=false;removeAdminNav()}
+   });
+ }catch(e){console.error(e);toast("Erro ao iniciar Firebase")}
+}
+async function createUserDoc(u){
+ try{await db.collection("users").doc(u.uid).set({email:u.email||"",createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}catch(e){console.error(e)}
+}
+async function checkAdmin(uid){
+ try{const d=await db.collection("admin").doc(uid).get();isAdmin=d.exists;if(isAdmin)addAdminNav()}catch(e){isAdmin=false;console.error(e)}
+}
+function addAdminNav(){
+ if(document.getElementById("nav-admin"))return;
+ const el=document.createElement("div");el.className="nav adminText";el.id="nav-admin";el.innerHTML='<i class="fas fa-lock"></i>ADM';el.onclick=()=>navTo("admin");document.querySelector("nav").appendChild(el);
+ document.querySelectorAll(".nav").forEach(x=>x.style.width=(100/document.querySelectorAll(".nav").length)+"%");
+}
+function removeAdminNav(){const e=document.getElementById("nav-admin");if(e)e.remove();document.querySelectorAll(".nav").forEach(x=>x.style.width="25%")}
+function updateProfile(){
+ document.getElementById("unauth").style.display=currentUser?"none":"block";
+ document.getElementById("authProfile").style.display=currentUser?"block":"none";
+ if(currentUser){document.getElementById("userEmail").textContent=currentUser.email||"Usuário";loadHistory()}
+}
+
+async function login(){
+ if(!isFirebase)return toast("Configure o Firebase primeiro.");
+ const e=document.getElementById("email").value.trim(),p=document.getElementById("pass").value;
+ if(!e||!p)return toast("Preencha e-mail e senha.");
+ try{await auth.signInWithEmailAndPassword(e,p);toast("Login realizado!");closeAuth()}catch(err){toast("Erro: "+friendlyAuthError(err))}
+}
+async function register(){
+ if(!isFirebase)return toast("Configure o Firebase primeiro.");
+ const e=document.getElementById("email").value.trim(),p=document.getElementById("pass").value;
+ if(!e||p.length<6)return toast("Use e-mail e senha com pelo menos 6 caracteres.");
+ try{await auth.createUserWithEmailAndPassword(e,p);toast("Conta criada!");closeAuth()}catch(err){toast("Erro: "+friendlyAuthError(err))}
+}
+function friendlyAuthError(e){return e.code==="auth/email-already-in-use"?"E-mail já cadastrado.":e.code==="auth/invalid-email"?"E-mail inválido.":e.code==="auth/weak-password"?"Senha muito fraca.":e.code==="auth/invalid-credential"?"E-mail ou senha incorretos.":e.message}
+function logout(){if(auth)auth.signOut();navTo("home");toast("Desconectado.")}
+
+function clamp(v){return Math.max(0,Math.min(200,Math.round(v)))}
+function generateMath(){
+ const marca=(document.getElementById("marca").value||"genérico").toLowerCase();
+ let dpi=parseInt(document.getElementById("dpi").value,10)||500;
+ dpi=Math.max(100,Math.min(1000,dpi));
+ const estilo=document.getElementById("estilo").value,controle=document.getElementById("controle").value;
+ let base=styleBase(estilo);
+ if(controle==="velocidade")base+=8;else base-=3;
+ const dpiFactor=(600-dpi)/18;
+ if(/iphone|apple/.test(marca))base-=4;
+ if(/samsung|xiaomi|poco|redmi|motorola|moto|realme|infinix|tecno/.test(marca))base+=2;
+ base+=dpiFactor;
+ const jitter=()=>Math.floor(Math.random()*7)-3;
+ const s={
+   Geral:clamp(base+18+jitter()),
+   RedDot:clamp(base+8+jitter()),
+   "Mira 2x":clamp(base-2+jitter()),
+   "Mira 4x":clamp(base-15+jitter()),
+   AWM:clamp(55+(controle==="precisao"?-8:5)+jitter()),
+   Olhadinha:clamp(base-5+jitter())
+ };
+ const recDpi=Math.round(Math.max(300,Math.min(800,dpi+(estilo==="rusher"?25:estilo==="suporte"?-20:0))));
+ const botao=Math.round(Math.max(42,Math.min(60,52+(controle==="velocidade"?4:-2)+(estilo==="rusher"?2:0))));
+ const profile=estilo==="rusher"?"Rush / capa":estilo==="suporte"?"Longa distância":"Equilibrado";
+ const grid=document.getElementById("resultGrid");grid.innerHTML="";
+ Object.entries(s).forEach(([k,v])=>grid.innerHTML+=`<div class="sensi"><div class="value">${v}</div><div class="label">${k}</div></div>`);
+ document.getElementById("resDpi").textContent=recDpi;
+ document.getElementById("resBtn").textContent=botao+"%";
+ document.getElementById("resProfile").textContent=profile;
+ lastConfig=`🔥 FF SENSI PRO IA 🔥\\nAparelho: ${marca}\\nGeral: ${s.Geral}\\nRed Dot: ${s.RedDot}\\n2x: ${s["Mira 2x"]}\\n4x: ${s["Mira 4x"]}\\nAWM: ${s.AWM}\\nOlhadinha: ${s.Olhadinha}\\nBotão: ${botao}%\\nDPI recomendado: ${recDpi}\\nPerfil: ${profile}\\nCriado por VYTOR FF`;
+}
+function styleBase(s){return s==="rusher"?145:s==="suporte"?105:125}
+function processAI(){
+ if(!document.getElementById("marca").value.trim())return toast("Informe a marca/modelo.");
+ if(!document.getElementById("dpi").value)return toast("Informe o DPI.");
+ document.getElementById("form").style.display="none";document.getElementById("processing").style.display="block";document.getElementById("result").style.display="none";
+ const logs=["Lendo aparelho...","Calibrando DPI...","Ajustando mira...","Finalizando cálculo..."];let i=0;document.getElementById("log").textContent=logs[0];
+ const timer=setInterval(()=>{i++;if(i<logs.length)document.getElementById("log").textContent=logs[i];else clearInterval(timer)},500);
+ setTimeout(()=>{generateMath();document.getElementById("processing").style.display="none";document.getElementById("result").style.display="block";toast("Configuração gerada!")},2300)
+}
+function resetGenerator(){document.getElementById("result").style.display="none";document.getElementById("form").style.display="block"}
+function quick(type){navTo("generate");setTimeout(()=>{if(type==="dpi_alto")document.getElementById("dpi").value=750;if(type==="dpi_baixo")document.getElementById("dpi").value=350;if(type==="precisa")document.getElementById("controle").value="precisao";if(type==="equilibrada")document.getElementById("estilo").value="camper";if(!document.getElementById("marca").value)document.getElementById("marca").value="Samsung";if(!document.getElementById("dpi").value)document.getElementById("dpi").value=600;processAI()},250)}
+async function copyConfig(){try{await navigator.clipboard.writeText(lastConfig);toast("Configuração copiada!")}catch(e){toast("Não foi possível copiar.")}}
+async function saveConfig(){
+ if(!currentUser)return toast("Faça login para salvar.");
+ if(!lastConfig)return toast("Gere uma configuração primeiro.");
+ try{await db.collection("history").add({uid:currentUser.uid,config:lastConfig,createdAt:firebase.firestore.FieldValue.serverTimestamp()});toast("Configuração salva!");loadHistory()}catch(e){console.error(e);toast("Erro ao salvar.")}
+}
+
+async function loadHistory(){
+ if(!currentUser||!db)return;
+ const box=document.getElementById("history");box.innerHTML="Carregando...";
+ try{
+   const snap=await db.collection("history").where("uid","==",currentUser.uid).limit(30).get();
+   if(snap.empty){box.textContent="Nenhuma configuração salva.";return}
+   const docs=snap.docs.sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+   box.innerHTML=docs.map(d=>`<div class="history-item">${escapeHtml(d.data().config||"")}</div>`).join("");
+ }catch(e){console.error(e);box.textContent="Não foi possível carregar o histórico."}
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+async function loadDevices(){
+ const list=document.getElementById("deviceList");list.innerHTML='<div class="center muted">Carregando banco...</div>';
+ if(isFirebase&&db){
+   try{
+     const snap=await db.collection("devices").limit(100).get();
+     if(!snap.empty){renderDevices(snap.docs.map(d=>d.data()));return}
+   }catch(e){console.warn(e)}
+ }
+ renderDevices(mockDevices)
+}
+function renderDevices(devs){document.getElementById("deviceList").innerHTML=devs.map(d=>`<div class="glass device"><h4 class="red">${escapeHtml(d.marca||"")} ${escapeHtml(d.modelo||"")}</h4><div class="row"><span>DPI: ${d.dpi||"-"}</span><span>Geral: <b style="color:#fff">${d.geral||"-"}</b></span><span>Botão: ${d.botao||d["botão"]||"-"}</span></div></div>`).join("")}
+function filterDevices(){const q=document.getElementById("search").value.toLowerCase();document.querySelectorAll("#deviceList .device").forEach(c=>c.style.display=c.innerText.toLowerCase().includes(q)?"block":"none")}
+
+async function loadAdmin(){
+ if(!isAdmin||!db)return;
+ try{
+  const users=await db.collection("users").get(),configs=await db.collection("history").get();
+  document.getElementById("admUsers").textContent=users.size;document.getElementById("admConfigs").textContent=configs.size;
+ }catch(e){console.error(e);toast("Não foi possível carregar o dashboard.")}
+}
+function downloadHTML(){if(!isAdmin)return toast("Acesso negado.");const text="<!DOCTYPE html>\\n"+document.documentElement.outerHTML;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/html"}));a.download="ff_sensi_pro_ia.html";a.click();toast("Download iniciado.")}
+async function copyHTML(){if(!isAdmin)return toast("Acesso negado.");try{await navigator.clipboard.writeText("<!DOCTYPE html>\\n"+document.documentElement.outerHTML);toast("Código copiado!")}catch(e){toast("Não foi possível copiar.")}}
+
+document.getElementById("main-logo").addEventListener("touchstart",()=>pressTimer=setTimeout(()=>openAuth(),1800));
+document.getElementById("main-logo").addEventListener("touchend",()=>clearTimeout(pressTimer));
+window.addEventListener("load",()=>{initFirebase();loadDevices();setTimeout(()=>{document.getElementById("splash").style.opacity="0";setTimeout(()=>document.getElementById("splash").remove(),500)},900)});
+</script>
+</body>
+</html>
