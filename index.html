@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script type="module" src="/@vite/client"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Rio Tropical: Cidade Aberta</title>
+  <meta name="description" content="Jogo original de ação em mundo aberto 2D inspirado no estilo clássico mobile, ambientado em uma metrópole tropical com missões, trânsito, polícia, lojas e veículos dirigíveis.">
+  <meta property="og:title" content="Rio Tropical: Cidade Aberta">
+  <meta property="og:description" content="Jogo original de ação em mundo aberto 2D inspirado no estilo clássico mobile, ambientado em uma metrópole tropical com missões, trânsito, polícia, lojas e veículos dirigíveis.">
+  <meta property="og:type" content="website">
+  <style>
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #0c121e;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  touch-action: none;
+  position: fixed;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  background: #2b3a4a;
+}
+
+/* HUD LAYER */
+#hudLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* TOP BAR */
+.hud-top-left {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.radar-wrapper {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(10, 20, 30, 0.85);
+  border: 3px solid #1abc9c;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+#minimapCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.district-label {
+  background: rgba(15, 23, 42, 0.88);
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  max-width: 130px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.hud-clock {
+  background: rgba(15, 23, 42, 0.8);
+  color: #f1f5f9;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* TOP RIGHT STATS */
+.hud-top-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.status-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-icon {
+  font-size: 11px;
+  font-weight: 900;
+  width: 16px;
+  text-align: center;
+}
+
+.stat-bar-container {
+  width: 90px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  transition: width 0.15s ease-out;
+}
+
+.stat-hp .stat-bar-fill { background: linear-gradient(90deg, #ef4444, #22c55e); }
+.stat-armor .stat-bar-fill { background: linear-gradient(90deg, #38bdf8, #0284c7); }
+.stat-stamina .stat-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+
+.cash-badge {
+  background: rgba(15, 23, 42, 0.9);
+  color: #4ade80;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* WANTED STARS */
+.wanted-stars {
+  display: flex;
+  gap: 3px;
+}
+
+.star {
+  font-size: 16px;
+  color: #475569;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+  transition: transform 0.2s;
+}
+
+.star.active {
+  color: #fbbf24;
+  animation: starPulse 0.8s infinite alternate;
+}
+
+@keyframes starPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px #f59e0b); }
+  100% { transform: scale(1.15); filter: drop-shadow(0 0 6px #fbbf24); }
+}
+
+/* WEAPON SELECTOR */
+.weapon-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  padding: 6px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.weapon-icon-art {
+  font-size: 20px;
+}
+
+.weapon-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.weapon-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.weapon-ammo {
+  font-size: 12px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+/* MISSION BANNER */
+.mission-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid #f59e0b;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 85%;
+  pointer-events: auto;
+  text-align: center;
+}
+
+.mission-title {
+  color: #f59e0b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mission-desc {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* VEHICLE SPEEDOMETER */
+.vehicle-hud {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.9);
+  padding: 6px 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #f1f5f9;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.vehicle-hud.active {
+  opacity: 1;
+}
+
+.speed-gauge {
+  font-size: 18px;
+  font-weight: 900;
+  color: #38bdf8;
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-unit {
+  font-size: 9px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+/* VIRTUAL CONTROLS FOR TOUCH */
+.touch-zone {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 50%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* JOYSTICK */
+.joystick-base {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(15, 23, 42, 0.6) 70%);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.joystick-thumb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 52px;
+  height: 52px;
+  margin-top: -26px;
+  margin-left: -26px;
+  background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  transition: transform 0.05s ease-out;
+}
+
+/* ACTION BUTTONS */
+.action-buttons-group {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(2, 56px);
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.action-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: #ffffff;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  user-select: none;
+  transition: transform 0.1s, background 0.1s;
+}
+
+.action-btn:active {
+  transform: scale(0.92);
+  background: rgba(56, 189, 248, 0.4);
+}
+
+.btn-attack {
+  grid-column: 3;
+  grid-row: 2;
+  width: 66px;
+  height: 66px;
+  background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%);
+  border-color: #fca5a5;
+}
+
+.btn-attack:active {
+  background: radial-gradient(circle, #dc2626 0%, #991b1b 100%);
+}
+
+.btn-sprint {
+  grid-column: 2;
+  grid-row: 2;
+  background: radial-gradient(circle, #f59e0b 0%, #d97706 100%);
+  border-color: #fde68a;
+}
+
+.btn-vehicle {
+  grid-column: 3;
+  grid-row: 1;
+  background: radial-gradient(circle, #10b981 0%, #047857 100%);
+  border-color: #a7f3d0;
+}
+
+.btn-horn {
+  grid-column: 2;
+  grid-row: 1;
+  background: radial-gradient(circle, #6366f1 0%, #4338ca 100%);
+  border-color: #c7d2fe;
+}
+
+.btn-switch {
+  grid-column: 1;
+  grid-row: 2;
+  background: radial-gradient(circle, #64748b 0%, #334155 100%);
+  border-color: #cbd5e1;
+}
+
+.btn-label {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 1px;
+}
+
+.btn-icon {
+  font-size: 18px;
+}
+
+/* TOP CONTROLS */
+.btn-top-menu {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f1f5f9;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* MODALS & SCREENS */
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-card {
+  background: #0f172a;
+  border: 2px solid #38bdf8;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  color: #f8fafc;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.shop-item {
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.shop-item:hover, .shop-item:active {
+  border-color: #38bdf8;
+  transform: translateY(-2px);
+}
+
+.shop-item-icon {
+  font-size: 26px;
+}
+
+.shop-item-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.shop-item-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: #4ade80;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border: 1px solid #38bdf8;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+/* WASTED / BUSTED SPLASH */
+.splash-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  pointer-events: auto;
+}
+
+.splash-overlay.show {
+  display: flex;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.splash-title {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+}
+
+.splash-wasted .splash-title {
+  color: #ef4444;
+}
+
+.splash-busted .splash-title {
+  color: #3b82f6;
+}
+
+.splash-subtitle {
+  font-size: 15px;
+  color: #e2e8f0;
+  margin-bottom: 24px;
+  text-align: center;
+  max-width: 80%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* DESKTOP HINT */
+.desktop-keys-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.7);
+  color: #94a3b8;
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .desktop-keys-hint { display: none; }
+}
+
+  </style>
+<script src="/_aistudio-iframe.js?v=2c34bde1"></script></head>
+<body>
+  <!-- Canvas principal do jogo -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD Interface Superior e Inferior -->
+  <div id="hudLayer">
+    <!-- Canto Superior Esquerdo: Mini-mapa radar, Distrito e Relógio -->
+    <div class="hud-top-left">
+      <div class="radar-wrapper">
+        <canvas id="minimapCanvas" width="110" height="110"></canvas>
+      </div>
+      <div class="district-label" id="districtBanner">Centro</div>
+      <div class="hud-clock" id="hudClock">14:00</div>
+    </div>
+
+    <!-- Faixa Central: Notificação de Missão Ativa -->
+    <div class="mission-banner" id="missionBanner">
+      <div class="mission-title" id="missionTitle">CIDADE DE GUANABARA</div>
+      <div class="mission-desc" id="missionDesc">Explore a metrópole ou vá até o Bar do Zeca no Centro.</div>
+    </div>
+
+    <!-- Canto Superior Direito: Barras de Status, Dinheiro, Estrelas e Arma -->
+    <div class="hud-top-right">
+      <div class="status-bars">
+        <div class="stat-row stat-hp">
+          <span class="stat-icon" style="color:#ef4444;">✚</span>
+          <div class="stat-bar-container">
+            <div class="stat-bar-fill" id="hpBarFill" style="width:100%;"></div>
+          </div>
+        </div>
+        <div class="stat-row stat-armor">
+          <span class="stat-icon" style="color:#38bdf8;">🛡</span>
+          <div class="stat-bar-container">
+            <div class="stat-bar-fill" id="armorBarFill" style="width:100%;"></div>
+          </div>
+        </div>
+        <div class="stat-row stat-stamina">
+          <span class="stat-icon" style="color:#fbbf24;">⚡</span>
+          <div class="stat-bar-container">
+            <div class="stat-bar-fill" id="staminaBarFill" style="width:100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cash-badge" id="hudCash">R$ 650</div>
+
+      <div class="wanted-stars">
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+      </div>
+
+      <div class="weapon-card" id="hudWeapon" title="Toque para trocar de arma">
+        <span class="weapon-icon-art" id="hudWeaponIcon">👊</span>
+        <div class="weapon-info">
+          <span class="weapon-name" id="hudWeaponName">Punhos</span>
+          <span class="weapon-ammo" id="hudWeaponAmmo">∞</span>
+        </div>
+      </div>
+
+      <button class="btn-top-menu" id="btnPause">⏸ PAUSAR</button>
+    </div>
+
+    <!-- Velocímetro Digital e Indicador de Veículo -->
+    <div class="vehicle-hud" id="vehicleHud">
+      <div>
+        <div style="font-size:10px; color:#94a3b8;" id="vehicleName">Veloce GT</div>
+        <div class="speed-gauge"><span id="speedValue">0</span> <span class="speed-unit">KM/H</span></div>
+      </div>
+    </div>
+
+    <!-- Dica de Teclado no PC -->
+    <div class="desktop-keys-hint">
+      PC: [W,A,S,D] Mover/Dirigir | [Espaço/Mouse] Atacar | [Shift] Correr/Freio | [F/Enter] Entrar/Sair | [Q/E] Trocar Arma | [H] Buzina
+    </div>
+  </div>
+
+  <!-- Controles Virtuais de Toque para Mobile Android -->
+  <div class="touch-zone">
+    <!-- Joystick Analógico Flutuante -->
+    <div class="joystick-base" id="joystickBase">
+      <div class="joystick-thumb" id="joystickThumb"></div>
+    </div>
+
+    <!-- Botões de Ação Virtuais -->
+    <div class="action-buttons-group">
+      <button class="action-btn btn-horn" id="btnHorn">
+        <span class="btn-icon">📢</span>
+        <span class="btn-label">Buzina</span>
+      </button>
+
+      <button class="action-btn btn-vehicle" id="btnVehicle">
+        <span class="btn-icon">🚗</span>
+        <span class="btn-label">Entrar</span>
+      </button>
+
+      <button class="action-btn btn-switch" id="btnSwitchWeapon">
+        <span class="btn-icon">🔄</span>
+        <span class="btn-label">Arma</span>
+      </button>
+
+      <button class="action-btn btn-sprint" id="btnSprint">
+        <span class="btn-icon">⚡</span>
+        <span class="btn-label">Correr</span>
+      </button>
+
+      <button class="action-btn btn-attack" id="btnAttack">
+        <span class="btn-icon">💥</span>
+        <span class="btn-label">Atacar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: Loja de Armas (Armaria Tropical) -->
+  <div class="modal-backdrop" id="gunShopModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚔ ARMARIA TROPICAL</div>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="shop-grid" id="gunShopList"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Loja de Roupas (Boutique Carioca) -->
+  <div class="modal-backdrop" id="clothesShopModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">👕 BOUTIQUE CARIOCA</div>
+        <button class="modal-close">✕</button>
+      </div>
+      <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Escolha seu visual:</div>
+      <div class="shop-grid">
+        <div class="shop-item" onclick="window.game.player.outfit.shirt='#ef4444'; window.game.sound.playCash();">
+          <div class="shop-item-icon">🎽</div>
+          <div class="shop-item-name">Regata Vermelha Carioca</div>
+          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
+        </div>
+        <div class="shop-item" onclick="window.game.player.outfit.shirt='#0284c7'; window.game.sound.playCash();">
+          <div class="shop-item-icon">👕</div>
+          <div class="shop-item-name">Camisa Bossa Nova Azul</div>
+          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
+        </div>
+        <div class="shop-item" onclick="window.game.player.outfit.shirt='#1e293b'; window.game.sound.playCash();">
+          <div class="shop-item-icon">👔</div>
+          <div class="shop-item-name">Terno Executivo Preto</div>
+          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
+        </div>
+        <div class="shop-item" onclick="window.game.player.outfit.shirt='#059669'; window.game.sound.playCash();">
+          <div class="shop-item-icon">🌺</div>
+          <div class="shop-item-name">Camisa Havaiana Tropical</div>
+          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Oficina Mecânica (Oficina do Zé) -->
+  <div class="modal-backdrop" id="garageShopModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🔧 OFICINA DO ZÉ</div>
+        <button class="modal-close">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn-primary" id="btnRepairCar">🛠️ Reparar Funilaria e Motor (R$ 150)</button>
+        <button class="btn-primary" id="btnRepaintCar" style="background:#475569;">🎨 Repintar Veículo com Nova Cor (R$ 80)</button>
+        <button class="btn-primary" id="btnTurboCar" style="background:#7c3aed;">⚡ Instalar Turbo Supercharger (R$ 1.200)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Celular de Missão / Diálogo de História -->
+  <div class="modal-backdrop" id="storyDialogModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="dialogModalTitle">📱 CELULAR</div>
+      </div>
+      <p style="font-size:14px; line-height:1.6; color:#f1f5f9;" id="dialogModalText"></p>
+      <button class="btn-primary" id="btnDialogConfirm" style="margin-top:10px;">ACEITAR MISSÃO</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Menu de Pausa & Estatísticas -->
+  <div class="modal-backdrop" id="pauseMenuModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⏸ JOGO PAUSADO</div>
+        <button class="modal-close">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <button class="btn-primary" onclick="window.game.togglePause();">CONTINUAR JOGO</button>
+        <button class="btn-primary" style="background:#059669;" onclick="window.game.saveGame(); alert('Progresso salvo com sucesso no navegador!');">💾 SALVAR JOGO (LOCALSTORAGE)</button>
+        <button class="btn-primary" style="background:#0284c7;" onclick="window.game.sound.toggleRadio(); alert('Rádio do carro alternada!');">📻 LIGAR/DESLIGAR RÁDIO</button>
+        <button class="btn-primary" style="background:#e11d48;" id="btnDownloadIndexHtml" onclick="window.downloadGameFile();">📥 BAIXAR ARQUIVO INDEX.HTML</button>
+        <div style="font-size:12px; color:#94a3b8; text-align:center; margin-top:10px;">
+          Rio Tropical: Cidade Aberta v1.0<br>
+          Criado em arquivo único sem dependências externas.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tela de Derrota / Prisão (Wasted / Busted) -->
+  <div class="splash-overlay" id="splashOverlay">
+    <div class="splash-title" id="splashTitle">DESPERDIÇADO</div>
+    <div class="splash-subtitle" id="splashSubtitle">Você foi derrotado.</div>
+  </div>
+
+  <!-- TELA INICIAL: Toque para começar (desbloqueia áudio web) -->
+  <div id="startScreenOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:radial-gradient(circle, #0f172a 0%, #020617 100%); z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
+    <div style="font-size:32px; font-weight:900; color:#38bdf8; letter-spacing:2px; text-shadow:0 4px 16px rgba(56,189,248,0.4); margin-bottom:6px;">
+      RIO TROPICAL
+    </div>
+    <div style="font-size:16px; font-weight:700; color:#f59e0b; letter-spacing:4px; margin-bottom:28px;">
+      CIDADE ABERTA
+    </div>
+    <div style="background:rgba(255,255,255,0.06); padding:16px 20px; border-radius:16px; border:1px solid rgba(255,255,255,0.15); max-width:380px; margin-bottom:28px; font-size:13px; line-height:1.5; color:#cbd5e1;">
+      Mundo aberto inspirado no clássico mobile estilo Java. Pilote carros e motos, explore a praia, favela, centro e porto, enfrente a polícia, compre armas e cumpra missões!
+    </div>
+    <button id="btnStartGame" style="background:linear-gradient(135deg, #0284c7, #0369a1); border:2px solid #38bdf8; color:#ffffff; font-size:16px; font-weight:800; padding:14px 36px; border-radius:30px; cursor:pointer; box-shadow:0 4px 20px rgba(2,132,199,0.6);">
+      ▶ TOQUE PARA JOGAR
+    </button>
+    <button onclick="window.downloadGameFile();" style="margin-top:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); color:#94a3b8; font-size:13px; font-weight:600; padding:10px 20px; border-radius:20px; cursor:pointer;">
+      📥 Baixar index.html (Jogo Offline)
+    </button>
+  </div>
+
+  <!-- CÓDIGO DO JOGO EM JAVASCRIPT PURO -->
+  <script type="module" src="/index.html?html-proxy&index=0.js"></script>
+</body>
+</html>
