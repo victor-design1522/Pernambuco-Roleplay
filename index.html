@@ -1,1145 +1,815 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Rio Tropical: Cidade Aberta - Edition 2.0</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0c121e;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      touch-action: none;
-      position: fixed;
-    }
-
-    #gameCanvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-      background: #1e293b;
-    }
-
-    #hudLayer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    .hud-top-left {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      pointer-events: auto;
-    }
-
-    .radar-wrapper {
-      position: relative;
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      background: rgba(10, 20, 30, 0.85);
-      border: 3px solid #1abc9c;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
-      overflow: hidden;
-    }
-
-    #minimapCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .district-label {
-      background: rgba(15, 23, 42, 0.88);
-      color: #38bdf8;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      text-align: center;
-      white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    }
-
-    .hud-clock {
-      background: rgba(15, 23, 42, 0.8);
-      color: #f1f5f9;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .hud-top-right {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-      pointer-events: auto;
-    }
-
-    .status-bars {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      background: rgba(15, 23, 42, 0.85);
-      padding: 8px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    }
-
-    .stat-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .stat-icon {
-      font-size: 11px;
-      font-weight: 900;
-      width: 16px;
-      text-align: center;
-    }
-
-    .stat-bar-container {
-      width: 90px;
-      height: 8px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .stat-bar-fill {
-      height: 100%;
-      transition: width 0.15s ease-out;
-    }
-
-    .stat-hp .stat-bar-fill { background: linear-gradient(90deg, #ef4444, #22c55e); }
-    .stat-armor .stat-bar-fill { background: linear-gradient(90deg, #38bdf8, #0284c7); }
-    .stat-stamina .stat-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-
-    .cash-badge {
-      background: rgba(15, 23, 42, 0.9);
-      color: #4ade80;
-      font-size: 16px;
-      font-weight: 800;
-      padding: 4px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(74, 222, 128, 0.4);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    }
-
-    .wanted-stars {
-      display: flex;
-      gap: 3px;
-    }
-
-    .star {
-      font-size: 16px;
-      color: #475569;
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
-    }
-
-    .star.active {
-      color: #fbbf24;
-      animation: starPulse 0.8s infinite alternate;
-    }
-
-    @keyframes starPulse {
-      0% { transform: scale(1); filter: drop-shadow(0 0 2px #f59e0b); }
-      100% { transform: scale(1.15); filter: drop-shadow(0 0 6px #fbbf24); }
-    }
-
-    .weapon-card {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(15, 23, 42, 0.9);
-      padding: 6px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
-    .weapon-icon-art { font-size: 20px; }
-    .weapon-info { display: flex; flex-direction: column; }
-    .weapon-name { font-size: 11px; font-weight: 700; color: #e2e8f0; }
-    .weapon-ammo { font-size: 12px; font-weight: 800; color: #38bdf8; }
-
-    .mission-banner {
-      position: absolute;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.92);
-      padding: 6px 16px;
-      border-radius: 20px;
-      border: 1px solid #f59e0b;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      max-width: 85%;
-      pointer-events: auto;
-      text-align: center;
-    }
-
-    .mission-title { color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
-    .mission-desc { color: #f8fafc; font-size: 12px; font-weight: 600; margin-top: 2px; }
-
-    .vehicle-hud {
-      position: absolute;
-      bottom: 110px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.9);
-      padding: 6px 16px;
-      border-radius: 24px;
-      border: 1px solid rgba(56, 189, 248, 0.5);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #f1f5f9;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: auto;
-    }
-
-    .vehicle-hud.active { opacity: 1; }
-    .speed-gauge { font-size: 18px; font-weight: 900; color: #38bdf8; }
-    .speed-unit { font-size: 9px; color: #94a3b8; font-weight: 700; }
-
-    .touch-zone {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 50%;
-      pointer-events: none;
-      z-index: 20;
-    }
-
-    .joystick-base {
-      position: absolute;
-      bottom: 24px;
-      left: 24px;
-      width: 120px;
-      height: 120px;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(15, 23, 42, 0.6) 70%);
-      border: 2px solid rgba(255, 255, 255, 0.25);
-      border-radius: 50%;
-      pointer-events: auto;
-      touch-action: none;
-    }
-
-    .joystick-thumb {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 52px;
-      height: 52px;
-      margin-top: -26px;
-      margin-left: -26px;
-      background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      pointer-events: none;
-      transition: transform 0.05s ease-out;
-    }
-
-    .action-buttons-group {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      display: grid;
-      grid-template-columns: repeat(3, 56px);
-      grid-template-rows: repeat(2, 56px);
-      gap: 10px;
-      pointer-events: auto;
-    }
-
-    .action-btn {
-      background: rgba(15, 23, 42, 0.85);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      color: #ffffff;
-      font-weight: 800;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      touch-action: none;
-    }
-
-    .action-btn:active { transform: scale(0.92); background: rgba(56, 189, 248, 0.4); }
-    .btn-attack { grid-column: 3; grid-row: 2; width: 66px; height: 66px; background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
-    .btn-sprint { grid-column: 2; grid-row: 2; background: radial-gradient(circle, #f59e0b 0%, #d97706 100%); border-color: #fde68a; }
-    .btn-vehicle { grid-column: 3; grid-row: 1; background: radial-gradient(circle, #10b981 0%, #047857 100%); border-color: #a7f3d0; }
-    .btn-horn { grid-column: 2; grid-row: 1; background: radial-gradient(circle, #6366f1 0%, #4338ca 100%); border-color: #c7d2fe; }
-    .btn-switch { grid-column: 1; grid-row: 2; background: radial-gradient(circle, #64748b 0%, #334155 100%); border-color: #cbd5e1; }
-    .btn-label { font-size: 8px; text-transform: uppercase; margin-top: 1px; }
-    .btn-icon { font-size: 18px; }
-
-    .btn-top-menu {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #f1f5f9;
-      font-size: 12px;
-      font-weight: bold;
-      padding: 6px 12px;
-      border-radius: 12px;
-      cursor: pointer;
-    }
-
-    .modal-backdrop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 16px;
-    }
-
-    .modal-backdrop.open { display: flex; }
-    .modal-card {
-      background: #0f172a;
-      border: 2px solid #38bdf8;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 420px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-      color: #f8fafc;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 10px;
-    }
-
-    .modal-title { font-size: 18px; font-weight: 800; color: #38bdf8; }
-    .modal-close { background: transparent; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; }
-
-    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .shop-item {
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .shop-item:hover { border-color: #38bdf8; }
-    .shop-item-icon { font-size: 26px; }
-    .shop-item-name { font-size: 12px; font-weight: 700; color: #f1f5f9; }
-    .shop-item-price { font-size: 13px; font-weight: 800; color: #4ade80; }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #0284c7, #0369a1);
-      border: 1px solid #38bdf8;
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      padding: 10px 16px;
-      border-radius: 12px;
-      cursor: pointer;
-      width: 100%;
-      text-align: center;
-    }
-
-    .splash-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.85);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-    }
-
-    .splash-overlay.show { display: flex; animation: fadeIn 0.4s ease-out; }
-    .splash-title { font-size: 42px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px; }
-    .splash-wasted .splash-title { color: #ef4444; }
-    .splash-busted .splash-title { color: #3b82f6; }
-    .splash-subtitle { font-size: 15px; color: #e2e8f0; margin-bottom: 24px; text-align: center; }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    .desktop-keys-hint {
-      position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.7);
-      color: #94a3b8;
-      font-size: 10px;
-      padding: 4px 12px;
-      border-radius: 12px;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 600px) { .desktop-keys-hint { display: none; } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cidade do Sol - Mundo Aberto</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Arial, sans-serif; }
+html, body { width:100%; height:100%; overflow:hidden; background:#1a1a2e; }
+canvas { display:block; background:#000; }
+.tela { position:absolute; top:0; left:0; width:100%; height:100%; display:none; flex-direction:column; background:rgba(10,10,30,0.95); color:#fff; z-index:100; padding:4%; overflow-y:auto; }
+.ativa { display:flex; }
+button { background:#f76b1c; border:none; color:#fff; padding:3% 5%; margin:2% 0; border-radius:8px; font-size:1em; cursor:pointer; box-shadow:0 3px 0 #c85510; }
+button:active { transform:translateY(2px); box-shadow:0 1px 0 #c85510; }
+input, select { background:#2a2a4e; border:1px solid #444; color:#fff; padding:3%; border-radius:6px; margin:1% 0; width:100%; }
+.cx { background:#252540; border-radius:10px; padding:4%; margin:2% 0; }
+.lin { display:flex; gap:3%; flex-wrap:wrap; }
+.col { flex:1; min-width:120px; }
+.tit { font-size:1.4em; font-weight:bold; margin-bottom:3%; color:#ffc107; text-align:center; }
+.sub { font-weight:bold; margin:2% 0; color:#81d4fa; }
+.aviso { color:#ff9800; font-size:0.9em; margin-top:2%; }
+.rodape { margin-top:auto; text-align:center; font-size:0.8em; color:#888; padding:4% 0; }
+</style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
+<canvas id="jogo"></canvas>
 
-  <div id="hudLayer">
-    <div class="hud-top-left">
-      <div class="radar-wrapper">
-        <canvas id="minimapCanvas" width="110" height="110"></canvas>
-      </div>
-      <div class="district-label" id="districtBanner">Centro</div>
-      <div class="hud-clock" id="hudClock">12:00</div>
-    </div>
+<!-- Tela de Início -->
+<div id="telaInicio" class="tela ativa">
+<div class="tit">🌆 Cidade do Sol</div>
+<p style="text-align:center; margin-bottom:5%; color:#ccc;">Um mundo aberto inspirado nas belezas do litoral brasileiro</p>
+<button onclick="iniciarJogo()">▶ Jogar</button>
+<button onclick="carregarJogo()">📂 Continuar</button>
+<div class="aviso">O progresso é salvo automaticamente no navegador</div>
+<div class="rodape">Versão 1.0 | Apenas para navegador Android</div>
+</div>
 
-    <div class="mission-banner" id="missionBanner">
-      <div class="mission-title" id="missionTitle">RIO TROPICAL</div>
-      <div class="mission-desc" id="missionDesc">Explore a cidade ou vá até o Bar do Zeca no Centro.</div>
-    </div>
+<!-- Tela de Pausa -->
+<div id="telaPausa" class="tela">
+<div class="tit">⏸ Pausado</div>
+<button onclick="resumirJogo()">▶ Retomar</button>
+<button onclick="salvarJogo()">💾 Salvar</button>
+<button onclick="abrirLojaArmas()">🔫 Loja de Armas</button>
+<button onclick="abrirLojaRoupas()">👕 Loja de Roupas</button>
+<button onclick="abrirOficina()">🔧 Oficina</button>
+<button onclick="abrirMissoes()">📋 Missões</button>
+<button onclick="abrirInventario()">🎒 Inventário</button>
+<button onclick="sairParaInicio()">🚪 Sair</button>
+</div>
 
-    <div class="hud-top-right">
-      <div class="status-bars">
-        <div class="stat-row stat-hp">
-          <span class="stat-icon" style="color:#ef4444;">✚</span>
-          <div class="stat-bar-container"><div class="stat-bar-fill" id="hpBarFill" style="width:100%;"></div></div>
-        </div>
-        <div class="stat-row stat-armor">
-          <span class="stat-icon" style="color:#38bdf8;">🛡</span>
-          <div class="stat-bar-container"><div class="stat-bar-fill" id="armorBarFill" style="width:100%;"></div></div>
-        </div>
-        <div class="stat-row stat-stamina">
-          <span class="stat-icon" style="color:#fbbf24;">⚡</span>
-          <div class="stat-bar-container"><div class="stat-bar-fill" id="staminaBarFill" style="width:100%;"></div></div>
-        </div>
-      </div>
+<!-- Tela de Loja de Armas -->
+<div id="lojaArmas" class="tela">
+<div class="tit">🔫 Loja de Armamentos</div>
+<div id="listaArmas"></div>
+<button onclick="fecharTela()">← Voltar</button>
+</div>
 
-      <div class="cash-badge" id="hudCash">R$ 500</div>
+<!-- Tela de Loja de Roupas -->
+<div id="lojaRoupas" class="tela">
+<div class="tit">👕 Moda Urbana</div>
+<div id="listaRoupas"></div>
+<button onclick="fecharTela()">← Voltar</button>
+</div>
 
-      <div class="wanted-stars" id="wantedStars">
-        <span class="star">★</span>
-        <span class="star">★</span>
-        <span class="star">★</span>
-        <span class="star">★</span>
-        <span class="star">★</span>
-      </div>
+<!-- Tela de Oficina -->
+<div id="oficina" class="tela">
+<div class="tit">🔧 Oficina Mecânica</div>
+<div id="listaVeiculos"></div>
+<button onclick="fecharTela()">← Voltar</button>
+</div>
 
-      <div class="weapon-card" id="hudWeapon">
-        <span class="weapon-icon-art" id="hudWeaponIcon">👊</span>
-        <div class="weapon-info">
-          <span class="weapon-name" id="hudWeaponName">Punhos</span>
-          <span class="weapon-ammo" id="hudWeaponAmmo">∞</span>
-        </div>
-      </div>
+<!-- Tela de Missões -->
+<div id="telaMissoes" class="tela">
+<div class="tit">📋 Missões</div>
+<div class="sub">Principais</div>
+<div id="missoesPrincipais" class="cx"></div>
+<div class="sub">Secundárias</div>
+<div id="missoesSecundarias" class="cx"></div>
+<div class="sub">Corridas</div>
+<div id="listaCorridas" class="cx"></div>
+<button onclick="fecharTela()">← Voltar</button>
+</div>
 
-      <button class="btn-top-menu" id="btnPause">⏸ PAUSA</button>
-    </div>
+<!-- Tela de Inventário -->
+<div id="telaInventario" class="tela">
+<div class="tit">🎒 Inventário</div>
+<div class="cx">
+<p><strong>Dinheiro:</strong> R$<span id="valDinheiro">0</span></p>
+<p><strong>Vida:</strong> <span id="valVida">100</span>/100</p>
+<p><strong>Colete:</strong> <span id="valColete">0</span>/100</p>
+<p><strong>Energia:</strong> <span id="valEnergia">100</span>/100</p>
+</div>
+<div class="sub">Itens</div>
+<div id="itensInventario" class="cx"></div>
+<button onclick="fecharTela()">← Voltar</button>
+</div>
 
-    <div class="vehicle-hud" id="vehicleHud">
-      <div>
-        <div style="font-size:10px; color:#94a3b8;" id="vehicleName">Carro</div>
-        <div class="speed-gauge"><span id="speedValue">0</span> <span class="speed-unit">KM/H</span></div>
-      </div>
-    </div>
+<!-- Tela de Hospital -->
+<div id="telaHospital" class="tela">
+<div class="tit">🏥 Hospital Municipal</div>
+<p style="text-align:center; margin:3% 0;">Recuperar vida custa R$ 500</p>
+<button onclick="pagarHospital()">💉 Recuperar Vida</button>
+<button onclick="fecharTela()">← Voltar</button>
+</div>
 
-    <div class="desktop-keys-hint">
-      PC: [WASD] Mover | [Espaço] Atacar | [Shift] Correr | [F/Enter] Veículo | [Q/E] Arma | [H] Buzina
-    </div>
-  </div>
+<!-- Tela de Delegacia -->
+<div id="telaDelegacia" class="tela">
+<div class="tit">🚓 Delegacia de Polícia</div>
+<p style="text-align:center; margin:3% 0;">Apagar mandado custa R$ 1000 por estrela</p>
+<button onclick="pagarDelegacia()">⚖️ Pagar Multa</button>
+<button onclick="fecharTela()">← Voltar</button>
+</div>
 
-  <div class="touch-zone">
-    <div class="joystick-base" id="joystickBase">
-      <div class="joystick-thumb" id="joystickThumb"></div>
-    </div>
+<script>
+// ==============================================
+// CONFIGURAÇÕES GERAIS E CONSTANTES
+// ==============================================
+const LARGURA_TELA = window.innerWidth;
+const ALTURA_TELA = window.innerHeight;
+const canvas = document.getElementById('jogo');
+const ctx = canvas.getContext('2d');
+canvas.width = LARGURA_TELA;
+canvas.height = ALTURA_TELA;
 
-    <div class="action-buttons-group">
-      <button class="action-btn btn-horn" id="btnHorn"><span class="btn-icon">📢</span><span class="btn-label">Buzina</span></button>
-      <button class="action-btn btn-vehicle" id="btnVehicle"><span class="btn-icon">🚗</span><span class="btn-label">Entrar</span></button>
-      <button class="action-btn btn-switch" id="btnSwitchWeapon"><span class="btn-icon">🔄</span><span class="btn-label">Arma</span></button>
-      <button class="action-btn btn-sprint" id="btnSprint"><span class="btn-icon">⚡</span><span class="btn-label">Correr</span></button>
-      <button class="action-btn btn-attack" id="btnAttack"><span class="btn-icon">💥</span><span class="btn-label">Atacar</span></button>
-    </div>
-  </div>
+// Dimensões do mapa
+const TAMANHO_MUNDO = 8000;
+const TAMANHO_QUADRA = 200;
+const TAMANHO_RUA = 40;
 
-  <div class="modal-backdrop" id="gunShopModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">⚔ ARMARIA TROPICAL</div>
-        <button class="modal-close" onclick="closeModals()">✕</button>
-      </div>
-      <div class="shop-grid" id="gunShopList"></div>
-    </div>
-  </div>
+// Cores do ambiente
+const CORES = {
+    ceuDia: '#87CEEB',
+    ceuNoite: '#0a0a23',
+    ceuEntardecer: '#ff7e47',
+    asfalto: '#333333',
+    calcada: '#c2c2c2',
+    grama: '#4a7c3f',
+    agua: '#1e90ff',
+    areia: '#f4e4ba',
+    predio: '#7d7d7d',
+    predioEscuro: '#5a5a5a',
+    favela: '#8b4513',
+    industrial: '#444444',
+    porto: '#654321',
+    parque: '#2e7d32',
+    semaforoVermelho: '#e53935',
+    semaforoAmarelo: '#fdd835',
+    semaforoVerde: '#43a047'
+};
 
-  <div class="modal-backdrop" id="pauseMenuModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">⏸ JOGO PAUSADO</div>
-        <button class="modal-close" onclick="closeModals()">✕</button>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <button class="btn-primary" onclick="game.togglePause()">CONTINUAR JOGO</button>
-        <button class="btn-primary" style="background:#f59e0b;" onclick="game.unstuckPlayer(); game.togglePause();">🚀 DESTRAVAR PERSONAGEM</button>
-        <button class="btn-primary" style="background:#0284c7;" onclick="game.toggleWeather(); game.togglePause();">🌦️ ALTERNAR CLIMA</button>
-        <button class="btn-primary" style="background:#059669;" onclick="game.saveGame(); game.togglePause();">💾 SALVAR PROGRESSO</button>
-      </div>
-    </div>
-  </div>
+// Tipos de veículos
+const TIPOS_VEICULOS = {
+    carro: { cor: '#e53935', velocidadeMax: 4.5, aceleracao: 0.15, freio: 0.25, largura: 40, altura: 20, preco: 15000 },
+    moto: { cor: '#ffc107', velocidadeMax: 6, aceleracao: 0.2, freio: 0.3, largura: 20, altura: 12, preco: 8000 },
+    onibus: { cor: '#1976d2', velocidadeMax: 2.8, aceleracao: 0.08, freio: 0.15, largura: 70, altura: 25, preco: 45000 },
+    caminhao: { cor: '#7b1fa2', velocidadeMax: 2.2, aceleracao: 0.05, freio: 0.12, largura: 80, altura: 28, preco: 55000 },
+    policia: { cor: '#0066cc', velocidadeMax: 5.5, aceleracao: 0.18, freio: 0.28, largura: 42, altura: 20, preco: 0 }
+};
 
-  <div class="splash-overlay" id="splashOverlay">
-    <div class="splash-title" id="splashTitle">DESPERDIÇADO</div>
-    <div class="splash-subtitle" id="splashSubtitle">Você se deu mal!</div>
-  </div>
+// Armas disponíveis
+const ARMAS = {
+    punho: { nome: 'Punho', dano: 5, alcance: 25, cadencia: 500, preco: 0, municao: Infinity },
+    rev: { nome: 'Revólver', dano: 25, alcance: 200, cadencia: 800, preco: 3000, municao: 30 },
+    smg: { nome: 'Submetralhadora', dano: 12, alcance: 180, cadencia: 120, preco: 8000, municao: 120 },
+    rifle: { nome: 'Rifle', dano: 40, alcance: 350, cadencia: 400, preco: 15000, municao: 60 },
+    espingarda: { nome: 'Espingarda', dano: 60, alcance: 100, cadencia: 1000, preco: 12000, municao: 24 }
+};
 
-  <div id="startScreenOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:radial-gradient(circle, #0f172a 0%, #020617 100%); z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
-    <div style="font-size:32px; font-weight:900; color:#38bdf8; letter-spacing:2px; margin-bottom:6px;">RIO TROPICAL</div>
-    <div style="font-size:16px; font-weight:700; color:#f59e0b; letter-spacing:4px; margin-bottom:28px;">CIDADE ABERTA 2.0</div>
-    <button id="btnStartGame" style="background:linear-gradient(135deg, #0284c7, #0369a1); border:2px solid #38bdf8; color:#ffffff; font-size:16px; font-weight:800; padding:14px 36px; border-radius:30px; cursor:pointer; box-shadow:0 4px 20px rgba(2,132,199,0.6);">
-      ▶ TOQUE PARA JOGAR
-    </button>
-  </div>
+// Roupas disponíveis
+const ROUPAS = {
+    casual: { nome: 'Casual', cor: '#4fc3f7', preco: 0 },
+    esportivo: { nome: 'Esportivo', cor: '#ff5722', preco: 2000 },
+    social: { nome: 'Social', cor: '#212121', preco: 5000 },
+    favela: { nome: 'Estilo Local', cor: '#9c27b0', preco: 1500 },
+    militar: { nome: 'Tático', cor: '#455a64', preco: 10000 }
+};
 
-  <script>
-    // --- SINTETIZADOR DE ÁUDIO WEB ---
-    class SoundEngine {
-      constructor() {
-        this.ctx = null;
-      }
-      init() {
-        if (!this.ctx) {
-          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-      }
-      playShoot() {
+// ==============================================
+// SISTEMA DE SOM (GERADO POR JS)
+// ==============================================
+const Som = {
+    ctx: null,
+    iniciar() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    },
+    tocar(freq, dur, tipo = 'sine', vol = 0.1) {
         if (!this.ctx) return;
-        let osc = this.ctx.createOscillator();
-        let gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.15);
-      }
-      playExplosion() {
-        if (!this.ctx) return;
-        let osc = this.ctx.createOscillator();
-        let gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.5);
-        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.5);
-      }
-      playHorn() {
-        if (!this.ctx) return;
-        let osc = this.ctx.createOscillator();
-        let gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.3);
-      }
-      playCash() {
-        if (!this.ctx) return;
-        let osc = this.ctx.createOscillator();
-        let gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-        osc.frequency.setValueAtTime(1200, this.ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.25);
-      }
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.connect(g); g.connect(this.ctx.destination);
+        o.type = tipo; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur / 1000);
+        o.start(); o.stop(this.ctx.currentTime + dur / 1000);
+    },
+    passo() { this.tocar(200 + Math.random() * 100, 80, 'triangle', 0.04); },
+    motor() { this.tocar(80 + Math.random() * 40, 100, 'sawtooth', 0.06); },
+    tiro() { this.tocar(120, 60, 'square', 0.15); setTimeout(()=>this.tocar(90, 40, 'triangle', 0.08), 30); },
+    batida() { this.tocar(60, 120, 'triangle', 0.12); },
+    dinheiro() { this.tocar(880, 80, 'sine', 0.1); setTimeout(()=>this.tocar(1100, 100, 'sine', 0.1), 80); },
+    dano() { this.tocar(150, 150, 'sawtooth', 0.1); },
+    sirene() { this.tocar(880, 200, 'square', 0.08); setTimeout(()=>this.tocar(440, 200, 'square', 0.08), 200); },
+    alerta() { this.tocar(440, 150, 'sine', 0.1); }
+};
+
+// ==============================================
+// CLASSES PRINCIPAIS
+// ==============================================
+
+// Jogador
+class Jogador {
+    constructor() {
+        this.x = TAMANHO_MUNDO / 2;
+        this.y = TAMANHO_MUNDO / 2;
+        this.angulo = 0;
+        this.vel = 0;
+        this.velMax = 3;
+        this.velCorrida = 5;
+        this.vida = 100;
+        this.vidaMax = 100;
+        this.colete = 0;
+        this.coleteMax = 100;
+        this.energia = 100;
+        this.energiaMax = 100;
+        this.dinheiro = 5000;
+        this.procurado = 0;
+        this.tempoProcurado = 0;
+        this.veiculo = null;
+        this.estaEmVeiculo = false;
+        this.armaAtual = 'punho';
+        this.ultimoTiro = 0;
+        this.roupa = 'casual';
+        this.andando = false;
+        this.ultimoPasso = 0;
+        this.inventario = { armas: ['punho'], roupas: ['casual'], veiculos: [] };
+        this.missoes = {
+            principais: [
+                { id: 'm1', nome: 'Conhecer a Cidade', desc: 'Visite o centro comercial', concluida: false, progresso: 0, alvo: 'centro' },
+                { id: 'm2', nome: 'Primeiro Contato', desc: 'Fale com o comerciante da feira', concluida: false, progresso: 0, alvo: 'feira' },
+                { id: 'm3', nome: 'Respeito às Regras', desc: 'Pague uma multa na delegacia', concluida: false, progresso: 0, alvo: 'delegacia' }
+            ],
+            secundarias: [
+                { id: 's1', nome: 'Entrega Expressa', desc: 'Leve o pacote até a praia', concluida: false, progresso: 0, alvo: 'praia' },
+                { id: 's2', nome: 'Socorro no Parque', desc: 'Ajude a encontrar um objeto perdido', concluida: false, progresso: 0, alvo: 'parque' },
+                { id: 's3', nome: 'Passeio Industrial', desc: 'Visite a zona fabril', concluida: false, progresso: 0, alvo: 'industrial' }
+            ],
+            corridas: [
+                { id: 'c1', nome: 'Circuito Litorâneo', desc: 'Corrida pela orla', concluida: false, tempoRecord: null, premio: 2000 },
+                { id: 'c2', nome: 'Desafio do Centro', desc: 'Velocidade entre prédios', concluida: false, tempoRecord: null, premio: 3000 },
+                { id: 'c3', nome: 'Rota da Serra', desc: 'Suba e desça a zona alta', concluida: false, tempoRecord: null, premio: 4000 }
+            ]
+        };
     }
 
-    const sound = new SoundEngine();
-
-    // --- ARMAS ---
-    const WEAPONS = [
-      { name: 'Punhos', icon: '👊', ammo: Infinity, maxAmmo: Infinity, damage: 15, range: 40, rate: 350 },
-      { name: 'Pistola 9mm', icon: '🔫', ammo: 60, maxAmmo: 120, damage: 30, range: 300, rate: 250, price: 200 },
-      { name: 'MP5 Sub', icon: '🔫', ammo: 120, maxAmmo: 240, damage: 25, range: 350, rate: 100, price: 600 },
-      { name: 'Fuzil IA2', icon: '', ammo: 90, maxAmmo: 180, damage: 45, range: 450, rate: 140, price: 1200 },
-      { name: 'RPG-7', icon: '🚀', ammo: 5, maxAmmo: 15, damage: 200, range: 500, rate: 1000, price: 3000, explosive: true }
-    ];
-
-    // --- GAME ENGINE PRINCIPAL ---
-    class Game {
-      constructor() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.minimapCanvas = document.getElementById('minimapCanvas');
-        this.minimapCtx = this.minimapCanvas.getContext('2d');
-
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-
-        this.worldSize = 3000;
-        this.paused = false;
-        this.weather = 'sunny'; // sunny | rainy
-        this.lastTime = performance.now();
-
-        this.keys = {};
-        this.touchVector = { x: 0, y: 0 };
-        this.isSprinting = false;
-        this.isAttacking = false;
-
-        this.bullets = [];
-        this.particles = [];
-        this.pedestrians = [];
-        this.vehicles = [];
-        this.buildings = [];
-
-        this.player = {
-          x: 1500,
-          y: 1500,
-          radius: 14,
-          angle: 0,
-          speed: 0,
-          maxSpeed: 3.2,
-          hp: 100,
-          armor: 50,
-          stamina: 100,
-          cash: 500,
-          wantedLevel: 0,
-          weaponIdx: 0,
-          inVehicle: null,
-          lastShot: 0
-        };
-
-        this.initWorld();
-        this.bindEvents();
-        this.bindTouchControls();
-      }
-
-      initWorld() {
-        // Criar Edifícios e Blocos de Cidade
-        for (let x = 300; x < this.worldSize - 300; x += 400) {
-          for (let y = 300; y < this.worldSize - 300; y += 400) {
-            this.buildings.push({
-              x: x,
-              y: y,
-              w: 220,
-              h: 220,
-              color: '#334155'
-            });
-          }
+    atualizar(controles, delta) {
+        if (this.estaEmVeiculo && this.veiculo) {
+            this.veiculo.atualizarPorJogador(controles, delta);
+            this.x = this.veiculo.x;
+            this.y = this.veiculo.y;
+            this.angulo = this.veiculo.angulo;
+            return;
         }
 
-        // Spawn inicial de Pedestres
-        for (let i = 0; i < 40; i++) {
-          this.pedestrians.push({
-            x: Math.random() * (this.worldSize - 400) + 200,
-            y: Math.random() * (this.worldSize - 400) + 200,
-            angle: Math.random() * Math.PI * 2,
-            speed: 1,
-            hp: 30,
-            isCop: i < 5
-          });
-        }
-
-        // Spawn de Veículos
-        let carColors = ['#ef4444', '#38bdf8', '#fbbf24', '#10b981', '#a855f7'];
-        for (let i = 0; i < 15; i++) {
-          this.vehicles.push({
-            x: 200 + i * 180,
-            y: 260,
-            w: 36,
-            h: 68,
-            angle: Math.PI / 2,
-            speed: 0,
-            maxSpeed: 7.5,
-            hp: 200,
-            color: carColors[i % carColors.length],
-            isCop: i === 0
-          });
-        }
-      }
-
-      bindEvents() {
-        window.addEventListener('resize', () => {
-          this.width = window.innerWidth;
-          this.height = window.innerHeight;
-          this.canvas.width = this.width;
-          this.canvas.height = this.height;
-        });
-
-        window.addEventListener('keydown', (e) => {
-          this.keys[e.key.toLowerCase()] = true;
-          if (e.key.toLowerCase() === 'f' || e.key === 'Enter') this.toggleVehicle();
-          if (e.key.toLowerCase() === 'q') this.switchWeapon(-1);
-          if (e.key.toLowerCase() === 'e') this.switchWeapon(1);
-          if (e.key.toLowerCase() === 'h') this.honk();
-        });
-
-        window.addEventListener('keyup', (e) => {
-          this.keys[e.key.toLowerCase()] = false;
-        });
-
-        document.getElementById('btnStartGame').addEventListener('click', () => {
-          sound.init();
-          document.getElementById('startScreenOverlay').style.display = 'none';
-          this.startLoop();
-        });
-
-        document.getElementById('btnPause').addEventListener('click', () => this.togglePause());
-        document.getElementById('hudWeapon').addEventListener('click', () => this.switchWeapon(1));
-      }
-
-      bindTouchControls() {
-        const base = document.getElementById('joystickBase');
-        const thumb = document.getElementById('joystickThumb');
-
-        let activeTouchId = null;
-        let baseRect = null;
-
-        base.addEventListener('touchstart', (e) => {
-          sound.init();
-          let touch = e.changedTouches[0];
-          activeTouchId = touch.identifier;
-          baseRect = base.getBoundingClientRect();
-          this.updateJoystick(touch, baseRect, thumb);
-        });
-
-        base.addEventListener('touchmove', (e) => {
-          for (let touch of e.changedTouches) {
-            if (touch.identifier === activeTouchId) {
-              this.updateJoystick(touch, baseRect, thumb);
+        this.andando = false;
+        let velAtual = controles.correndo && this.energia > 0 ? this.velCorrida : this.velMax;
+        
+        if (controles.mover.x !== 0 || controles.mover.y !== 0) {
+            const comp = Math.sqrt(controles.mover.x ** 2 + controles.mover.y ** 2);
+            const dx = (controles.mover.x / comp) * velAtual;
+            const dy = (controles.mover.y / comp) * velAtual;
+            
+            this.angulo = Math.atan2(dy, dx);
+            this.mover(dx, dy);
+            this.andando = true;
+            
+            if (controles.correndo && this.energia > 0) this.energia = Math.max(0, this.energia - 0.15);
+            if (Date.now() - this.ultimoPasso > 300 / velAtual) {
+                Som.passo();
+                this.ultimoPasso = Date.now();
             }
-          }
-        });
-
-        const resetJoystick = () => {
-          activeTouchId = null;
-          thumb.style.transform = `translate(0px, 0px)`;
-          this.touchVector = { x: 0, y: 0 };
-        };
-
-        base.addEventListener('touchend', resetJoystick);
-        base.addEventListener('touchcancel', resetJoystick);
-
-        document.getElementById('btnAttack').addEventListener('touchstart', (e) => { e.preventDefault(); this.isAttacking = true; });
-        document.getElementById('btnAttack').addEventListener('touchend', () => { this.isAttacking = false; });
-        document.getElementById('btnSprint').addEventListener('touchstart', (e) => { e.preventDefault(); this.isSprinting = true; });
-        document.getElementById('btnSprint').addEventListener('touchend', () => { this.isSprinting = false; });
-        document.getElementById('btnVehicle').addEventListener('click', () => this.toggleVehicle());
-        document.getElementById('btnSwitchWeapon').addEventListener('click', () => this.switchWeapon(1));
-        document.getElementById('btnHorn').addEventListener('click', () => this.honk());
-      }
-
-      updateJoystick(touch, rect, thumb) {
-        let centerX = rect.left + rect.width / 2;
-        let centerY = rect.top + rect.height / 2;
-        let dx = touch.clientX - centerX;
-        let dy = touch.clientY - centerY;
-        let dist = Math.hypot(dx, dy);
-        let maxRadius = rect.width / 2;
-
-        if (dist > maxRadius) {
-          dx = (dx / dist) * maxRadius;
-          dy = (dy / dist) * maxRadius;
         }
 
-        thumb.style.transform = `translate(${dx}px, ${dy}px)`;
-        this.touchVector = { x: dx / maxRadius, y: dy / maxRadius };
-      }
+        if (!controles.correndo && this.energia < this.energiaMax) {
+            this.energia = Math.min(this.energiaMax, this.energia + 0.08);
+        }
 
-      switchWeapon(dir = 1) {
-        this.player.weaponIdx = (this.player.weaponIdx + dir + WEAPONS.length) % WEAPONS.length;
-        let w = WEAPONS[this.player.weaponIdx];
-        document.getElementById('hudWeaponIcon').innerText = w.icon;
-        document.getElementById('hudWeaponName').innerText = w.name;
-        document.getElementById('hudWeaponAmmo').innerText = w.ammo === Infinity ? '∞' : w.ammo;
-      }
+        if (controles.atacando) this.atacar();
+        if (this.procurado > 0) {
+            this.tempoProcurado -= delta;
+            if (this.tempoProcurado <= 0) this.procurado = Math.max(0, this.procurado - 1);
+            if (this.procurado > 0 && Math.random() < 0.005) Som.sirene();
+        }
+    }
 
-      honk() {
-        sound.playHorn();
-      }
-
-      toggleVehicle() {
-        if (this.player.inVehicle) {
-          this.player.x = this.player.inVehicle.x + 40;
-          this.player.y = this.player.inVehicle.y;
-          this.player.inVehicle = null;
-          document.getElementById('vehicleHud').classList.remove('active');
+    mover(dx, dy) {
+        const novoX = this.x + dx;
+        const novoY = this.y + dy;
+        if (!Mapa.verificarColisao(novoX, novoY, 16, 16)) {
+            this.x = Math.max(50, Math.min(TAMANHO_MUNDO - 50, novoX));
+            this.y = Math.max(50, Math.min(TAMANHO_MUNDO - 50, novoY));
         } else {
-          for (let v of this.vehicles) {
-            if (Math.hypot(this.player.x - v.x, this.player.y - v.y) < 50) {
-              this.player.inVehicle = v;
-              document.getElementById('vehicleHud').classList.add('active');
-              document.getElementById('vehicleName').innerText = v.isCop ? "Viatura Policial" : "Carro Esporte";
-              break;
+            if (!Mapa.verificarColisao(novoX, this.y, 16, 16)) this.x = Math.max(50, Math.min(TAMANHO_MUNDO - 50, novoX));
+            if (!Mapa.verificarColisao(this.x, novoY, 16, 16)) this.y = Math.max(50, Math.min(TAMANHO_MUNDO - 50, novoY));
+        }
+    }
+
+    atacar() {
+        const agora = Date.now();
+        const arma = ARMAS[this.armaAtual];
+        if (agora - this.ultimoTiro < arma.cadencia) return;
+        if (this.armaAtual !== 'punho' && (!this.inventario.municao || this.inventario.municao[this.armaAtual] <= 0)) return;
+        
+        this.ultimoTiro = agora;
+        if (this.armaAtual !== 'punho') {
+            this.inventario.municao[this.armaAtual]--;
+            if (this.procurado < 2) this.procurado = 2, this.tempoProcurado = 30000;
+        }
+        
+        Som.tiro();
+        const alvo = this.encontrarAlvo();
+        if (alvo) {
+            alvo.receberDano(arma.dano);
+            if (alvo.vida <= 0) {
+                this.dinheiro += 50;
+                Som.dinheiro();
+                if (Math.random() < 0.3) this.procurado = Math.min(5, this.procurado + 1);
             }
-          }
         }
-      }
+    }
 
-      togglePause() {
-        this.paused = !this.paused;
-        let modal = document.getElementById('pauseMenuModal');
-        if (this.paused) modal.classList.add('open');
-        else modal.classList.remove('open');
-      }
-
-      toggleWeather() {
-        this.weather = this.weather === 'sunny' ? 'rainy' : 'sunny';
-      }
-
-      unstuckPlayer() {
-        this.player.x = 1500;
-        this.player.y = 1500;
-      }
-
-      saveGame() {
-        localStorage.setItem('rio_tropical_save', JSON.stringify({
-          cash: this.player.cash,
-          hp: this.player.hp,
-          armor: this.player.armor
-        }));
-        alert("Jogo salvo localmente!");
-      }
-
-      startLoop() {
-        const loop = (time) => {
-          let dt = (time - this.lastTime) / 1000;
-          this.lastTime = time;
-
-          if (!this.paused) {
-            this.update(dt);
-            this.render();
-          }
-          requestAnimationFrame(loop);
-        };
-        requestAnimationFrame(loop);
-      }
-
-      update(dt) {
-        // --- MOVIMENTO DO JOGADOR / VEÍCULO ---
-        let moveX = 0;
-        let moveY = 0;
-
-        if (this.keys['w'] || this.keys['arrowup']) moveY -= 1;
-        if (this.keys['s'] || this.keys['arrowdown']) moveY += 1;
-        if (this.keys['a'] || this.keys['arrowleft']) moveX -= 1;
-        if (this.keys['d'] || this.keys['arrowright']) moveX += 1;
-
-        if (this.touchVector.x !== 0 || this.touchVector.y !== 0) {
-          moveX = this.touchVector.x;
-          moveY = this.touchVector.y;
+    encontrarAlvo() {
+        let maisProximo = null, distMin = ARMAS[this.armaAtual].alcance;
+        const dx = Math.cos(this.angulo), dy = Math.sin(this.angulo);
+        for (const npc of Mundo.npcs) {
+            const d = Math.hypot(npc.x - this.x, npc.y - this.y);
+            if (d < distMin) {
+                const ang = Math.atan2(npc.y - this.y, npc.x - this.x);
+                let dif = Math.abs(ang - this.angulo);
+                if (dif > Math.PI) dif = 2 * Math.PI - dif;
+                if (dif < Math.PI / 3) { distMin = d; maisProximo = npc; }
+            }
         }
+        return maisProximo;
+    }
 
-        let isSprinting = this.isSprinting || this.keys['shift'];
+    receberDano(qtd) {
+        if (this.colete > 0) {
+            const danoColete = Math.min(this.colete, qtd * 0.7);
+            this.colete -= danoColete;
+            qtd -= danoColete;
+        }
+        this.vida = Math.max(0, this.vida - qtd);
+        Som.dano();
+        if (this.vida <= 0) {
+            this.procurado = 0;
+            this.tempoProcurado = 0;
+            this.vida = 30;
+            this.x = TAMANHO_MUNDO / 2;
+            this.y = TAMANHO_MUNDO / 2 - 400;
+            Som.alerta();
+        }
+    }
 
-        if (this.player.inVehicle) {
-          let v = this.player.inVehicle;
-          if (moveY < 0) v.speed = Math.min(v.speed + 0.2, v.maxSpeed);
-          else if (moveY > 0) v.speed = Math.max(v.speed - 0.15, -v.maxSpeed * 0.4);
-          else v.speed *= 0.96;
-
-          if (Math.abs(v.speed) > 0.2) {
-            let steer = (moveX * 0.05) * (v.speed > 0 ? 1 : -1);
-            v.angle += steer;
-          }
-
-          v.x += Math.cos(v.angle) * v.speed;
-          v.y += Math.sin(v.angle) * v.speed;
-
-          this.player.x = v.x;
-          this.player.y = v.y;
-          this.player.angle = v.angle;
-
-          document.getElementById('speedValue').innerText = Math.round(Math.abs(v.speed) * 18);
+    entrarSairVeiculo() {
+        if (!this.estaEmVeiculo) {
+            for (const v of Mundo.veiculos) {
+                if (!v.proprietario && Math.hypot(v.x - this.x, v.y - this.y) < 50) {
+                    this.veiculo = v;
+                    this.estaEmVeiculo = true;
+                    v.ocupante = this;
+                    return;
+                }
+            }
+            for (const v of this.inventario.veiculos) {
+                if (Math.hypot(v.x - this.x, v.y - this.y) < 60) {
+                    this.veiculo = v;
+                    this.estaEmVeiculo = true;
+                    v.ocupante = this;
+                    return;
+                }
+            }
         } else {
-          let speed = isSprinting ? this.player.maxSpeed * 1.6 : this.player.maxSpeed;
-          let len = Math.hypot(moveX, moveY);
-
-          if (len > 0.1) {
-            let normX = moveX / (len > 1 ? len : 1);
-            let normY = moveY / (len > 1 ? len : 1);
-
-            this.player.x += normX * speed;
-            this.player.y += normY * speed;
-            this.player.angle = Math.atan2(normY, normX);
-          }
+            this.estaEmVeiculo = false;
+            this.x = this.veiculo.x + Math.cos(this.veiculo.angulo + Math.PI / 2) * 40;
+            this.y = this.veiculo.y + Math.sin(this.veiculo.angulo + Math.PI / 2) * 40;
+            this.veiculo.ocupante = null;
+            this.veiculo = null;
         }
+    }
 
-        // Limites de mundo
-        this.player.x = Math.max(50, Math.min(this.worldSize - 50, this.player.x));
-        this.player.y = Math.max(50, Math.min(this.worldSize - 50, this.player.y));
-
-        // --- ATAQUE / TIRO ---
-        if ((this.isAttacking || this.keys[' ']) && performance.now() - this.player.lastShot > WEAPONS[this.player.weaponIdx].rate) {
-          this.shootWeapon();
-          this.player.lastShot = performance.now();
-        }
-
-        // --- ATUALIZAR BALAS ---
-        for (let i = this.bullets.length - 1; i >= 0; i--) {
-          let b = this.bullets[i];
-          b.x += b.vx;
-          b.y += b.vy;
-          b.life--;
-
-          // Colisão de projétil com Pedestres
-          for (let p of this.pedestrians) {
-            if (Math.hypot(b.x - p.x, b.y - p.y) < 16) {
-              p.hp -= b.damage;
-              b.life = 0;
-              if (p.hp <= 0) {
-                this.player.cash += 50;
-                this.player.wantedLevel = Math.min(5, this.player.wantedLevel + 1);
-                this.updateWantedUI();
-              }
+    atualizarProgresso(local) {
+        for (const m of this.missoes.principais) {
+            if (!m.concluida && m.alvo === local) {
+                m.progresso = 100;
+                m.concluida = true;
+                this.dinheiro += 1000;
+                Som.dinheiro();
             }
-          }
+        }
+        for (const m of this.missoes.secundarias) {
+            if (!m.concluida && m.alvo === local) {
+                m.progresso = 100;
+                m.concluida = true;
+                this.dinheiro += 500;
+                Som.dinheiro();
+            }
+        }
+    }
+}
 
-          if (b.life <= 0) this.bullets.splice(i, 1);
+// Mapa e Geografia
+const Mapa = {
+    areas: [],
+    semaforos: [],
+    
+    inicializar() {
+        this.areas = [];
+        const centroX = TAMANHO_MUNDO / 2;
+        const centroY = TAMANHO_MUNDO / 2;
+
+        // Praia
+        this.areas.push({ tipo: 'praia', x: 0, y: 0, l: TAMANHO_MUNDO, a: 1200, cor: CORES.areia });
+        // Mar
+        this.areas.push({ tipo: 'agua', x: 0, y: 0, l: TAMANHO_MUNDO, a: 600, cor: CORES.agua });
+        // Parque
+        this.areas.push({ tipo: 'parque', x: centroX - 800, y: centroY - 1000, l: 1600, a: 800, cor: CORES.parque });
+        // Centro
+        this.areas.push({ tipo: 'centro', x: centroX - 1000, y: centroY - 400, l: 2000, a: 1200, cor: CORES.predio });
+        // Favela
+        this.areas.push({ tipo: 'favela', x: centroX + 1200, y: centroY - 600, l: 1000, a: 1400, cor: CORES.favela });
+        // Zona Residencial
+        this.areas.push({ tipo: 'residencial', x: centroX - 1500, y: centroY + 600, l: 1200, a: 1000, cor: CORES.calcada });
+        // Área Industrial
+        this.areas.push({ tipo: 'industrial', x: 0, y: centroY + 1000, l: 1000, a: 1200, cor: CORES.industrial });
+        // Porto
+        this.areas.push({ tipo: 'porto', x: TAMANHO_MUNDO - 1200, y: centroY + 800, l: 1200, a: 800, cor: CORES.porto });
+        // Aeroporto
+        this.areas.push({ tipo: 'aeroporto', x: centroX - 600, y: TAMANHO_MUNDO - 1000, l: 1200, a: 1000, cor: '#555555' });
+
+        // Gerar quarteirões e ruas
+        this.gerarQuadras();
+        this.gerarSemaforos();
+    },
+
+    gerarQuadras() {
+        const qtd = Math.floor(TAMANHO_MUNDO / (TAMANHO_QUADRA + TAMANHO_RUA));
+        for (let i = 0; i <= qtd; i++) {
+            for (let j = 0; j <= qtd; j++) {
+                const x = i * (TAMANHO_QUADRA + TAMANHO_RUA);
+                const y = j * (TAMANHO_QUADRA + TAMANHO_RUA);
+                if (x < TAMANHO_MUNDO && y < TAMANHO_MUNDO) {
+                    const ehAgua = this.verificarArea(x + TAMANHO_QUADRA/2, y + TAMANHO_QUADRA/2, 'agua');
+                    const ehPraia = this.verificarArea(x + TAMANHO_QUADRA/2, y + TAMANHO_QUADRA/2, 'praia');
+                    if (!ehAgua || ehPraia) {
+                        let tipo = 'predio';
+                        if (this.verificarArea(x, y, 'favela')) tipo = 'favela';
+                        else if (this.verificarArea(x, y, 'industrial')) tipo = 'industrial';
+                        else if (this.verificarArea(x, y, 'parque')) tipo = 'grama';
+                        this.areas.push({ tipo, x, y, l: TAMANHO_QUADRA, a: TAMANHO_QUADRA, solido: tipo !== 'grama', cor: this.corPorTipo(tipo) });
+                    }
+                }
+            }
+        }
+    },
+
+    corPorTipo(tipo) {
+        const cores = {
+            predio: CORES.predio, favela: CORES.favela, industrial: CORES.industrial,
+            grama: CORES.grama, agua: CORES.agua, praia: CORES.areia, porto: CORES.porto,
+            centro: CORES.predioEscuro, residencial: '#d4af87', aeroporto: '#444'
+        };
+        return cores[tipo] || CORES.predio;
+    },
+
+    gerarSemaforos() {
+        const espaco = 800;
+        for (let x = espaco; x < TAMANHO_MUNDO; x += espaco) {
+            for (let y = espaco; y < TAMANHO_MUNDO; y += espaco) {
+                if (!this.verificarArea(x, y, 'agua') && !this.verificarArea(x, y, 'parque')) {
+                    this.semaforos.push({ x, y, estado: 0, tempo: 0, duracoes: [4000, 1000, 4000] });
+                }
+            }
+        }
+    },
+
+    verificarArea(x, y, tipoAlvo) {
+        for (const a of this.areas) {
+            if (x >= a.x && x < a.x + a.l && y >= a.y && y < a.y + a.a) {
+                return a.tipo === tipoAlvo;
+            }
+        }
+        return false;
+    },
+
+    obterArea(x, y) {
+        for (const a of this.areas) {
+            if (x >= a.x && x < a.x + a.l && y >= a.y && y < a.y + a.a) return a;
+        }
+        return null;
+    },
+
+    verificarColisao(x, y, w, h) {
+        const area = this.obterArea(x, y);
+        if (!area) return true;
+        if (area.tipo === 'agua') return true;
+        if (area.solido) return true;
+        return false;
+    },
+
+    atualizarSemaforos(delta) {
+        for (const s of this.semaforos) {
+            s.tempo += delta;
+            if (s.tempo >= s.duracoes[s.estado]) {
+                s.estado = (s.estado + 1) % 3;
+                s.tempo = 0;
+            }
+        }
+    },
+
+    desenhar(camera) {
+        const inicioX = Math.max(0, Math.floor((camera.x - LARGURA_TELA / 2) / (TAMANHO_QUADRA + TAMANHO_RUA)) - 1);
+        const fimX = Math.min(Math.floor(TAMANHO_MUNDO / (TAMANHO_QUADRA + TAMANHO_RUA)) + 1, inicioX + Math.ceil(LARGURA_TELA / (TAMANHO_QUADRA + TAMANHO_RUA)) + 2);
+        const inicioY = Math.max(0, Math.floor((camera.y - ALTURA_TELA / 2) / (TAMANHO_QUADRA + TAMANHO_RUA)) - 1);
+        const fimY = Math.min(Math.floor(TAMANHO_MUNDO / (TAMANHO_QUADRA + TAMANHO_RUA)) + 1, inicioY + Math.ceil(ALTURA_TELA / (TAMANHO_QUADRA + TAMANHO_RUA)) + 2);
+
+        // Fundo
+        const dia = Relacao.dia;
+        const corFundo = dia > 0.7 ? CORES.ceuDia : dia > 0.3 ? CORES.ceuEntardecer : CORES.ceuNoite;
+        ctx.fillStyle = corFundo;
+        ctx.fillRect(0, 0, LARGURA_TELA, ALTURA_TELA);
+
+        // Áreas grandes
+        for (const a of this.areas) {
+            if (a.l > TAMANHO_QUADRA) {
+                const sx = a.x - camera.x + LARGURA_TELA / 2;
+                const sy = a.y - camera.y + ALTURA_TELA / 2;
+                if (sx + a.l > 0 && sx < LARGURA_TELA && sy + a.a > 0 && sy < ALTURA_TELA) {
+                    ctx.fillStyle = a.cor;
+                    ctx.fillRect(sx, sy, a.l, a.a);
+                }
+            }
         }
 
-        // Atualizar Pedestres
-        for (let p of this.pedestrians) {
-          if (p.hp > 0) {
-            p.x += Math.cos(p.angle) * p.speed;
-            p.y += Math.sin(p.angle) * p.speed;
-            if (Math.random() < 0.02) p.angle += (Math.random() - 0.5);
-          }
+        // Ruas e calçadas
+        ctx.fillStyle = CORES.asfalto;
+        for (let i = inicioX; i <= fimX; i++) {
+            const rx = i * (TAMANHO_QUADRA + TAMANHO_RUA) - camera.x + LARGURA_TELA / 2;
+            ctx.fillRect(rx, 0, TAMANHO_RUA, ALTURA_TELA);
+        }
+        for (let j = inicioY; j <= fimY; j++) {
+            const ry = j * (TAMANHO_QUADRA + TAMANHO_RUA) - camera.y + ALTURA_TELA / 2;
+            ctx.fillRect(0, ry, LARGURA_TELA, TAMANHO_RUA);
         }
 
-        // Atualizar HUD Status
-        document.getElementById('hpBarFill').style.width = `${this.player.hp}%`;
-        document.getElementById('armorBarFill').style.width = `${this.player.armor}%`;
-        document.getElementById('hudCash').innerText = `R$ ${this.player.cash}`;
-      }
-
-      shootWeapon() {
-        let w = WEAPONS[this.player.weaponIdx];
-        if (w.ammo <= 0) return;
-
-        if (w.ammo !== Infinity) {
-          w.ammo--;
-          document.getElementById('hudWeaponAmmo').innerText = w.ammo;
+        // Quadras
+        for (let i = inicioX; i <= fimX; i++) {
+            for (let j = inicioY; j <= fimY; j++) {
+                const x = i * (TAMANHO_QUADRA + TAMANHO_RUA);
+                const y = j * (TAMANHO_QUADRA + TAMANHO_RUA);
+                const sx = x - camera.x + LARGURA_TELA / 2;
+                const sy = y - camera.y + ALTURA_TELA / 2;
+                if (sx + TAMANHO_QUADRA > 0 && sx < LARGURA_TELA && sy + TAMANHO_QUADRA > 0 && sy < ALTURA_TELA) {
+                    const a = this.obterArea(x + TAMANHO_QUADRA/2, y + TAMANHO_QUADRA/2);
+                    if (a && a.l <= TAMANHO_QUADRA * 2) {
+                        ctx.fillStyle = a.cor;
+                        ctx.fillRect(sx, sy, TAMANHO_QUADRA, TAMANHO_QUADRA);
+                        if (a.tipo === 'predio' || a.tipo === 'centro' || a.tipo === 'favela') {
+                            const alt = 30 + Math.random() * 60;
+                            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                            ctx.fillRect(sx + 5, sy + 5, TAMANHO_QUADRA - 10, alt);
+                            if (dia < 0.4) {
+                                ctx.fillStyle = Math.random() > 0.5 ? '#ffd700' : '#333';
+                                for (let w = 10; w < TAMANHO_QUADRA - 10; w += 15) {
+                                    for (let h = 10; h < alt - 5; h += 15) {
+                                        if (Math.random() > 0.4) ctx.fillRect(sx + w, sy + h, 6, 8);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        sound.playShoot();
-
-        let speed = 12;
-        this.bullets.push({
-          x: this.player.x,
-          y: this.player.y,
-          vx: Math.cos(this.player.angle) * speed,
-          vy: Math.sin(this.player.angle) * speed,
-          damage: w.damage,
-          life: 40
-        });
-      }
-
-      updateWantedUI() {
-        let stars = document.getElementById('wantedStars').children;
-        for (let i = 0; i < 5; i++) {
-          if (i < this.player.wantedLevel) stars[i].classList.add('active');
-          else stars[i].classList.remove('active');
+        // Semáforos
+        for (const s of this.semaforos) {
+            const sx = s.x - camera.x + LARGURA_TELA / 2;
+            const sy = s.y - camera.y + ALTURA_TELA / 2;
+            if (sx > -20 && sx < LARGURA_TELA + 20 && sy > -20 && sy < ALTURA_TELA + 20) {
+                const cor = [CORES.semaforoVermelho, CORES.semaforoAmarelo, CORES.semaforoVerde][s.estado];
+                ctx.fillStyle = '#222';
+                ctx.fillRect(sx - 4, sy - 15, 8, 30);
+                ctx.fillStyle = cor;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
-      }
+    },
 
-      render() {
-        // Câmera Centralizada
-        let camX = this.player.x - this.width / 2;
-        let camY = this.player.y - this.height / 2;
-
-        this.ctx.clearRect(0, 0, this.width, this.height);
-        this.ctx.save();
-        this.ctx.translate(-camX, -camY);
-
-        // Ground / Asfalto
-        this.ctx.fillStyle = '#1e293b';
-        this.ctx.fillRect(0, 0, this.worldSize, this.worldSize);
-
-        // Desenhar Edifícios
-        for (let b of this.buildings) {
-          this.ctx.fillStyle = b.color;
-          this.ctx.fillRect(b.x, b.y, b.w, b.h);
-          this.ctx.strokeStyle = '#475569';
-          this.ctx.lineWidth = 4;
-          this.ctx.strokeRect(b.x, b.y, b.w, b.h);
+    obterEstadoSemaforo(x, y) {
+        let menorDist = Infinity, estado = 2;
+        for (const s of this.semaforos) {
+            const d = Math.hypot(s.x - x, s.y - y);
+            if (d < 60 && d < menorDist) {
+                menorDist = d;
+                estado = s.estado;
+            }
         }
+        return estado;
+    }
+};
 
-        // Desenhar Veículos
-        for (let v of this.vehicles) {
-          this.ctx.save();
-          this.ctx.translate(v.x, v.y);
-          this.ctx.rotate(v.angle);
-          this.ctx.fillStyle = v.color;
-          this.ctx.fillRect(-v.h / 2, -v.w / 2, v.h, v.w);
-          this.ctx.fillStyle = '#0f172a';
-          this.ctx.fillRect(-v.h / 4, -v.w / 2 + 2, 12, v.w - 4);
-          this.ctx.restore();
-        }
-
-        // Desenhar Pedestres
-        for (let p of this.pedestrians) {
-          if (p.hp <= 0) continue;
-          this.ctx.beginPath();
-          this.ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
-          this.ctx.fillStyle = p.isCop ? '#3b82f6' : '#e2e8f0';
-          this.ctx.fill();
-        }
-
-        // Desenhar Projéteis
-        this.ctx.fillStyle = '#fbbf24';
-        for (let b of this.bullets) {
-          this.ctx.beginPath();
-          this.ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-          this.ctx.fill();
-        }
-
-        // Desenhar Jogador (se fora do veículo)
-        if (!this.player.inVehicle) {
-          this.ctx.save();
-          this.ctx.translate(this.player.x, this.player.y);
-          this.ctx.rotate(this.player.angle);
-
-          // Corpo
-          this.ctx.beginPath();
-          this.ctx.arc(0, 0, this.player.radius, 0, Math.PI * 2);
-          this.ctx.fillStyle = '#0284c7';
-          this.ctx.fill();
-          this.ctx.strokeStyle = '#ffffff';
-          this.ctx.lineWidth = 2;
-          this.ctx.stroke();
-
-          // Arma / Direção
-          this.ctx.beginPath();
-          this.ctx.moveTo(0, 0);
-          this.ctx.lineTo(20, 0);
-          this.ctx.strokeStyle = '#fbbf24';
-          this.ctx.lineWidth = 4;
-          this.ctx.stroke();
-
-          this.ctx.restore();
-        }
-
-        // Efeito de Chuva
-        if (this.weather === 'rainy') {
-          this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
-          this.ctx.lineWidth = 1;
-          for (let i = 0; i < 60; i++) {
-            let rx = camX + Math.random() * this.width;
-            let ry = camY + Math.random() * this.height;
-            this.ctx.beginPath();
-            this.ctx.moveTo(rx, ry);
-            this.ctx.lineTo(rx - 5, ry + 15);
-            this.ctx.stroke();
-          }
-        }
-
-        this.ctx.restore();
-
-        // Renderizar Radar / Mini-mapa
-        this.renderMinimap();
-      }
-
-      renderMinimap() {
-        let mctx = this.minimapCtx;
-        mctx.clearRect(0, 0, 110, 110);
-        mctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-        mctx.fillRect(0, 0, 110, 110);
-
-        let scale = 110 / this.worldSize;
-
-        // Player no minimapa
-        mctx.fillStyle = '#38bdf8';
-        mctx.beginPath();
-        mctx.arc(this.player.x * scale, this.player.y * scale, 3, 0, Math.PI * 2);
-        mctx.fill();
-
-        // Veículos no minimapa
-        mctx.fillStyle = '#ef4444';
-        for (let v of this.vehicles) {
-          mctx.fillRect(v.x * scale, v.y * scale, 2, 2);
-        }
-      }
+// Veículo
+class Veiculo {
+    constructor(x, y, tipo = 'carro') {
+        this.x = x;
+        this.y = y;
+        this.angulo = Math.random() * Math.PI * 2;
+        this.tipo = tipo;
+        const cfg = TIPOS_VEICULOS[tipo];
+        this.largura = cfg.largura;
+        this.altura = cfg.altura;
+        this.velocidade = 0;
+        this.velMax = cfg.velocidadeMax;
+        this.aceleracao = cfg.aceleracao;
+        this.freio = cfg.freio;
+        this.cor = cfg.cor;
+        this.proprietario = null;
+        this.ocupante = null;
+        this.ultimoSom = 0;
+        this.ia = true;
+        this.velocidadeAlvo = this.velMax * (0.5 + Math.random() * 0.3);
     }
 
-    function closeModals() {
-      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
+    atualizarPorJogador(controles, delta) {
+        this.ia = false;
+        if (controles.frente) this.velocidade = Math.min(this.velMax, this.velocidade + this.aceleracao);
+        else if (controles.tras) this.velocidade = Math.max(-this.velMax * 0.4, this.velocidade - this.aceleracao);
+        else this.velocidade *= 0.96;
+        
+        if (Math.abs(this.velocidade) > 0.1) {
+            const dir = this.velocidade > 0 ? 1 : -1;
+            if (controles.esquerda) this.angulo -= 0.04 * dir;
+            if (controles.direita) this.angulo += 0.04 * dir;
+        }
+        
+        this.mover();
+        if (Math.abs(this.velocidade) > 1 && Date.now() - this.ultimoSom > 300) {
+            Som.motor();
+            this.ultimoSom = Date.now();
+        }
     }
 
-    let game;
-    window.addEventListener('load', () => {
-      game = new Game();
-      window.game = game;
-    });
-  </script>
-</body>
-</html>
+    atualizarIA(delta) {
+        if (this.ocupante) return;
+        this.ia = true;
+        
+        const sem = Mapa.obterEstadoSemaforo(this.x, this.y);
+        if (sem === 0) {
+            this.velocidade *= 0.92;
+            if (this.velocidade < 0.2) this.velocidade = 0;
+        } else {
+            if (Math.random() < 0.02) this.velocidadeAlvo = this.velMax * (0.4 + Math.random() * 0.4);
+            if (this.velocidade < this.velocidadeAlvo) this.velocidade += this.aceleracao * 0.7;
+            else this.velocidade *= 0.95;
+        }
+        
+        if (Math.random() < 0.01) this.angulo += (Math.random() - 0.5) * 0.5;
+        this.angulo += Math.sin(this.x / 500) * 0.001;
+        
+        this.mover();
+    }
+
+    mover() {
+        const novoX = this.x + Math.cos(this.angulo) * this.velocidade;
+        const novoY = this.y + Math.sin(this.angulo) * this.velocidade;
+        
+        if (!Mapa.verificarColisao(novoX, novoY, this.largura, this.altura)) {
+            this.x = Math.max(50, Math.min(TAMANHO_MUNDO - 50, novoX));
+            this.y = Math.max(50, Math.min(TAMANHO_MUNDO - 50, novoY));
+        } else {
+            this.velocidade *= -0.3;
+            this.angulo += Math.PI / 2 + Math.random() * 0.5;
+            Som.batida();
+            if (this.ia && Math.random() < 0.1) {
+                const distJog = Math.hypot(Mundo.jogador.x - this.x, Mundo.jogador.y - this.y);
+                if (distJog < 150) Mundo.jogador.procurado = Math.min(5, Mundo.jogador.procurado + 1);
+            }
+        }
+    }
+
+    desenhar(camera) {
+        const sx = this.x - camera.x + LARGURA_TELA / 2;
+        const sy = this.y - camera.y + ALTURA_TELA / 2;
+        if (sx < -100 || sx > LARGURA_TELA + 100 || sy < -100 || sy > ALTURA_TELA + 100) return;
+        
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(this.angulo);
+        ctx.fillStyle = this.cor;
+        ctx.fillRect(-this.largura / 2, -this.altura / 2, this.largura, this.altura);
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillRect(-this.largura / 4, -this.altura / 3, this.largura / 2, this.altura / 1.5);
+        ctx.fillStyle = '#222';
+        ctx.fillRect(-this.largura / 2.5, -this.altura / 2, 8, 6);
+        ctx.fillRect(this.largura / 2.5 - 8, -this.altura / 2, 8, 6);
+        ctx.fillRect(-this.largura / 2.5, this.altura / 2 - 6, 8, 6);
+        ctx.fillRect(this.largura / 2.5 - 8, this.altura / 2 - 6, 8, 6);
+        ctx.restore();
+    }
+}
+
+// NPC
+class NPC {
+    constructor(x, y, tipo = 'pedestre') {
+        this.x = x;
+        this.y = y;
+        this.tipo = tipo;
+        this.angulo = Math.random() * Math.PI * 2;
+        this.velocidade = tipo === 'correndo' ? 2.5 : 1 + Math.random();
+        this.destino = this.novoDestino();
+        this.vida = tipo === 'policia' ? 100 : 30;
+        this.reagindo = false;
+        this.tipoCor = ['#e64a19', '#0288d1', '#f9a825', '#6a1b9a', '#2e7d32'][Math.floor(Math.random() * 5)];
+        if (tipo === 'policia') this.tipoCor = '#0066cc';
+    }
+
+    novoDestino() {
+        return {
+            x: this.x + (Math.random() - 0.5) * 600,
+            y: this.y + (Math.random() - 0.5) * 600
+        };
+    }
+
+    atualizar(delta) {
+        const distJog = Math.hypot(Mundo.jogador.x - this.x, Mundo.jogador.y - this.y);
+        
+        if (distJog < 200 && Mundo.jogador.armaAtual !== 'punho') {
+            this.reagindo = true;
+            this.angulo = Math.atan2(this.y - Mundo.jogador.y, this.x - Mundo.jogador.x);
+            if (this.tipo !== 'policia') this.velocidade = 3.5;
+        } else if (distJog < 50 && Mundo.jogador.estaEmVeiculo) {
+            this.reagindo = true;
+            this.angulo = Math.atan2(this.y - Mundo.jogador.y, this.x - Mundo.jogador.x);
+            this.velocidade = 3;
+        } else {
+            this.reagindo = false;
+            const distDest = Math.hypot(this.destino.x - this.x, this.destino.y - this.y);
+            if (distDest < 20) this.destino = this.novoDestino();
+            this.angulo = Math.atan2(this.destino.y - this.y, this.destino.x - this.x);
+        }
+        
+        if (this.tipo === 'policia' && Mundo.jogador.procurado > 0 && distJog < 600) {
+            this.angulo = Math.atan2(Mundo.jogador.y - this.y, Mundo.jogador.x - this.x);
+            this.velocidade = 3.5;
+        }
+        
+        const nx = this.x + Math.cos(this.angulo) * this.velocidade;
+        const ny = this.y + Math.sin(this.angulo) * this.velocidade;
+        if (!Mapa.verificarColisao(nx, ny, 12, 12)) {
+            this.x = Math.max(50, Math.min(TAMANHO_MUNDO - 50, nx));
+            this.y = Math.max(50, Math.min(TAMANHO_MUNDO - 50, ny));
+        } else {
+            this.angulo += Math.PI / 2;
+        }
+    }
+
+    receberDano(qtd) {
+        this.vida -= qtd;
+        if (this.vida <= 0) {
+            if (this.tipo !== 'policia') {
+                Mundo.jogador.procurado = Math.min(5, Mundo.jogador.procurado + 2);
+                Mundo.jogador.tempoProcurado = 45000;
+            }
+            const idx = Mundo.npcs.indexOf(this);
+            if (idx > -1) Mundo.npcs.splice(idx, 1);
+        }
+    }
+
+    desenhar(camera) {
+        const sx = this.x - camera.x + LARGURA_TELA / 2;
+        const sy = this.y - camera.y + ALTURA_TELA / 2;
+        if (sx < -20 || sx > LARGURA_TELA + 20 || sy < -20 || sy > ALTURA_TELA + 20) return;
+        
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.fillStyle = this.tipoCor;
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+        if (this.reagindo) {
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.fillText('❗', -6, -12);
+        }
+        if (this.tipo === 'policia') {
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial';
+            ctx.fillText('P', -4, 4);
+        }
+        ctx.restore();
+    }
+}
+
+// Mundo e Relógio
+const Relacao = {
+    hora: 10,
+    dia: 0.7,
+    
+    atualizar(delta) {
+        this.hora += delta / 60000;
+        if (this.hora >= 24) this.hora = 0;
+        if (this.hora >= 6 && this.hora < 12) this.dia = 0.3 + (this.hora - 6) / 10;
+        else if (this.hora
