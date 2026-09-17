@@ -3,79 +3,192 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Cidade do Sol - Mundo Aberto</title>
+<title>Cidade do Sol</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:Arial, sans-serif; touch-action:none; user-select:none; }
-html, body { width:100%; height:100%; overflow:hidden; background:#1a1a2e; }
-canvas { display:block; background:#000; }
-
-/* Telas */
-.tela { position:absolute; top:0; left:0; width:100%; height:100%; display:none; flex-direction:column; background:rgba(10,10,30,0.96); color:#fff; z-index:100; padding:5%; overflow-y:auto; }
-.tela.ativa { display:flex; }
-button { background:#f76b1c; border:none; color:#fff; padding:3.5% 5%; margin:2.5% 0; border-radius:10px; font-size:1em; cursor:pointer; box-shadow:0 4px 0 #c85510; transition:all 0.1s; }
-button:active { transform:translateY(3px); box-shadow:0 1px 0 #c85510; background:#e05f18; }
-input, select { background:#2a2a4e; border:1px solid #444; color:#fff; padding:3.5%; border-radius:8px; margin:1.5% 0; width:100%; font-size:1em; }
-.cx { background:#252540; border-radius:12px; padding:5%; margin:3% 0; }
-.tit { font-size:1.5em; font-weight:bold; margin-bottom:4%; color:#ffc107; text-align:center; }
-.sub { font-weight:bold; margin:3% 0 1%; color:#81d4fa; font-size:1.1em; }
-.aviso { color:#ff9800; font-size:0.9em; margin-top:3%; text-align:center; }
-.rodape { margin-top:auto; text-align:center; font-size:0.8em; color:#888; padding:5% 0; }
-.item { padding:3%; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; }
-.item:last-child { border:none; }
-.nome { font-weight:bold; }
-.preco { color:#4caf50; }
-.btn-comprar { padding:2% 4%; font-size:0.9em; margin:0; }
-
-/* HUD */
-#hud { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:50; }
-.barra { height:10px; border-radius:5px; overflow:hidden; background:#333; margin:2px 0; }
-.barra > div { height:100%; transition:width 0.2s; }
-.vida { background:linear-gradient(90deg, #e53935, #ff5722); }
-.colete { background:linear-gradient(90deg, #1976d2, #42a5f5); }
-.energia { background:linear-gradient(90deg, #fdd835, #ffeb3b); }
-.info-top { position:absolute; top:10px; left:10px; width:40%; }
-.dinheiro { font-size:1.1em; font-weight:bold; color:#ffd700; text-shadow:2px 2px 0 #000; margin:5px 0; }
-.estrelas { position:absolute; top:10px; right:10px; font-size:1.3em; text-shadow:2px 2px 0 #000; }
-.estrela { color:#444; margin-left:2px; }
-.estrela.ativa { color:#ffd700; text-shadow:0 0 5px #ffd700; }
-.minimapa { position:absolute; bottom:130px; right:10px; width:130px; height:130px; border-radius:50%; background:rgba(0,0,0,0.7); border:3px solid #ffd700; overflow:hidden; }
-#mapaCanvas { width:100%; height:100%; display:block; }
-.hora { position:absolute; top:10px; left:50%; transform:translateX(-50%); font-size:1em; font-weight:bold; text-shadow:2px 2px 0 #000; }
-.local { position:absolute; top:40px; left:10px; font-size:0.85em; color:#ccc; text-shadow:1px 1px 0 #000; }
-.arma { position:absolute; bottom:130px; left:10px; font-size:0.9em; font-weight:bold; text-shadow:2px 2px 0 #000; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; }
-.missao { position:absolute; top:70px; left:10px; right:150px; font-size:0.85em; color:#fff; text-shadow:1px 1px 0 #000; background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:5px; }
-
-/* Controles */
-.controles { position:absolute; bottom:0; left:0; width:100%; height:120px; pointer-events:none; z-index:60; }
-.analogico { position:absolute; bottom:15px; left:15px; width:100px; height:100px; border-radius:50%; background:rgba(255,255,255,0.15); border:3px solid rgba(255,255,255,0.3); pointer-events:auto; }
-.analogico-centro { position:absolute; width:45px; height:45px; border-radius:50%; background:rgba(255,255,255,0.5); left:50%; top:50%; transform:translate(-50%, -50%); }
-.botoes { position:absolute; bottom:15px; right:15px; display:grid; grid-template-columns:repeat(2, 60px); gap:8px; pointer-events:auto; }
-.btn-acao { width:60px; height:60px; border-radius:50%; background:rgba(247,107,28,0.85); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:0.85em; box-shadow:0 3px 0 rgba(0,0,0,0.3); border:none; color:#fff; }
-.btn-acao:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.3); }
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif;touch-action:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a1a;position:fixed}
+canvas{display:block}
+#debug{position:absolute;top:5px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#0f0;padding:4px 8px;border-radius:4px;font-size:9px;z-index:200;display:none;font-family:monospace}
+.tela{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;z-index:100;padding:7%;overflow-y:auto}
+.tela.ativa{display:flex}
+#telaInicio{
+    justify-content:center;align-items:center;text-align:center;
+    background:linear-gradient(180deg,#ff7e47 0%,#ff5722 30%,#1a1a3c 70%,#0a0a1a 100%);
+}
+#telaInicio::before{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:40%;
+    background:linear-gradient(0deg,rgba(30,144,255,.3),transparent);
+    pointer-events:none;
+}
+#telaInicio .logo{
+    font-size:2.8em;font-weight:900;color:#fff;
+    text-shadow:0 0 30px rgba(255,193,7,.6),0 4px 0 rgba(0,0,0,.3);
+    margin-bottom:5px;position:relative;z-index:1;
+    letter-spacing:1px;
+}
+#telaInicio .sub{color:rgba(255,255,255,.8);margin-bottom:40px;font-size:1em;position:relative;z-index:1}
+#telaInicio .sol{
+    width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle,#ffeb3b 0%,#ff9800 60%,transparent 100%);
+    position:absolute;top:15%;left:50%;transform:translateX(-50%);
+    box-shadow:0 0 60px rgba(255,152,0,.6);
+    animation:brilhar 3s ease-in-out infinite;
+}
+@keyframes brilhar{0%,100%{opacity:.8}50%{opacity:1}}
+button{
+    background:linear-gradient(180deg,#ff9800 0%,#f57c00 100%);
+    border:none;color:#fff;padding:15px 24px;margin:8px 0;
+    border-radius:14px;font-size:1.05em;font-weight:bold;cursor:pointer;
+    box-shadow:0 5px 0 rgba(0,0,0,.3),0 8px 20px rgba(255,152,0,.3);
+    transition:all .1s;width:100%;max-width:280px;
+    position:relative;z-index:1;
+    letter-spacing:.5px;
+}
+button:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+button.sec{
+    background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,rgba(255,255,255,.08) 100%);
+    border:2px solid rgba(255,255,255,.2);
+    box-shadow:0 4px 0 rgba(0,0,0,.2);
+    backdrop-filter:blur(10px);
+}
+#telaPausa,.tela-menus{background:linear-gradient(135deg,rgba(26,26,60,.97),rgba(10,10,30,.98))}
+.cx{
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    border-radius:14px;padding:5%;margin:3% 0;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.tit{
+    font-size:1.5em;font-weight:900;margin-bottom:5%;
+    color:#ffc107;text-align:center;
+    text-shadow:0 2px 10px rgba(255,193,7,.3);
+    letter-spacing:.5px;
+}
+.sub{font-weight:bold;margin:4% 0 2%;color:#64b5f6;font-size:1.05em}
+.aviso{color:#ffd700;font-size:.85em;margin-top:15px;text-align:center}
+.rodape{margin-top:20px;text-align:center;font-size:.75em;color:rgba(255,255,255,.4)}
+.item{
+    padding:12px 15px;border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex;justify-content:space-between;align-items:center;
+    background:rgba(255,255,255,.01);
+}
+.item:last-child{border:none;border-radius:0 0 10px 10px}
+.item:first-child{border-radius:10px 10px 0 0}
+.nome{font-weight:bold;font-size:.95em;color:#fff}
+.preco{color:#4caf50;font-weight:bold;font-size:.9em}
+.btn-c{
+    padding:7px 14px;font-size:.82em;margin:0;width:auto;
+    box-shadow:0 3px 0 rgba(0,0,0,.3);
+    border-radius:10px;max-width:none;
+}
+#hud{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50;display:none}
+.barra{
+    height:11px;border-radius:6px;overflow:hidden;
+    background:rgba(0,0,0,.6);margin:3px 0;
+    border:1px solid rgba(255,255,255,.15);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.5);
+}
+.barra>div{height:100%;transition:width .15s;border-radius:5px}
+.vida{background:linear-gradient(90deg,#c62828,#ef5350,#ff8a80)}
+.colete{background:linear-gradient(90deg,#0d47a1,#2196f3,#64b5f6)}
+.energia{background:linear-gradient(90deg,#f57f17,#ffeb3b,#fff59d)}
+.info-top{
+    position:absolute;top:10px;left:10px;width:38%;
+    background:rgba(0,0,0,.35);padding:8px 10px;border-radius:10px;
+    backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.08);
+}
+.dinheiro{
+    font-size:1.05em;font-weight:bold;color:#ffd700;
+    text-shadow:1px 1px 0 rgba(0,0,0,.8);margin:5px 0 0 0;
+}
+.estrelas{
+    position:absolute;top:10px;right:10px;
+    background:rgba(0,0,0,.35);padding:6px 10px;border-radius:20px;
+    backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.08);
+    font-size:1.1em;
+}
+.estrela{color:rgba(255,255,255,.2);margin-left:1px}
+.estrela.ativa{color:#ffd700;text-shadow:0 0 8px #ffd700}
+.minimapa{
+    position:absolute;bottom:135px;right:10px;width:110px;height:110px;
+    border-radius:50%;background:rgba(0,0,0,.7);
+    border:3px solid #ffc107;overflow:hidden;
+    box-shadow:0 0 20px rgba(255,193,7,.2),inset 0 0 10px rgba(0,0,0,.5);
+}
+#mapaCanvas{width:100%;height:100%;display:block}
+.hora{
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    font-size:.9em;font-weight:bold;color:#fff;
+    text-shadow:1px 1px 0 rgba(0,0,0,.8);
+    background:rgba(0,0,0,.4);padding:5px 14px;border-radius:20px;
+    backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1);
+}
+.local{
+    position:absolute;top:42px;left:10px;font-size:.78em;
+    color:rgba(255,255,255,.85);text-shadow:1px 1px 0 rgba(0,0,0,.8);
+    background:rgba(0,0,0,.3);padding:4px 10px;border-radius:12px;
+}
+.arma{
+    position:absolute;bottom:135px;left:10px;font-size:.85em;font-weight:bold;
+    color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.8);
+    background:rgba(0,0,0,.45);padding:7px 12px;border-radius:10px;
+    backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1);
+}
+.missao{
+    position:absolute;top:72px;left:10px;right:130px;font-size:.78em;
+    color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.8);
+    background:rgba(0,0,0,.4);padding:7px 10px;border-radius:10px;
+    line-height:1.35;backdrop-filter:blur(5px);
+    border-left:3px solid #ffc107;
+}
+.controles{position:absolute;bottom:0;left:0;width:100%;height:125px;pointer-events:none;z-index:60;display:none}
+.analogico{
+    position:absolute;bottom:15px;left:15px;width:100px;height:100px;
+    border-radius:50%;background:rgba(255,255,255,.08);
+    border:3px solid rgba(255,255,255,.2);pointer-events:auto;
+    backdrop-filter:blur(5px);
+    box-shadow:inset 0 0 20px rgba(0,0,0,.3);
+}
+.analogico-centro{
+    position:absolute;width:44px;height:44px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.9),rgba(255,255,255,.5));
+    left:50%;top:50%;transform:translate(-50%,-50%);
+    box-shadow:0 3px 10px rgba(0,0,0,.3);
+}
+.botoes{position:absolute;bottom:15px;right:15px;display:grid;grid-template-columns:repeat(2,58px);gap:10px;pointer-events:auto}
+.btn-acao{
+    width:58px;height:58px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#ffb74d,#e65100);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:bold;font-size:1.1em;
+    box-shadow:0 4px 0 rgba(0,0,0,.35),0 6px 15px rgba(255,152,0,.25);
+    border:none;color:#fff;padding:0;margin:0;max-width:58px;
+    text-shadow:1px 1px 0 rgba(0,0,0,.3);
+}
+.btn-acao:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
 <canvas id="jogo"></canvas>
+<div id="debug"></div>
 
-<!-- HUD -->
 <div id="hud">
     <div class="info-top">
         <div class="barra"><div id="barraVida" class="vida" style="width:100%"></div></div>
         <div class="barra"><div id="barraColete" class="colete" style="width:0%"></div></div>
         <div class="barra"><div id="barraEnergia" class="energia" style="width:100%"></div></div>
-        <div class="dinheiro">R$<span id="valorDinheiro">5000</span></div>
+        <div class="dinheiro">💰 R$<span id="valorDinheiro">5000</span></div>
     </div>
     <div class="estrelas" id="estrelas">
         <span class="estrela">★</span><span class="estrela">★</span><span class="estrela">★</span><span class="estrela">★</span><span class="estrela">★</span>
     </div>
-    <div class="hora" id="hora">10:00</div>
-    <div class="local" id="localizacao">Centro</div>
-    <div class="missao" id="missaoAtual">📋 Conhecer a Cidade — Visite o centro comercial</div>
-    <div class="arma" id="armaAtual">Punho</div>
+    <div class="hora" id="hora">☀️ 10:00</div>
+    <div class="local" id="localizacao">🏖️ Praia</div>
+    <div class="missao" id="missaoAtual">📋 Conhecer a Cidade — Suba a orla até o centro</div>
+    <div class="arma" id="armaAtual">👊 Punho</div>
     <div class="minimapa"><canvas id="mapaCanvas"></canvas></div>
 </div>
 
-<!-- Controles -->
 <div class="controles" id="controles">
     <div class="analogico" id="analogico"><div class="analogico-centro" id="alavanca"></div></div>
     <div class="botoes">
@@ -86,208 +199,141 @@ input, select { background:#2a2a4e; border:1px solid #444; color:#fff; padding:3
     </div>
 </div>
 
-<!-- Telas -->
 <div id="telaInicio" class="tela ativa">
-    <div class="tit">🌆 Cidade do Sol</div>
-    <p style="text-align:center; margin-bottom:5%; color:#ccc;">Um mundo aberto inspirado nas belezas do litoral brasileiro</p>
-    <button onclick="iniciarNovoJogo()">▶ Novo Jogo</button>
-    <button onclick="carregarJogo()">📂 Continuar</button>
-    <div class="aviso">O progresso é salvo automaticamente no navegador</div>
-    <div class="rodape">Versão 1.0 • Compatível com Android Chrome</div>
+    <div class="sol"></div>
+    <div class="logo">CIDADE DO SOL</div>
+    <p class="sub">🌴 Mundo Aberto • Litoral Brasileiro 🌊</p>
+    <button onclick="iniciarNovoJogo()">▶ COMEÇAR</button>
+    <button class="sec" onclick="carregarJogo()">📂 CONTINUAR</button>
+    <p class="aviso">💾 Progresso salvo automaticamente</p>
+    <div class="rodape">Versão 3.0 • Gráficos Melhorados</div>
 </div>
 
-<div id="telaPausa" class="tela">
-    <div class="tit">⏸ Jogo Pausado</div>
-    <button onclick="resumirJogo()">▶ Retomar</button>
-    <button onclick="abrirLojaArmas()">🔫 Loja de Armas</button>
-    <button onclick="abrirLojaRoupas()">👕 Loja de Roupas</button>
-    <button onclick="abrirOficina()">🔧 Oficina</button>
-    <button onclick="abrirMissoes()">📋 Missões</button>
-    <button onclick="abrirInventario()">🎒 Inventário</button>
-    <button onclick="abrirHospital()">🏥 Hospital</button>
-    <button onclick="abrirDelegacia()">🚓 Delegacia</button>
-    <button onclick="salvarJogo()">💾 Salvar</button>
-    <button onclick="sairParaInicio()">🚪 Sair</button>
+<div id="telaPausa" class="tela tela-menus">
+    <div class="tit">⏸ JOGO PAUSADO</div>
+    <button onclick="resumirJogo()">▶ RETOMAR</button>
+    <button class="sec" onclick="abrirLojaArmas()">🔫 Loja de Armas</button>
+    <button class="sec" onclick="abrirLojaRoupas()">👕 Moda Urbana</button>
+    <button class="sec" onclick="abrirOficina()">🔧 Oficina</button>
+    <button class="sec" onclick="abrirMissoes()">📋 Missões</button>
+    <button class="sec" onclick="abrirInventario()">🎒 Inventário</button>
+    <button class="sec" onclick="abrirHospital()">🏥 Hospital</button>
+    <button class="sec" onclick="abrirDelegacia()">🚓 Delegacia</button>
+    <button onclick="salvarJogo()">💾 SALVAR</button>
+    <button class="sec" onclick="sairParaInicio()">🚪 SAIR</button>
 </div>
 
-<div id="lojaArmas" class="tela">
-    <div class="tit">🔫 Loja de Armamentos</div>
-    <div id="listaArmas"></div>
-    <button onclick="fecharTela()">← Voltar</button>
-</div>
-
-<div id="lojaRoupas" class="tela">
-    <div class="tit">👕 Moda Urbana</div>
-    <div id="listaRoupas"></div>
-    <button onclick="fecharTela()">← Voltar</button>
-</div>
-
-<div id="oficina" class="tela">
-    <div class="tit">🔧 Oficina Mecânica</div>
-    <div class="sub">Comprar</div>
-    <div id="listaVeiculos"></div>
-    <div class="sub">Meus Veículos</div>
-    <div id="meusVeiculos"></div>
-    <button onclick="fecharTela()">← Voltar</button>
-</div>
-
-<div id="telaMissoes" class="tela">
-    <div class="tit">📋 Missões</div>
-    <div class="sub">Principais</div>
-    <div id="missoesPrincipais" class="cx"></div>
-    <div class="sub">Secundárias</div>
-    <div id="missoesSecundarias" class="cx"></div>
-    <div class="sub">Corridas</div>
-    <div id="listaCorridas" class="cx"></div>
-    <button onclick="fecharTela()">← Voltar</button>
-</div>
-
-<div id="telaInventario" class="tela">
-    <div class="tit">🎒 Inventário</div>
-    <div class="cx">
-        <p><strong>Dinheiro:</strong> R$<span id="invDinheiro">0</span></p>
-        <p><strong>Vida:</strong> <span id="invVida">100</span>/100</p>
-        <p><strong>Colete:</strong> <span id="invColete">0</span>/100</p>
-        <p><strong>Energia:</strong> <span id="invEnergia">100</span>/100</p>
-        <p><strong>Arma:</strong> <span id="invArma">Punho</span></p>
-        <p><strong>Roupa:</strong> <span id="invRoupa">Casual</span></p>
-        <p><strong>Procurado:</strong> <span id="invProcurado">0</span> estrelas</p>
-    </div>
-    <div class="sub">Armas</div>
-    <div id="invListaArmas" class="cx"></div>
-    <button onclick="fecharTela()">← Voltar</button>
-</div>
-
-<div id="telaHospital" class="tela">
-    <div class="tit">🏥 Hospital Municipal</div>
-    <p style="text-align:center; margin:5% 0;">Recuperar vida custa R$ 500</p>
-    <button onclick="pagarHospital()">💉 Recuperar — R$ 500</button>
-    <p style="text-align:center; margin:5% 0;">Colete custa R$ 800</p>
-    <button onclick="comprarColete()">🛡️ Colete — R$ 800</button>
-    <button onclick="fecharTela()">← Voltar</button>
-</div>
-
-<div id="telaDelegacia" class="tela">
-    <div class="tit">🚓 Delegacia</div>
-    <p style="text-align:center; margin:5% 0;">Cada estrela custa R$ 1.000</p>
-    <p style="text-align:center; color:#ffd700; font-weight:bold;">Você tem <span id="qtdEstrelas">0</span> estrela(s) = R$ <span id="valorMulta">0</span></p>
-    <button onclick="pagarMulta()">⚖️ Pagar Multa</button>
-    <button onclick="fecharTela()">← Voltar</button>
-</div>
+<div id="lojaArmas" class="tela tela-menus"><div class="tit">🔫 ARMAMENTOS</div><div id="listaArmas"></div><button class="sec" onclick="fecharTela()">← VOLTAR</button></div>
+<div id="lojaRoupas" class="tela tela-menus"><div class="tit">👕 MODA URBANA</div><div id="listaRoupas"></div><button class="sec" onclick="fecharTela()">← VOLTAR</button></div>
+<div id="oficina" class="tela tela-menus"><div class="tit">🔧 OFICINA</div><div class="sub">Comprar Veículos</div><div id="listaVeiculos"></div><div class="sub">Meus Veículos</div><div id="meusVeiculos"></div><button class="sec" onclick="fecharTela()">← VOLTAR</button></div>
+<div id="telaMissoes" class="tela tela-menus"><div class="tit">📋 MISSÕES</div><div class="sub">Principais</div><div id="missoesPrincipais" class="cx"></div><div class="sub">Secundárias</div><div id="missoesSecundarias" class="cx"></div><button class="sec" onclick="fecharTela()">← VOLTAR</button></div>
+<div id="telaInventario" class="tela tela-menus"><div class="tit">🎒 INVENTÁRIO</div><div class="cx"><p><strong>Dinheiro:</strong> R$<span id="invDinheiro">0</span></p><p><strong>Vida:</strong> <span id="invVida">100</span>/100</p><p><strong>Colete:</strong> <span id="invColete">0</span>/100</p><p><strong>Energia:</strong> <span id="invEnergia">100</span>/100</p><p><strong>Arma:</strong> <span id="invArma">Punho</span></p><p><strong>Roupa:</strong> <span id="invRoupa">Casual</span></p><p><strong>Procurado:</strong> <span id="invProcurado">0</span> estrelas</p></div><button class="sec" onclick="fecharTela()">← VOLTAR</button></div>
+<div id="telaHospital" class="tela tela-menus"><div class="tit">🏥 HOSPITAL</div><div class="cx"><p style="text-align:center;margin:10px 0;color:#ffd700;font-weight:bold;">💉 Tratamento Completo</p><p style="text-align:center;margin-bottom:15px;color:#aaa;font-size:.9em;">Recupera 100% da vida</p><button onclick="pagarHospital()">R$ 500</button><hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:20px 0"><p style="text-align:center;margin:10px 0;color:#ffd700;font-weight:bold;">🛡️ Colete Balístico</p><p style="text-align:center;margin-bottom:15px;color:#aaa;font-size:.9em;">Proteção de 100 pontos</p><button onclick="comprarColete()">R$ 800</button></div><button class="sec" onclick="fecharTela()">← VOLTAR</button></div>
+<div id="telaDelegacia" class="tela tela-menus"><div class="tit">🚓 DELEGACIA</div><div class="cx"><p style="text-align:center;margin:10px 0;">Estrelas: <span id="qtdEstrelas" style="color:#ffd700;font-weight:bold;font-size:1.3em;">0</span></p><p style="text-align:center;margin:15px 0;color:#4caf50;font-weight:bold;font-size:1.2em;">R$ <span id="valorMulta">0</span></p><button onclick="pagarMulta()">⚖️ Pagar Multa</button></div><button class="sec" onclick="fecharTela()">← VOLTAR</button></div>
 
 <script>
-// ==============================================
-// CONFIGURAÇÕES GERAIS
-// ==============================================
+const debug = document.getElementById('debug');
+let dbg = [];
+function log(m){dbg.push(m);if(dbg.length>4)dbg.shift();debug.textContent=dbg.join(' | ');console.log('[JOGO]',m);}
+window.onerror=function(m,u,l){log('ERRO: '+m+' L'+l);return true;};
+log('Carregando...');
+
 const LARGURA = window.innerWidth;
 const ALTURA = window.innerHeight;
 const canvas = document.getElementById('jogo');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { alpha: false });
 canvas.width = LARGURA;
 canvas.height = ALTURA;
+log('Canvas: '+LARGURA+'x'+ALTURA);
 
 const mapaCanvas = document.getElementById('mapaCanvas');
 const mapaCtx = mapaCanvas.getContext('2d');
-mapaCanvas.width = 130;
-mapaCanvas.height = 130;
+mapaCanvas.width = 110;
+mapaCanvas.height = 110;
 
-const TAM_MUNDO = 8000;
-const TAM_QUADRA = 200;
-const TAM_RUA = 40;
+const TAM_MUNDO = 5000;
+const TAM_QUADRA = 160;
+const TAM_RUA = 32;
 
 const CORES = {
-    ceuDia:'#87CEEB', ceuNoite:'#0a0a23', ceuTarde:'#ff7e47',
-    asfalto:'#333', calcada:'#c2c2c2', grama:'#4a7c3f', agua:'#1e90ff', areia:'#f4e4ba',
-    predio:'#7d7d7d', favela:'#8b4513', industrial:'#444', porto:'#654321', parque:'#2e7d32',
-    semVerm:'#e53935', semAmar:'#fdd835', semVerd:'#43a047'
+    ceuDia:'#87CEEB',ceuNoite:'#0a0a23',ceuTarde:'#ff7e47',
+    asfalto:'#2a2a2a',asfaltoClaro:'#333333',calcada:'#b0b0b0',
+    grama:'#4a7c3f',gramaClara:'#5a8c4f',
+    agua:'#1565c0',aguaClara:'#1e88e5',
+    areia:'#f2d990',areiaEscura:'#e0c880',
+    predio:'#78909c',predioEscuro:'#546e7a',predioClaro:'#90a4ae',
+    favela:'#a0522d',favelaEscura:'#8b4513',
+    industrial:'#424242',industrialEscuro:'#303030',
+    porto:'#5d4037',parque:'#2e7d32',
+    semVerm:'#e53935',semAmar:'#fdd835',semVerd:'#43a047'
 };
 
 const VEICULOS = {
-    carro:{nome:'Carro',cor:'#e53935',velMax:4.5,acel:0.15,freio:0.25,w:40,h:20,preco:15000},
-    moto:{nome:'Moto',cor:'#ffc107',velMax:6,acel:0.2,freio:0.3,w:20,h:12,preco:8000},
-    onibus:{nome:'Ônibus',cor:'#1976d2',velMax:2.8,acel:0.08,freio:0.15,w:70,h:25,preco:45000},
-    caminhao:{nome:'Caminhão',cor:'#7b1fa2',velMax:2.2,acel:0.05,freio:0.12,w:80,h:28,preco:55000},
-    policia:{nome:'Viatura',cor:'#0066cc',velMax:5.5,acel:0.18,freio:0.28,w:42,h:20,preco:0}
+    carro:{nome:'Carro',cor:'#e53935',velMax:4,acel:0.12,freio:0.2,w:40,h:18,preco:15000},
+    moto:{nome:'Moto',cor:'#ffc107',velMax:5.2,acel:0.2,freio:0.28,w:20,h:10,preco:8000},
+    onibus:{nome:'Ônibus',cor:'#1976d2',velMax:2.5,acel:0.06,freio:0.12,w:70,h:24,preco:45000},
+    caminhao:{nome:'Caminhão',cor:'#7b1fa2',velMax:2,acel:0.04,freio:0.1,w:80,h:26,preco:55000}
 };
 
 const ARMAS = {
-    punho:{nome:'Punho',dano:5,alcance:25,cadencia:500,preco:0,mun:Infinity},
-    rev:{nome:'Revólver',dano:25,alcance:200,cadencia:800,preco:3000,mun:30},
-    smg:{nome:'Submetralhadora',dano:12,alcance:180,cadencia:120,preco:8000,mun:120},
-    rifle:{nome:'Rifle',dano:40,alcance:350,cadencia:400,preco:15000,mun:60},
-    espingarda:{nome:'Espingarda',dano:60,alcance:100,cadencia:1000,preco:12000,mun:24}
+    punho:{nome:'Punho',dano:5,alcance:30,cadencia:400,preco:0,mun:Infinity,icone:'👊'},
+    rev:{nome:'Revólver',dano:28,alcance:200,cadencia:700,preco:3000,mun:30,icone:'🔫'},
+    smg:{nome:'SMG',dano:10,alcance:150,cadencia:100,preco:8000,mun:120,icone:'🔫'},
+    rifle:{nome:'Rifle',dano:45,alcance:350,cadencia:350,preco:15000,mun:60,icone:'🎯'},
+    espingarda:{nome:'Espingarda',dano:55,alcance:90,cadencia:900,preco:12000,mun:24,icone:'💥'}
 };
 
 const ROUPAS = {
     casual:{nome:'Casual',cor:'#4fc3f7',preco:0},
     esportivo:{nome:'Esportivo',cor:'#ff5722',preco:2000},
     social:{nome:'Social',cor:'#212121',preco:5000},
-    local:{nome:'Estilo Local',cor:'#9c27b0',preco:1500},
+    local:{nome:'Local',cor:'#9c27b0',preco:1500},
     tatico:{nome:'Tático',cor:'#455a64',preco:10000}
 };
 
-let jogoPausado = false;
+let jogoPausado = true;
 let ultimoTempo = 0;
 let salvarTimer = 0;
+let tempoGlobal = 0;
+let frameCount = 0, fps = 0, fpsTimer = 0;
 
-// ==============================================
-// SISTEMA DE SOM (GERADO POR JS)
-// ==============================================
 const Som = {
     ctx:null,
-    iniciar(){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}},
-    tocar(f,d,t='sine',v=0.1){
-        if(!this.ctx)return;try{
-            const o=this.ctx.createOscillator(),g=this.ctx.createGain();
-            o.connect(g);g.connect(this.ctx.destination);
-            o.type=t;o.frequency.value=f;
-            g.gain.setValueAtTime(v,this.ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+d/1000);
-            o.start();o.stop(this.ctx.currentTime+d/1000);
-        }catch(e){}
-    },
-    passo(){this.tocar(200+Math.random()*100,80,'triangle',0.04);},
-    motor(){this.tocar(80+Math.random()*40,100,'sawtooth',0.06);},
-    tiro(){this.tocar(120,60,'square',0.15);setTimeout(()=>this.tocar(90,40,'triangle',0.08),30);},
-    batida(){this.tocar(60,120,'triangle',0.12);},
-    dinheiro(){this.tocar(880,80,'sine',0.1);setTimeout(()=>this.tocar(1100,100,'sine',0.1),80);},
-    dano(){this.tocar(150,150,'sawtooth',0.1);},
-    sirene(){this.tocar(880,200,'square',0.08);setTimeout(()=>this.tocar(440,200,'square',0.08),200);},
-    alerta(){this.tocar(440,150,'sine',0.1);},
-    sucesso(){this.tocar(523,150,'sine',0.1);setTimeout(()=>this.tocar(659,150,'sine',0.1),150);setTimeout(()=>this.tocar(784,200,'sine',0.1),300);}
+    iniciar(){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==='suspended')this.ctx.resume();log('Áudio OK');}catch(e){log('Sem áudio');this.ctx=null;}},
+    tocar(f,d,t,v){if(!this.ctx)return;try{const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.connect(g);g.connect(this.ctx.destination);o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v||0.1,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+d/1000);o.start();o.stop(this.ctx.currentTime+d/1000);}catch(e){}},
+    passo(){this.tocar(200+Math.random()*80,55,'triangle',0.025);},
+    motor(){this.tocar(90+Math.random()*25,65,'sawtooth',0.035);},
+    tiro(){this.tocar(140,40,'square',0.09);},
+    dinheiro(){this.tocar(880,65,'sine',0.06);setTimeout(()=>this.tocar(1100,85,'sine',0.06),65);},
+    dano(){this.tocar(150,90,'sawtooth',0.06);},
+    sucesso(){this.tocar(523,110,'sine',0.07);setTimeout(()=>this.tocar(659,110,'sine',0.07),110);setTimeout(()=>this.tocar(784,160,'sine',0.07),220);}
 };
 
-// ==============================================
-// CLASSE JOGADOR
-// ==============================================
 class Jogador {
     constructor(){
-        this.x=TAM_MUNDO/2; this.y=TAM_MUNDO/2;
-        this.angulo=0; this.velMax=3; this.velCorrida=5;
-        this.vida=100; this.vidaMax=100;
-        this.colete=0; this.coleteMax=100;
-        this.energia=100; this.energiaMax=100;
-        this.dinheiro=5000;
-        this.procurado=0; this.tempoProcurado=0;
-        this.veiculo=null; this.emVeiculo=false;
-        this.armaAtual='punho'; this.ultimoTiro=0;
-        this.roupa='casual'; this.andando=false; this.ultimoPasso=0;
-        this.inv={armas:['punho'],roupas:['casual'],veiculos:[],mun:{rev:0,smg:0,rifle:0,espingarda:0}};
-        this.missoes={
+        this.x = TAM_MUNDO/2;
+        this.y = 620;
+        this.angulo = Math.PI/2;
+        this.velMax = 2.5;
+        this.velCorrida = 4;
+        this.vida = 100; this.vidaMax = 100;
+        this.colete = 0; this.coleteMax = 100;
+        this.energia = 100; this.energiaMax = 100;
+        this.dinheiro = 5000;
+        this.procurado = 0; this.tempoProcurado = 0;
+        this.veiculo = null; this.emVeiculo = false;
+        this.armaAtual = 'punho'; this.ultimoTiro = 0;
+        this.roupa = 'casual'; this.ultimoPasso = 0;
+        this.inv = {armas:['punho'],roupas:['casual'],veiculos:[],mun:{rev:0,smg:0,rifle:0,espingarda:0}};
+        this.missoes = {
             principais:[
-                {id:'m1',nome:'Conhecer a Cidade',desc:'Visite o centro comercial',concluida:false,alvo:'centro'},
-                {id:'m2',nome:'Orla Marítima',desc:'Caminhe pela praia',concluida:false,alvo:'praia'},
+                {id:'m1',nome:'Orla Marítima',desc:'Suba a orla até o centro',concluida:false,alvo:'centro'},
+                {id:'m2',nome:'Vida na Praia',desc:'Curta a orla por um tempo',concluida:false,alvo:'praia'},
                 {id:'m3',nome:'Respeito às Regras',desc:'Pague multa na delegacia',concluida:false,alvo:'delegacia'}
             ],
             secundarias:[
-                {id:'s1',nome:'Entrega Expressa',desc:'Vá até o porto',concluida:false,alvo:'porto'},
-                {id:'s2',nome:'Passeio no Parque',desc:'Visite a área verde',concluida:false,alvo:'parque'},
-                {id:'s3',nome:'Zona Industrial',desc:'Conheça a fábrica',concluida:false,alvo:'industrial'}
-            ],
-            corridas:[
-                {id:'c1',nome:'Circuito Litorâneo',desc:'Corrida pela orla',concluida:false,premio:2000},
-                {id:'c2',nome:'Desafio do Centro',desc:'Velocidade entre prédios',concluida:false,premio:3000},
-                {id:'c3',nome:'Rota da Serra',desc:'Suba e desça a zona alta',concluida:false,premio:4000}
+                {id:'s1',nome:'Entrega no Porto',desc:'Vá até o porto',concluida:false,alvo:'porto'},
+                {id:'s2',nome:'Passeio no Parque',desc:'Visite a área verde',concluida:false,alvo:'parque'}
             ]
         };
     }
@@ -295,111 +341,105 @@ class Jogador {
     atualizar(ctrl,delta){
         if(jogoPausado)return;
         if(this.emVeiculo&&this.veiculo){
-            this.veiculo.atualizarJogador(ctrl,delta);
-            this.x=this.veiculo.x; this.y=this.veiculo.y; this.angulo=this.veiculo.angulo;
+            this.veiculo.atualizarJogador(ctrl);
+            this.x=this.veiculo.x;this.y=this.veiculo.y;this.angulo=this.veiculo.angulo;
             return;
         }
-        this.andando=false;
-        const velAtual=ctrl.correndo&&this.energia>0?this.velCorrida:this.velMax;
-        if(ctrl.mover.x!==0||ctrl.mover.y!==0){
-            const comp=Math.hypot(ctrl.mover.x,ctrl.mover.y)||1;
-            const dx=(ctrl.mover.x/comp)*velAtual, dy=(ctrl.mover.y/comp)*velAtual;
-            this.angulo=Math.atan2(dy,dx);
-            this.mover(dx,dy); this.andando=true;
-            if(ctrl.correndo&&this.energia>0)this.energia=Math.max(0,this.energia-0.15);
-            if(Date.now()-this.ultimoPasso>300/velAtual){Som.passo();this.ultimoPasso=Date.now();}
+        const mx=ctrl.mover.x,my=ctrl.mover.y;
+        const temMov=Math.abs(mx)>0.05||Math.abs(my)>0.05;
+        if(temMov){
+            const comp=Math.hypot(mx,my)||1;
+            const nx=mx/comp,ny=my/comp;
+            const vel=ctrl.correndo&&this.energia>0?this.velCorrida:this.velMax;
+            this.angulo=Math.atan2(ny,nx);
+            this.mover(nx*vel,ny*vel);
+            if(ctrl.correndo&&this.energia>0)this.energia=Math.max(0,this.energia-0.1);
+            const agora=Date.now();
+            if(agora-this.ultimoPasso>280/vel){Som.passo();this.ultimoPasso=agora;}
+        }else{
+            if(this.energia<this.energiaMax)this.energia=Math.min(this.energiaMax,this.energia+0.05);
         }
-        if(!ctrl.correndo&&this.energia<this.energiaMax)this.energia=Math.min(this.energiaMax,this.energia+0.08);
         if(ctrl.atacando)this.atacar();
         if(this.procurado>0){
             this.tempoProcurado-=delta;
-            if(this.tempoProcurado<=0){this.procurado=Math.max(0,this.procurado-1);this.tempoProcurado=20000;}
-            if(Math.random()<0.003)Som.sirene();
+            if(this.tempoProcurado<=0){this.procurado=Math.max(0,this.procurado-1);this.tempoProcurado=25000;}
         }
         this.verificarLocal();
     }
 
     mover(dx,dy){
-        const nx=this.x+dx, ny=this.y+dy;
-        if(!Mapa.colisao(nx,ny,16,16)){
-            this.x=Math.max(50,Math.min(TAM_MUNDO-50,nx));
-            this.y=Math.max(50,Math.min(TAM_MUNDO-50,ny));
+        const nx=this.x+dx,ny=this.y+dy;
+        if(!Mapa.colisao(nx,ny,12,12)){
+            this.x=Math.max(60,Math.min(TAM_MUNDO-60,nx));
+            this.y=Math.max(60,Math.min(TAM_MUNDO-60,ny));
         }else{
-            if(!Mapa.colisao(nx,this.y,16,16))this.x=Math.max(50,Math.min(TAM_MUNDO-50,nx));
-            if(!Mapa.colisao(this.x,ny,16,16))this.y=Math.max(50,Math.min(TAM_MUNDO-50,ny));
+            if(!Mapa.colisao(nx,this.y,12,12))this.x=Math.max(60,Math.min(TAM_MUNDO-60,nx));
+            if(!Mapa.colisao(this.x,ny,12,12))this.y=Math.max(60,Math.min(TAM_MUNDO-60,ny));
         }
     }
 
     atacar(){
-        const agora=Date.now(), arma=ARMAS[this.armaAtual];
+        const agora=Date.now(),arma=ARMAS[this.armaAtual];
         if(agora-this.ultimoTiro<arma.cadencia)return;
         if(this.armaAtual!=='punho'){
             if(!this.inv.mun[this.armaAtual]||this.inv.mun[this.armaAtual]<=0)return;
             this.inv.mun[this.armaAtual]--;
             if(this.procurado<2){this.procurado=2;this.tempoProcurado=30000;}
         }
-        this.ultimoTiro=agora; Som.tiro();
-        const alvo=this.encontrarAlvo(arma.alcance);
+        this.ultimoTiro=agora;Som.tiro();
+        let alvo=null,distMin=arma.alcance;
+        for(const npc of Mundo.npcs){
+            const d=Math.hypot(npc.x-this.x,npc.y-this.y);
+            if(d<distMin){
+                const ang=Math.atan2(npc.y-this.y,npc.x-this.x);
+                let dif=Math.abs(ang-this.angulo);
+                if(dif>Math.PI)dif=2*Math.PI-dif;
+                if(dif<Math.PI/3){distMin=d;alvo=npc;}
+            }
+        }
         if(alvo){
             alvo.receberDano(arma.dano);
             if(alvo.vida<=0){
-                this.dinheiro+=50; Som.dinheiro();
+                this.dinheiro+=50;Som.dinheiro();
                 if(alvo.tipo==='policia'){this.procurado=Math.min(5,this.procurado+2);this.tempoProcurado=45000;}
                 else if(Math.random()<0.3){this.procurado=Math.min(5,this.procurado+1);this.tempoProcurado=30000;}
             }
         }
     }
 
-    encontrarAlvo(alcance){
-        let mDist=alcance, mAlvo=null;
-        for(const npc of Mundo.npcs){
-            const d=Math.hypot(npc.x-this.x,npc.y-this.y);
-            if(d<mDist){
-                const ang=Math.atan2(npc.y-this.y,npc.x-this.x);
-                let dif=Math.abs(ang-this.angulo);
-                if(dif>Math.PI)dif=2*Math.PI-dif;
-                if(dif<Math.PI/3){mDist=d;mAlvo=npc;}
-            }
-        }
-        return mAlvo;
-    }
-
     receberDano(qtd){
         if(this.colete>0){const dc=Math.min(this.colete,qtd*0.7);this.colete-=dc;qtd-=dc;}
-        this.vida=Math.max(0,this.vida-qtd); Som.dano();
-        if(this.vida<=0){
-            this.procurado=0; this.tempoProcurado=0; this.vida=30;
-            this.x=TAM_MUNDO/2; this.y=TAM_MUNDO/2-400; Som.alerta();
-        }
+        this.vida=Math.max(0,this.vida-qtd);Som.dano();
+        if(this.vida<=0){this.procurado=0;this.tempoProcurado=0;this.vida=30;this.x=TAM_MUNDO/2;this.y=620;this.angulo=Math.PI/2;}
     }
 
     entrarSair(){
         if(!this.emVeiculo){
             for(const v of Mundo.veiculos){
-                if(!v.proprietario&&Math.hypot(v.x-this.x,v.y-this.y)<50){
-                    this.veiculo=v; this.emVeiculo=true; v.ocupante=this; return;
+                if(!v.ocupante&&Math.hypot(v.x-this.x,v.y-this.y)<45){
+                    this.veiculo=v;this.emVeiculo=true;v.ocupante=this;return;
                 }
             }
             for(const v of this.inv.veiculos){
-                if(Math.hypot(v.x-this.x,v.y-this.y)<60){
-                    this.veiculo=v; this.emVeiculo=true; v.ocupante=this; return;
+                if(Math.hypot(v.x-this.x,v.y-this.y)<50){
+                    this.veiculo=v;this.emVeiculo=true;v.ocupante=this;return;
                 }
             }
         }else{
             this.emVeiculo=false;
-            this.x=this.veiculo.x+Math.cos(this.veiculo.angulo+Math.PI/2)*45;
-            this.y=this.veiculo.y+Math.sin(this.veiculo.angulo+Math.PI/2)*45;
-            this.veiculo.ocupante=null; this.veiculo=null;
+            this.x=this.veiculo.x+Math.cos(this.veiculo.angulo+Math.PI/2)*40;
+            this.y=this.veiculo.y+Math.sin(this.veiculo.angulo+Math.PI/2)*40;
+            this.veiculo.ocupante=null;this.veiculo=null;
         }
     }
 
     verificarLocal(){
-        const locais=['centro','praia','porto','parque','industrial','favela','residencial','aeroporto'];
-        const nomes={centro:'Centro',praia:'Praia',porto:'Porto',parque:'Parque',industrial:'Zona Industrial',favela:'Comunidade',residencial:'Bairro Residencial',aeroporto:'Aeroporto'};
+        const locais=['centro','praia','porto','parque','industrial','favela','residencial'];
+        const nomes={centro:'🏙️ Centro',praia:'🏖️ Praia',porto:'⚓ Porto',parque:'🌳 Parque',industrial:'🏭 Industrial',favela:'🏘️ Comunidade',residencial:'🏠 Residencial'};
         for(const l of locais){
             if(Mapa.verificarArea(this.x,this.y,l)){
                 document.getElementById('localizacao').textContent=nomes[l];
-                this.atualizarMissoes(l); break;
+                this.atualizarMissoes(l);break;
             }
         }
     }
@@ -412,159 +452,198 @@ class Jogador {
     }
 }
 
-// ==============================================
-// CLASSE VEÍCULO
-// ==============================================
 class Veiculo {
     constructor(x,y,tipo='carro'){
-        this.x=x; this.y=y; this.angulo=Math.random()*Math.PI*2;
-        this.tipo=tipo; const c=VEICULOS[tipo];
-        this.w=c.w; this.h=c.h; this.vel=0; this.velMax=c.velMax;
-        this.acel=c.acel; this.freio=c.freio; this.cor=c.cor;
-        this.proprietario=null; this.ocupante=null; this.ultimoSom=0;
-        this.velAlvo=this.velMax*(0.5+Math.random()*0.3);
+        this.x=x;this.y=y;this.angulo=Math.random()*Math.PI*2;
+        this.tipo=tipo;const c=VEICULOS[tipo];
+        this.w=c.w;this.h=c.h;this.vel=0;this.velMax=c.velMax;
+        this.acel=c.acel;this.freio=c.freio;this.cor=c.cor;
+        this.ocupante=null;this.velAlvo=this.velMax*(0.4+Math.random()*0.4);
+        this.trocaDir=60+Math.random()*180;
     }
-
-    atualizarJogador(ctrl,delta){
+    atualizarJogador(ctrl){
         if(ctrl.frente)this.vel=Math.min(this.velMax,this.vel+this.acel);
         else if(ctrl.tras)this.vel=Math.max(-this.velMax*0.4,this.vel-this.acel);
-        else this.vel*=0.96;
+        else this.vel*=0.95;
         if(Math.abs(this.vel)>0.1){
-            const dir=this.vel>0?1:-1;
-            if(ctrl.esquerda)this.angulo-=0.04*dir;
-            if(ctrl.direita)this.angulo+=0.04*dir;
+            const f=this.vel>0?1:-1;
+            if(ctrl.esquerda)this.angulo-=0.035*f;
+            if(ctrl.direita)this.angulo+=0.035*f;
         }
         this.mover();
-        if(Math.abs(this.vel)>1&&Date.now()-this.ultimoSom>300){Som.motor();this.ultimoSom=Date.now();}
     }
-
     atualizarIA(){
         if(this.ocupante)return;
         const sem=Mapa.estadoSemaforo(this.x,this.y);
-        if(sem===0){this.vel*=0.92;if(this.vel<0.2)this.vel=0;}
+        if(sem===0){this.vel*=0.9;if(this.vel<0.12)this.vel=0;}
         else{
-            if(Math.random()<0.02)this.velAlvo=this.velMax*(0.4+Math.random()*0.4);
-            if(this.vel<this.velAlvo)this.vel+=this.acel*0.7; else this.vel*=0.95;
+            if(Math.random()<0.012)this.velAlvo=this.velMax*(0.4+Math.random()*0.4);
+            if(this.vel<this.velAlvo)this.vel+=this.acel*0.5;else this.vel*=0.97;
         }
-        if(Math.random()<0.01)this.angulo+=(Math.random()-0.5)*0.5;
-        this.angulo+=Math.sin(this.x/500)*0.001;
+        this.trocaDir--;
+        if(this.trocaDir<=0){
+            if(Math.random()<0.015)this.angulo+=(Math.random()-0.5)*0.5;
+            this.trocaDir=90+Math.random()*200;
+        }
         this.mover();
     }
-
     mover(){
         const nx=this.x+Math.cos(this.angulo)*this.vel;
         const ny=this.y+Math.sin(this.angulo)*this.vel;
         if(!Mapa.colisao(nx,ny,this.w,this.h)){
-            this.x=Math.max(50,Math.min(TAM_MUNDO-50,nx));
-            this.y=Math.max(50,Math.min(TAM_MUNDO-50,ny));
-        }else{
-            this.vel*=-0.3; this.angulo+=Math.PI/2+Math.random()*0.5; Som.batida();
-            const d=Math.hypot(Mundo.jogador.x-this.x,Mundo.jogador.y-this.y);
-            if(d<150&&Math.random()<0.1){Mundo.jogador.procurado=Math.min(5,Mundo.jogador.procurado+1);Mundo.jogador.tempoProcurado=20000;}
-        }
+            this.x=Math.max(60,Math.min(TAM_MUNDO-60,nx));
+            this.y=Math.max(60,Math.min(TAM_MUNDO-60,ny));
+        }else{this.vel*=-0.2;this.angulo+=Math.PI/2+(Math.random()-0.5)*0.4;}
     }
-
     desenhar(cam){
-        const sx=this.x-cam.x+LARGURA/2, sy=this.y-cam.y+ALTURA/2;
-        if(sx<-100||sx>LARGURA+100||sy<-100||sy>ALTURA+100)return;
-        ctx.save(); ctx.translate(sx,sy); ctx.rotate(this.angulo);
-        ctx.fillStyle=this.cor; ctx.fillRect(-this.w/2,-this.h/2,this.w,this.h);
-        ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(-this.w/4,-this.h/3,this.w/2,this.h/1.5);
-        ctx.fillStyle='#222';
-        ctx.fillRect(-this.w/2.5,-this.h/2,8,6); ctx.fillRect(this.w/2.5-8,-this.h/2,8,6);
-        ctx.fillRect(-this.w/2.5,this.h/2-6,8,6); ctx.fillRect(this.w/2.5-8,this.h/2-6,8,6);
+        const sx=this.x-cam.x+LARGURA/2,sy=this.y-cam.y+ALTURA/2;
+        if(sx<-80||sx>LARGURA+80||sy<-80||sy>ALTURA+80)return;
+        ctx.save();ctx.translate(sx,sy);ctx.rotate(this.angulo);
+        // Sombra
+        ctx.fillStyle='rgba(0,0,0,0.25)';
+        ctx.beginPath();ctx.ellipse(2,3,this.w/2,this.h/2.5,0,0,Math.PI*2);ctx.fill();
+        // Corpo
+        ctx.fillStyle=this.cor;
+        ctx.beginPath();
+        ctx.roundRect(-this.w/2,-this.h/2,this.w,this.h,4);
+        ctx.fill();
+        // Brilho
+        ctx.fillStyle='rgba(255,255,255,0.15)';
+        ctx.fillRect(-this.w/2+2,-this.h/2+2,this.w-4,4);
+        // Janelas
+        ctx.fillStyle='rgba(30,50,80,0.7)';
+        ctx.fillRect(-this.w/3.5,-this.h/3,this.w/1.8,this.h/1.6);
+        // Faróis
+        ctx.fillStyle='#fff8dc';
+        ctx.fillRect(this.w/2-4,-this.h/2+2,3,4);
+        ctx.fillRect(this.w/2-4,this.h/2-6,3,4);
+        // Rodas
+        ctx.fillStyle='#1a1a1a';
+        ctx.fillRect(-this.w/2.5,-this.h/2-2,8,5);
+        ctx.fillRect(this.w/2.5-8,-this.h/2-2,8,5);
+        ctx.fillRect(-this.w/2.5,this.h/2-3,8,5);
+        ctx.fillRect(this.w/2.5-8,this.h/2-3,8,5);
         ctx.restore();
     }
 }
 
-// ==============================================
-// CLASSE NPC
-// ==============================================
 class NPC {
     constructor(x,y,tipo='pedestre'){
-        this.x=x; this.y=y; this.tipo=tipo;
+        this.x=x;this.y=y;this.tipo=tipo;
         this.angulo=Math.random()*Math.PI*2;
-        this.vel=tipo==='correndo'?2.5:1+Math.random();
-        this.destino={x:x+(Math.random()-0.5)*600,y:y+(Math.random()-0.5)*600};
+        this.velBase=tipo==='correndo'?2:0.7+Math.random()*0.5;
+        this.vel=this.velBase;
+        this.destino={x:x+(Math.random()-0.5)*400,y:y+(Math.random()-0.5)*400};
         this.vida=tipo==='policia'?100:30;
         this.reagindo=false;
-        this.cor=tipo==='policia'?'#0066cc':['#e64a19','#0288d1','#f9a825','#6a1b9a','#2e7d32'][Math.floor(Math.random()*5)];
+        this.cor=tipo==='policia'?'#1565c0':['#e53935','#0288d1','#f9a825','#7b1fa2','#388e3c','#ef6c00'][Math.floor(Math.random()*6)];
+        this.cabelo=['#3e2723','#1a1a1a','#8d6e63','#f5f5f5'][Math.floor(Math.random()*4)];
+        this.trocaDest=80+Math.random()*160;
     }
-
     atualizar(){
         if(jogoPausado)return;
         const dJog=Math.hypot(Mundo.jogador.x-this.x,Mundo.jogador.y-this.y);
-        if(dJog<200&&Mundo.jogador.armaAtual!=='punho'){
-            this.reagindo=true; this.angulo=Math.atan2(this.y-Mundo.jogador.y,this.x-Mundo.jogador.x);
-            if(this.tipo!=='policia')this.vel=3.5;
-        }else if(dJog<50&&Mundo.jogador.emVeiculo){
-            this.reagindo=true; this.angulo=Math.atan2(this.y-Mundo.jogador.y,this.x-Mundo.jogador.x); this.vel=3;
+        if(dJog<160&&Mundo.jogador.armaAtual!=='punho'){
+            this.reagindo=true;this.angulo=Math.atan2(this.y-Mundo.jogador.y,this.x-Mundo.jogador.x);this.vel=2.2;
+        }else if(dJog<40&&Mundo.jogador.emVeiculo){
+            this.reagindo=true;this.angulo=Math.atan2(this.y-Mundo.jogador.y,this.x-Mundo.jogador.x);this.vel=2;
         }else{
-            this.reagindo=false;
-            const dDest=Math.hypot(this.destino.x-this.x,this.destino.y-this.y);
-            if(dDest<20)this.destino={x:this.x+(Math.random()-0.5)*600,y:this.y+(Math.random()-0.5)*600};
+            this.reagindo=false;this.vel=this.velBase;
+            this.trocaDest--;
+            if(this.trocaDest<=0){
+                const dD=Math.hypot(this.destino.x-this.x,this.destino.y-this.y);
+                if(dD<25||Math.random()<0.008)this.destino={x:this.x+(Math.random()-0.5)*400,y:this.y+(Math.random()-0.5)*400};
+                this.trocaDest=100+Math.random()*200;
+            }
             this.angulo=Math.atan2(this.destino.y-this.y,this.destino.x-this.x);
         }
-        if(this.tipo==='policia'&&Mundo.jogador.procurado>0&&dJog<600){
-            this.angulo=Math.atan2(Mundo.jogador.y-this.y,Mundo.jogador.x-this.x); this.vel=3.5;
-            if(dJog<40)Mundo.jogador.receberDano(2);
+        if(this.tipo==='policia'&&Mundo.jogador.procurado>0&&dJog<450){
+            this.angulo=Math.atan2(Mundo.jogador.y-this.y,Mundo.jogador.x-this.x);this.vel=2.5;
+            if(dJog<32)Mundo.jogador.receberDano(1.2);
         }
-        const nx=this.x+Math.cos(this.angulo)*this.vel, ny=this.y+Math.sin(this.angulo)*this.vel;
-        if(!Mapa.colisao(nx,ny,12,12)){
-            this.x=Math.max(50,Math.min(TAM_MUNDO-50,nx));
-            this.y=Math.max(50,Math.min(TAM_MUNDO-50,ny));
-        }else this.angulo+=Math.PI/2;
+        const nx=this.x+Math.cos(this.angulo)*this.vel;
+        const ny=this.y+Math.sin(this.angulo)*this.vel;
+        if(!Mapa.colisao(nx,ny,8,8)){
+            this.x=Math.max(60,Math.min(TAM_MUNDO-60,nx));
+            this.y=Math.max(60,Math.min(TAM_MUNDO-60,ny));
+        }else this.angulo+=Math.PI/2+(Math.random()-0.5)*0.4;
     }
-
     receberDano(qtd){
         this.vida-=qtd;
         if(this.vida<=0){const i=Mundo.npcs.indexOf(this);if(i>-1)Mundo.npcs.splice(i,1);}
     }
-
     desenhar(cam){
-        const sx=this.x-cam.x+LARGURA/2, sy=this.y-cam.y+ALTURA/2;
-        if(sx<-20||sx>LARGURA+20||sy<-20||sy>ALTURA+20)return;
-        ctx.save(); ctx.translate(sx,sy);
-        ctx.fillStyle=this.cor; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
-        if(this.reagindo){ctx.fillStyle='#fff';ctx.font='12px Arial';ctx.fillText('!',-3,-12);}
-        if(this.tipo==='policia'){ctx.fillStyle='#fff';ctx.font='10px Arial';ctx.fillText('P',-4,4);}
+        const sx=this.x-cam.x+LARGURA/2,sy=this.y-cam.y+ALTURA/2;
+        if(sx<-15||sx>LARGURA+15||sy<-15||sy>ALTURA+15)return;
+        ctx.save();ctx.translate(sx,sy);
+        // Sombra
+        ctx.fillStyle='rgba(0,0,0,0.25)';
+        ctx.beginPath();ctx.ellipse(1,3,7,4,0,0,Math.PI*2);ctx.fill();
+        // Corpo
+        ctx.fillStyle=this.cor;
+        ctx.beginPath();ctx.arc(0,0,7,0,Math.PI*2);ctx.fill();
+        // Cabeça
+        ctx.fillStyle='#ffdbac';
+        ctx.beginPath();ctx.arc(4,0,4,0,Math.PI*2);ctx.fill();
+        // Cabelo
+        ctx.fillStyle=this.cabelo;
+        ctx.beginPath();ctx.arc(4.5,-1,3.5,Math.PI,Math.PI*2);ctx.fill();
+        // Polícia
+        if(this.tipo==='policia'){
+            ctx.fillStyle='#1565c0';
+            ctx.fillRect(-2,-6,8,2);
+        }
+        // Reação
+        if(this.reagindo){
+            ctx.fillStyle='#fff';ctx.font='bold 11px Arial';
+            ctx.fillText('❗',-7,-12);
+        }
         ctx.restore();
     }
 }
 
-// ==============================================
-// MAPA
-// ==============================================
 const Mapa = {
-    areas:[], semaforos:[],
+    areas:[],semaforos:[],coqueiros:[],
 
     inicializar(){
-        const cx=TAM_MUNDO/2, cy=TAM_MUNDO/2;
+        const cx=TAM_MUNDO/2,cy=TAM_MUNDO/2;
         this.areas=[
-            {tipo:'agua',x:0,y:0,l:TAM_MUNDO,a:600,cor:CORES.agua,solido:true},
-            {tipo:'praia',x:0,y:500,l:TAM_MUNDO,a:700,cor:CORES.areia},
-            {tipo:'parque',x:cx-800,y:cy-1000,l:1600,a:800,cor:CORES.parque},
-            {tipo:'centro',x:cx-1000,y:cy-400,l:2000,a:1200,cor:CORES.predio,solido:true},
-            {tipo:'favela',x:cx+1200,y:cy-600,l:1000,a:1400,cor:CORES.favela,solido:true},
-            {tipo:'residencial',x:cx-1500,y:cy+600,l:1200,a:1000,cor:CORES.calcada,solido:true},
-            {tipo:'industrial',x:0,y:cy+1000,l:1000,a:1200,cor:CORES.industrial,solido:true},
-            {tipo:'porto',x:TAM_MUNDO-1200,y:cy+800,l:1200,a:800,cor:CORES.porto,solido:true},
-            {tipo:'aeroporto',x:cx-600,y:TAM_MUNDO-1000,l:1200,a:1000,cor:'#555',solido:true}
+            {tipo:'agua',x:0,y:0,l:TAM_MUNDO,a:500,cor:CORES.agua,solido:true},
+            {tipo:'praia',x:0,y:500,l:TAM_MUNDO,a:500,cor:CORES.areia},
+            {tipo:'parque',x:cx-600,y:cy-800,l:1200,a:600,cor:CORES.parque},
+            {tipo:'centro',x:cx-800,y:cy-300,l:1600,a:1000,cor:CORES.predio,solido:true},
+            {tipo:'favela',x:cx+900,y:cy-400,l:800,a:1100,cor:CORES.favela,solido:true},
+            {tipo:'residencial',x:cx-1100,y:cy+400,l:1000,a:800,cor:CORES.calcada,solido:true},
+            {tipo:'industrial',x:0,y:cy+800,l:800,a:900,cor:CORES.industrial,solido:true},
+            {tipo:'porto',x:TAM_MUNDO-900,y:cy+600,l:900,a:600,cor:CORES.porto,solido:true}
         ];
         const qtd=Math.floor(TAM_MUNDO/(TAM_QUADRA+TAM_RUA));
         for(let i=0;i<=qtd;i++)for(let j=0;j<=qtd;j++){
-            const x=i*(TAM_QUADRA+TAM_RUA), y=j*(TAM_QUADRA+TAM_RUA);
+            const x=i*(TAM_QUADRA+TAM_RUA),y=j*(TAM_QUADRA+TAM_RUA);
             if(!this.verificarArea(x+TAM_QUADRA/2,y+TAM_QUADRA/2,'agua')){
                 const a=this.obterArea(x+TAM_QUADRA/2,y+TAM_QUADRA/2);
                 if(a&&a.tipo!=='parque'&&a.tipo!=='praia'){
-                    this.areas.push({tipo:'quadra',x,y,l:TAM_QUADRA,a:TAM_QUADRA,solido:true,
-                        cor:a.tipo==='favela'?CORES.favela:a.tipo==='industrial'?CORES.industrial:CORES.predio});
+                    this.areas.push({
+                        tipo:'quadra',x,y,l:TAM_QUADRA,a:TAM_QUADRA,solido:true,
+                        cor:a.tipo==='favela'?CORES.favela:a.tipo==='industrial'?CORES.industrial:CORES.predio,
+                        altura:20+((i*13+j*7)%50),
+                        semente:i*100+j
+                    });
                 }
             }
         }
-        for(let x=800;x<TAM_MUNDO;x+=800)for(let y=800;y<TAM_MUNDO;y+=800)
+        // Coqueiros na praia
+        for(let i=0;i<40;i++){
+            this.coqueiros.push({
+                x:200+Math.random()*(TAM_MUNDO-400),
+                y:520+Math.random()*80,
+                tamanho:0.8+Math.random()*0.4
+            });
+        }
+        for(let x=600;x<TAM_MUNDO;x+=600)for(let y=600;y<TAM_MUNDO;y+=600)
             if(!this.verificarArea(x,y,'agua')&&!this.verificarArea(x,y,'parque'))
                 this.semaforos.push({x,y,estado:0,tempo:0,dur:[4000,1000,4000]});
+        log('Mapa: '+this.areas.length+' áreas, '+this.coqueiros.length+' coqueiros');
     },
 
     verificarArea(x,y,tipo){
@@ -595,109 +674,267 @@ const Mapa = {
         let md=Infinity,est=2;
         for(const s of this.semaforos){
             const d=Math.hypot(s.x-x,s.y-y);
-            if(d<60&&d<md){md=d;est=s.estado;}
+            if(d<55&&d<md){md=d;est=s.estado;}
         }
         return est;
     },
 
     desenhar(cam){
         const dia=Relogio.dia;
-        const corFundo=dia>0.7?CORES.ceuDia:dia>0.3?CORES.ceuTarde:CORES.ceuNoite;
-        ctx.fillStyle=corFundo; ctx.fillRect(0,0,LARGURA,ALTURA);
+        const fundo=dia>0.7?CORES.ceuDia:dia>0.3?CORES.ceuTarde:CORES.ceuNoite;
+        ctx.fillStyle=fundo;ctx.fillRect(0,0,LARGURA,ALTURA);
 
+        // Sol/Lua
+        if(dia>0.3){
+            const solX=LARGURA*0.8,solY=ALTURA*(0.15+(1-dia)*0.2);
+            const grad=ctx.createRadialGradient(solX,solY,0,solX,solY,80);
+            grad.addColorStop(0,dia>0.6?'rgba(255,235,59,0.8)':'rgba(255,152,0,0.6)');
+            grad.addColorStop(1,'transparent');
+            ctx.fillStyle=grad;ctx.fillRect(solX-80,solY-80,160,160);
+            ctx.fillStyle=dia>0.6?'#ffeb3b':'#ff9800';
+            ctx.beginPath();ctx.arc(solX,solY,25,0,Math.PI*2);ctx.fill();
+        }
+
+        // Áreas grandes
         for(const a of this.areas){
             if(a.l<=TAM_QUADRA)continue;
-            const sx=a.x-cam.x+LARGURA/2, sy=a.y-cam.y+ALTURA/2;
+            const sx=a.x-cam.x+LARGURA/2,sy=a.y-cam.y+ALTURA/2;
             if(sx+a.l>0&&sx<LARGURA&&sy+a.a>0&&sy<ALTURA){
-                ctx.fillStyle=a.cor; ctx.fillRect(sx,sy,a.l,a.a);
-                if(a.tipo==='praia'){
-                    ctx.fillStyle='rgba(255,255,255,0.3)';
-                    for(let i=0;i<5;i++){
-                        const wy=sy+50+i*100+Math.sin(Date.now()/1000+i)*10;
-                        ctx.fillRect(sx,wy,a.l,3);
+                if(a.tipo==='agua'){
+                    // Água com ondas
+                    ctx.fillStyle=CORES.agua;
+                    ctx.fillRect(sx,sy,a.l,a.a);
+                    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=2;
+                    for(let i=0;i<6;i++){
+                        const wy=sy+30+i*70+Math.sin(tempoGlobal/800+i)*8;
+                        ctx.beginPath();
+                        for(let x=0;x<a.l;x+=20){
+                            const yy=wy+Math.sin((x+tempoGlobal/400+i*50)/40)*3;
+                            if(x===0)ctx.moveTo(sx+x,yy);else ctx.lineTo(sx+x,yy);
+                        }
+                        ctx.stroke();
                     }
+                }else if(a.tipo==='praia'){
+                    // Areia com textura
+                    ctx.fillStyle=CORES.areia;
+                    ctx.fillRect(sx,sy,a.l,a.a);
+                    ctx.fillStyle='rgba(180,150,100,0.15)';
+                    for(let i=0;i<50;i++){
+                        const px=sx+((i*137)%a.l);
+                        const py=sy+((i*89)%a.a);
+                        ctx.fillRect(px,py,3,3);
+                    }
+                    // Beira do mar
+                    ctx.fillStyle='rgba(255,255,255,0.3)';
+                    for(let i=0;i<3;i++){
+                        const wy=sy+10+i*15+Math.sin(tempoGlobal/600+i)*5;
+                        ctx.fillRect(sx,wy,a.l,2);
+                    }
+                }else{
+                    ctx.fillStyle=a.cor;
+                    ctx.fillRect(sx,sy,a.l,a.a);
                 }
             }
         }
 
+        // Coqueiros
+        for(const c of this.coqueiros){
+            const sx=c.x-cam.x+LARGURA/2,sy=c.y-cam.y+ALTURA/2;
+            if(sx>-30&&sx<LARGURA+30&&sy>-30&&sy<ALTURA+30){
+                this.desenharCoqueiro(sx,sy,c.tamanho);
+            }
+        }
+
+        // Ruas
         ctx.fillStyle=CORES.asfalto;
         const ix=Math.max(0,Math.floor((cam.x-LARGURA/2)/(TAM_QUADRA+TAM_RUA))-1);
         const fx=Math.min(Math.floor(TAM_MUNDO/(TAM_QUADRA+TAM_RUA))+1,ix+Math.ceil(LARGURA/(TAM_QUADRA+TAM_RUA))+2);
         const iy=Math.max(0,Math.floor((cam.y-ALTURA/2)/(TAM_QUADRA+TAM_RUA))-1);
         const fy=Math.min(Math.floor(TAM_MUNDO/(TAM_QUADRA+TAM_RUA))+1,iy+Math.ceil(ALTURA/(TAM_QUADRA+TAM_RUA))+2);
 
-        for(let i=ix;i<=fx;i++){
-            const rx=i*(TAM_QUADRA+TAM_RUA)-cam.x+LARGURA/2;
-            ctx.fillRect(rx,0,TAM_RUA,ALTURA);
-        }
-        for(let j=iy;j<=fy;j++){
-            const ry=j*(TAM_QUADRA+TAM_RUA)-cam.y+ALTURA/2;
-            ctx.fillRect(0,ry,LARGURA,TAM_RUA);
-        }
+        for(let i=ix;i<=fx;i++){const rx=i*(TAM_QUADRA+TAM_RUA)-cam.x+LARGURA/2;ctx.fillRect(rx,0,TAM_RUA,ALTURA);}
+        for(let j=iy;j<=fy;j++){const ry=j*(TAM_QUADRA+TAM_RUA)-cam.y+ALTURA/2;ctx.fillRect(0,ry,LARGURA,TAM_RUA);}
 
-        ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=2; ctx.setLineDash([10,10]);
-        for(let i=ix;i<=fx;i++){
-            const rx=i*(TAM_QUADRA+TAM_RUA)-cam.x+LARGURA/2+TAM_RUA/2;
-            ctx.beginPath(); ctx.moveTo(rx,0); ctx.lineTo(rx,ALTURA); ctx.stroke();
-        }
-        for(let j=iy;j<=fy;j++){
-            const ry=j*(TAM_QUADRA+TAM_RUA)-cam.y+ALTURA/2+TAM_RUA/2;
-            ctx.beginPath(); ctx.moveTo(0,ry); ctx.lineTo(LARGURA,ry); ctx.stroke();
-        }
+        // Faixas de rua
+        ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2;ctx.setLineDash([8,8]);
+        for(let i=ix;i<=fx;i++){const rx=i*(TAM_QUADRA+TAM_RUA)-cam.x+LARGURA/2+TAM_RUA/2;ctx.beginPath();ctx.moveTo(rx,0);ctx.lineTo(rx,ALTURA);ctx.stroke();}
+        for(let j=iy;j<=fy;j++){const ry=j*(TAM_QUADRA+TAM_RUA)-cam.y+ALTURA/2+TAM_RUA/2;ctx.beginPath();ctx.moveTo(0,ry);ctx.lineTo(LARGURA,ry);ctx.stroke();}
         ctx.setLineDash([]);
 
+        // Calçadas
+        ctx.fillStyle=CORES.calcada;
         for(let i=ix;i<=fx;i++)for(let j=iy;j<=fy;j++){
-            const x=i*(TAM_QUADRA+TAM_RUA), y=j*(TAM_QUADRA+TAM_RUA);
-            const sx=x-cam.x+LARGURA/2, sy=y-cam.y+ALTURA/2;
+            const x=i*(TAM_QUADRA+TAM_RUA),y=j*(TAM_QUADRA+TAM_RUA);
+            const sx=x-cam.x+LARGURA/2,sy=y-cam.y+ALTURA/2;
+            const area=this.obterArea(x+TAM_QUADRA/2,y+TAM_QUADRA/2);
+            if(area&&area.tipo==='quadra'){
+                ctx.fillRect(sx-3,sy-3,TAM_QUADRA+6,3);
+                ctx.fillRect(sx-3,sy-3,3,TAM_QUADRA+6);
+            }
+        }
+
+        // Quadras e prédios
+        for(let i=ix;i<=fx;i++)for(let j=iy;j<=fy;j++){
+            const x=i*(TAM_QUADRA+TAM_RUA),y=j*(TAM_QUADRA+TAM_RUA);
+            const sx=x-cam.x+LARGURA/2,sy=y-cam.y+ALTURA/2;
             if(sx+TAM_QUADRA>0&&sx<LARGURA&&sy+TAM_QUADRA>0&&sy<ALTURA){
                 const a=this.obterArea(x+TAM_QUADRA/2,y+TAM_QUADRA/2);
                 if(a&&a.tipo==='quadra'){
-                    ctx.fillStyle=a.cor; ctx.fillRect(sx,sy,TAM_QUADRA,TAM_QUADRA);
-                    const alt=30+((i*7+j*13)%60);
-                    ctx.fillStyle='rgba(0,0,0,0.15)'; ctx.fillRect(sx+5,sy+5,TAM_QUADRA-10,alt);
-                    if(dia<0.4){
-                        ctx.fillStyle=((i+j)%3===0)?'#ffd700':'#333';
-                        for(let w=10;w<TAM_QUADRA-10;w+=15)for(let h=10;h<alt-5;h+=15)
-                            if(((w*h+i+j)%5)!==0)ctx.fillRect(sx+w,sy+h,6,8);
-                    }
+                    this.desenharQuadra(sx,sy,a);
                 }
             }
         }
 
+        // Semáforos
         for(const s of this.semaforos){
-            const sx=s.x-cam.x+LARGURA/2, sy=s.y-cam.y+ALTURA/2;
-            if(sx>-20&&sx<LARGURA+20&&sy>-20&&sy<ALTURA+20){
+            const sx=s.x-cam.x+LARGURA/2,sy=s.y-cam.y+ALTURA/2;
+            if(sx>-15&&sx<LARGURA+15&&sy>-15&&sy<ALTURA+15){
                 const cor=[CORES.semVerm,CORES.semAmar,CORES.semVerd][s.estado];
-                ctx.fillStyle='#222'; ctx.fillRect(sx-4,sy-15,8,30);
-                ctx.fillStyle=cor; ctx.beginPath(); ctx.arc(sx,sy,6,0,Math.PI*2); ctx.fill();
+                // Poste
+                ctx.fillStyle='#333';ctx.fillRect(sx-2,sy-18,4,30);
+                // Luz
+                ctx.fillStyle='rgba(0,0,0,0.5)';ctx.beginPath();ctx.arc(sx,sy,7,0,Math.PI*2);ctx.fill();
+                ctx.fillStyle=cor;ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);ctx.fill();
+                // Glow
+                ctx.fillStyle=cor.replace(')',',0.3)').replace('rgb','rgba');
+                ctx.beginPath();ctx.arc(sx,sy,12,0,Math.PI*2);ctx.fill();
+            }
+        }
+
+        // Escuridão da noite
+        if(dia<0.5){
+            ctx.fillStyle='rgba(0,0,20,'+(0.35-dia*0.5)+')';
+            ctx.fillRect(0,0,LARGURA,ALTURA);
+        }
+    },
+
+    desenharQuadra(sx,sy,a){
+        const tam=TAM_QUADRA;
+        // Base
+        ctx.fillStyle=a.cor;
+        ctx.fillRect(sx,sy,tam,tam);
+        
+        // Prédios
+        const sem=a.semente||0;
+        const numPredios=1+((sem*3)%3);
+        const altBase=a.altura||30;
+        
+        for(let p=0;p<numPredios;p++){
+            const px=sx+5+(p*(tam-10)/numPredios);
+            const py=sy+5;
+            const pw=(tam-15)/numPredios;
+            const ph=tam-10;
+            const alt=altBase+((sem+p*17)%30);
+            
+            // Sombra do prédio
+            ctx.fillStyle='rgba(0,0,0,0.2)';
+            ctx.fillRect(px+4,py+4,pw,ph);
+            
+            // Corpo
+            const corClara=this.clarear(a.cor,15);
+            const grad=ctx.createLinearGradient(px,py,px+pw,py);
+            grad.addColorStop(0,corClara);
+            grad.addColorStop(0.5,a.cor);
+            grad.addColorStop(1,this.escurecer(a.cor,15));
+            ctx.fillStyle=grad;
+            ctx.fillRect(px,py,pw,ph);
+            
+            // Topo
+            ctx.fillStyle=this.escurecer(a.cor,25);
+            ctx.fillRect(px,py,pw,4);
+            
+            // Janelas
+            const dia=Relogio.dia;
+            const espW=pw/4,espH=ph/6;
+            for(let wx=1;wx<4;wx++){
+                for(let wy=1;wy<6;wy++){
+                    const jx=px+wx*espW-3;
+                    const jy=py+wy*espH-3;
+                    if(dia<0.4){
+                        // Noite - janelas aleatoriamente acesas
+                        const acesa=((sem+wx*7+wy*13+p*5)%4)!==0;
+                        ctx.fillStyle=acesa?'rgba(255,215,0,0.85)':'rgba(20,30,50,0.8)';
+                        if(acesa){
+                            ctx.shadowColor='rgba(255,215,0,0.5)';
+                            ctx.shadowBlur=4;
+                        }
+                    }else{
+                        ctx.fillStyle='rgba(180,220,255,0.5)';
+                    }
+                    ctx.fillRect(jx,jy,5,5);
+                    ctx.shadowBlur=0;
+                }
             }
         }
     },
 
+    desenharCoqueiro(x,y,tam){
+        ctx.save();ctx.translate(x,y);ctx.scale(tam,tam);
+        // Sombra
+        ctx.fillStyle='rgba(0,0,0,0.2)';
+        ctx.beginPath();ctx.ellipse(3,2,10,4,0,0,Math.PI*2);ctx.fill();
+        // Tronco
+        ctx.fillStyle='#6d4c41';
+        ctx.beginPath();
+        ctx.moveTo(-3,0);
+        ctx.quadraticCurveTo(-2,-15,0,-30);
+        ctx.quadraticCurveTo(2,-15,3,0);
+        ctx.fill();
+        // Folhas
+        ctx.fillStyle='#2e7d32';
+        for(let i=0;i<6;i++){
+            const ang=(i/6)*Math.PI*2+Math.sin(tempoGlobal/1000)*0.05;
+            ctx.save();
+            ctx.translate(0,-30);
+            ctx.rotate(ang);
+            ctx.beginPath();
+            ctx.ellipse(10,0,14,5,0.2,0,Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+        }
+        // Cocos
+        ctx.fillStyle='#5d4037';
+        ctx.beginPath();ctx.arc(-3,-28,2.5,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(3,-27,2.5,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+    },
+
+    clarear(cor,amt){
+        const n=parseInt(cor.replace('#',''),16);
+        const r=Math.min(255,((n>>16)&255)+amt);
+        const g=Math.min(255,((n>>8)&255)+amt);
+        const b=Math.min(255,(n&255)+amt);
+        return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+    },
+
+    escurecer(cor,amt){
+        const n=parseInt(cor.replace('#',''),16);
+        const r=Math.max(0,((n>>16)&255)-amt);
+        const g=Math.max(0,((n>>8)&255)-amt);
+        const b=Math.max(0,(n&255)-amt);
+        return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+    },
+
     desenharMinimapa(){
-        mapaCtx.fillStyle='#1a1a2e'; mapaCtx.fillRect(0,0,130,130);
-        const escala=130/TAM_MUNDO;
+        mapaCtx.fillStyle='#1a1a2e';mapaCtx.fillRect(0,0,110,110);
+        const esc=110/TAM_MUNDO;
         for(const a of this.areas){
             if(a.l<=TAM_QUADRA)continue;
             mapaCtx.fillStyle=a.cor;
-            mapaCtx.fillRect(a.x*escala,a.y*escala,a.l*escala,a.a*escala);
+            mapaCtx.fillRect(a.x*esc,a.y*esc,a.l*esc,a.a*esc);
         }
         mapaCtx.fillStyle='#ffd700';
-        const jx=Mundo.jogador.x*escala, jy=Mundo.jogador.y*escala;
-        mapaCtx.beginPath(); mapaCtx.arc(jx,jy,4,0,Math.PI*2); mapaCtx.fill();
-        mapaCtx.strokeStyle='#ff5722'; mapaCtx.lineWidth=2;
-        mapaCtx.beginPath();
-        mapaCtx.moveTo(jx,jy);
+        const jx=Mundo.jogador.x*esc,jy=Mundo.jogador.y*esc;
+        mapaCtx.beginPath();mapaCtx.arc(jx,jy,3.5,0,Math.PI*2);mapaCtx.fill();
+        mapaCtx.strokeStyle='#ff5722';mapaCtx.lineWidth=2;
+        mapaCtx.beginPath();mapaCtx.moveTo(jx,jy);
         mapaCtx.lineTo(jx+Math.cos(Mundo.jogador.angulo)*8,jy+Math.sin(Mundo.jogador.angulo)*8);
         mapaCtx.stroke();
     }
 };
 
-// ==============================================
-// RELOGIO E MUNDO
-// ==============================================
 const Relogio = {
-    hora:10, dia:0.7,
+    hora:10,dia:0.7,
     atualizar(delta){
         this.hora+=delta/60000;
         if(this.hora>=24)this.hora=0;
@@ -705,59 +942,49 @@ const Relogio = {
         else if(this.hora>=12&&this.hora<18)this.dia=0.9-(this.hora-12)/15;
         else if(this.hora>=18&&this.hora<21)this.dia=0.5-(this.hora-18)/10;
         else this.dia=0.15;
-        const h=Math.floor(this.hora), m=Math.floor((this.hora%1)*60);
-        document.getElementById('hora').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+        const h=Math.floor(this.hora),m=Math.floor((this.hora%1)*60);
+        const icone=this.dia>0.6?'☀️':this.dia>0.3?'🌅':'🌙';
+        document.getElementById('hora').textContent=icone+' '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
     }
 };
 
 const Mundo = {
-    jogador:null, veiculos:[], npcs:[], camera:{x:0,y:0},
-
+    jogador:null,veiculos:[],npcs:[],camera:{x:0,y:0},
     inicializar(novo=true){
         if(novo)this.jogador=new Jogador();
-        this.veiculos=[]; this.npcs=[];
-        this.criarVeiculos(); this.criarNPCs();
+        this.veiculos=[];this.npcs=[];
+        this.criarVeiculos();this.criarNPCs();
+        this.camera.x=this.jogador.x;this.camera.y=this.jogador.y;
+        log('Mundo: '+this.veiculos.length+' veículos, '+this.npcs.length+' NPCs');
     },
-
     criarVeiculos(){
         const tipos=['carro','carro','carro','moto','moto','onibus','caminhao'];
-        for(let i=0;i<60;i++){
-            let x,y,tent=0;
-            do{
-                x=500+Math.random()*(TAM_MUNDO-1000);
-                y=800+Math.random()*(TAM_MUNDO-1600);
-                tent++;
-            }while(Mapa.colisao(x,y,40,20)&&tent<20);
-            if(tent<20)this.veiculos.push(new Veiculo(x,y,tipos[Math.floor(Math.random()*tipos.length)]));
+        for(let i=0;i<35;i++){
+            let x,y,t=0;
+            do{x=500+Math.random()*(TAM_MUNDO-1000);y=700+Math.random()*(TAM_MUNDO-1400);t++;}
+            while(Mapa.colisao(x,y,35,18)&&t<15);
+            if(t<15)this.veiculos.push(new Veiculo(x,y,tipos[Math.floor(Math.random()*tipos.length)]));
         }
     },
-
     criarNPCs(){
-        for(let i=0;i<80;i++){
-            let x,y,tent=0;
-            do{
-                x=500+Math.random()*(TAM_MUNDO-1000);
-                y=800+Math.random()*(TAM_MUNDO-1600);
-                tent++;
-            }while(Mapa.colisao(x,y,12,12)&&tent<20);
-            if(tent<20)this.npcs.push(new NPC(x,y,'pedestre'));
+        for(let i=0;i<50;i++){
+            let x,y,t=0;
+            do{x=500+Math.random()*(TAM_MUNDO-1000);y=700+Math.random()*(TAM_MUNDO-1400);t++;}
+            while(Mapa.colisao(x,y,8,8)&&t<15);
+            if(t<15)this.npcs.push(new NPC(x,y,'pedestre'));
         }
-        for(let i=0;i<15;i++){
-            let x,y,tent=0;
-            do{
-                x=500+Math.random()*(TAM_MUNDO-1000);
-                y=800+Math.random()*(TAM_MUNDO-1600);
-                tent++;
-            }while(Mapa.colisao(x,y,12,12)&&tent<20);
-            if(tent<20)this.npcs.push(new NPC(x,y,'policia'));
+        for(let i=0;i<10;i++){
+            let x,y,t=0;
+            do{x=500+Math.random()*(TAM_MUNDO-1000);y=700+Math.random()*(TAM_MUNDO-1400);t++;}
+            while(Mapa.colisao(x,y,8,8)&&t<15);
+            if(t<15)this.npcs.push(new NPC(x,y,'policia'));
         }
     },
-
     atualizar(ctrl,delta){
         if(jogoPausado)return;
         this.jogador.atualizar(ctrl,delta);
-        this.camera.x+=(this.jogador.x-this.camera.x)*0.1;
-        this.camera.y+=(this.jogador.y-this.camera.y)*0.1;
+        this.camera.x+=(this.jogador.x-this.camera.x)*0.08;
+        this.camera.y+=(this.jogador.y-this.camera.y)*0.08;
         for(const v of this.veiculos)v.atualizarIA();
         for(const v of this.jogador.inv.veiculos)if(!v.ocupante)v.atualizarIA();
         for(const n of this.npcs)n.atualizar();
@@ -765,63 +992,74 @@ const Mundo = {
         Relogio.atualizar(delta);
         atualizarHUD();
     },
-
     desenhar(){
         Mapa.desenhar(this.camera);
-        const todos=[...this.veiculos,...this.jogador.inv.veiculos,...this.npcs];
-        if(!this.jogador.emVeiculo)todos.push({desenhar:cam=>this.desenharJogador(cam)});
-        todos.sort((a,b)=>(a.y||a.y===0?a.y:this.jogador.y)-(b.y||b.y===0?b.y:this.jogador.y));
-        for(const obj of todos){
-            if(obj instanceof Veiculo)obj.desenhar(this.camera);
-            else if(obj instanceof NPC)obj.desenhar(this.camera);
-            else if(obj.desenhar)obj.desenhar(this.camera);
-        }
+        const objs=[];
+        for(const v of this.veiculos)objs.push({y:v.y,d:()=>v.desenhar(this.camera)});
+        for(const v of this.jogador.inv.veiculos)objs.push({y:v.y,d:()=>v.desenhar(this.camera)});
+        for(const n of this.npcs)objs.push({y:n.y,d:()=>n.desenhar(this.camera)});
+        if(!this.jogador.emVeiculo)objs.push({y:this.jogador.y,d:()=>this.desenharJogador()});
+        objs.sort((a,b)=>a.y-b.y);
+        for(const o of objs)o.d();
         if(this.jogador.emVeiculo&&this.jogador.veiculo)this.jogador.veiculo.desenhar(this.camera);
         Mapa.desenharMinimapa();
     },
-
-    desenharJogador(cam){
-        const sx=this.jogador.x-cam.x+LARGURA/2, sy=this.jogador.y-cam.y+ALTURA/2;
-        ctx.save(); ctx.translate(sx,sy); ctx.rotate(this.jogador.angulo);
+    desenharJogador(){
+        const sx=this.jogador.x-this.camera.x+LARGURA/2;
+        const sy=this.jogador.y-this.camera.y+ALTURA/2;
+        ctx.save();ctx.translate(sx,sy);
+        // Sombra
+        ctx.fillStyle='rgba(0,0,0,0.25)';
+        ctx.beginPath();ctx.ellipse(1,3,9,5,0,0,Math.PI*2);ctx.fill();
+        ctx.rotate(this.jogador.angulo);
+        // Corpo
         ctx.fillStyle=ROUPAS[this.jogador.roupa].cor;
-        ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#ffdbac'; ctx.beginPath(); ctx.arc(8,0,5,0,Math.PI*2); ctx.fill();
+        ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();
+        // Brilho
+        ctx.fillStyle='rgba(255,255,255,0.2)';
+        ctx.beginPath();ctx.arc(-2,-2,4,0,Math.PI*2);ctx.fill();
+        // Cabeça
+        ctx.fillStyle='#ffdbac';
+        ctx.beginPath();ctx.arc(6,0,4,0,Math.PI*2);ctx.fill();
+        // Cabelo
+        ctx.fillStyle='#3e2723';
+        ctx.beginPath();ctx.arc(6.5,-1,3.5,Math.PI,Math.PI*2);ctx.fill();
         ctx.restore();
     }
 };
 
-// ==============================================
-// CONTROLES
-// ==============================================
 const Controles = {
-    mover:{x:0,y:0}, correndo:false, atacando:false,
-    frente:false, tras:false, esquerda:false, direita:false,
-
+    mover:{x:0,y:0},correndo:false,atacando:false,
+    frente:false,tras:false,esquerda:false,direita:false,
     inicializar(){
         const analogico=document.getElementById('analogico');
         const alavanca=document.getElementById('alavanca');
-        let tocando=false, touchId=null;
-
+        let tocando=false,touchId=null;
         analogico.addEventListener('touchstart',e=>{
-            e.preventDefault(); tocando=true; touchId=e.touches[0].identifier;
+            e.preventDefault();tocando=true;touchId=e.touches[0].identifier;
             this.atualizarAnalogico(e.touches[0],analogico,alavanca);
-        });
+        },{passive:false});
         analogico.addEventListener('touchmove',e=>{
             e.preventDefault();
             for(const t of e.touches)if(t.identifier===touchId)this.atualizarAnalogico(t,analogico,alavanca);
-        });
-        const fim=e=>{e.preventDefault();tocando=false;touchId=null;this.mover.x=0;this.mover.y=0;
-            alavanca.style.left='50%';alavanca.style.top='50%';alavanca.style.transform='translate(-50%,-50%)';};
+        },{passive:false});
+        const fim=e=>{
+            e.preventDefault();tocando=false;touchId=null;
+            this.mover.x=0;this.mover.y=0;
+            this.frente=this.tras=this.esquerda=this.direita=false;
+            alavanca.style.left='50%';alavanca.style.top='50%';alavanca.style.transform='translate(-50%,-50%)';
+        };
         analogico.addEventListener('touchend',fim);
         analogico.addEventListener('touchcancel',fim);
-
-        document.getElementById('btnCorrer').addEventListener('touchstart',e=>{e.preventDefault();this.correndo=true;});
-        document.getElementById('btnCorrer').addEventListener('touchend',e=>{e.preventDefault();this.correndo=false;});
-        document.getElementById('btnAtacar').addEventListener('touchstart',e=>{e.preventDefault();this.atacando=true;});
-        document.getElementById('btnAtacar').addEventListener('touchend',e=>{e.preventDefault();this.atacando=false;});
-        document.getElementById('btnEntrar').addEventListener('touchstart',e=>{e.preventDefault();Mundo.jogador.entrarSair();});
-        document.getElementById('btnPausa').addEventListener('touchstart',e=>{e.preventDefault();pausarJogo();});
-
+        const addTouch=(id,acao)=>{
+            const el=document.getElementById(id);
+            el.addEventListener('touchstart',e=>{e.preventDefault();acao(true);},{passive:false});
+            el.addEventListener('touchend',e=>{e.preventDefault();acao(false);},{passive:false});
+        };
+        addTouch('btnCorrer',v=>this.correndo=v);
+        addTouch('btnAtacar',v=>this.atacando=v);
+        document.getElementById('btnEntrar').addEventListener('touchstart',e=>{e.preventDefault();Mundo.jogador.entrarSair();},{passive:false});
+        document.getElementById('btnPausa').addEventListener('touchstart',e=>{e.preventDefault();pausarJogo();},{passive:false});
         document.addEventListener('keydown',e=>{
             if(e.key==='w'||e.key==='ArrowUp'){this.mover.y=-1;this.frente=true;}
             if(e.key==='s'||e.key==='ArrowDown'){this.mover.y=1;this.tras=true;}
@@ -840,36 +1078,32 @@ const Controles = {
             if(e.key==='Shift')this.correndo=false;
             if(e.key===' ')this.atacando=false;
         });
+        log('Controles OK');
     },
-
     atualizarAnalogico(t,analogico,alavanca){
         const r=analogico.getBoundingClientRect();
-        const cx=r.left+r.width/2, cy=r.top+r.height/2;
-        let dx=t.clientX-cx, dy=t.clientY-cy;
-        const dist=Math.hypot(dx,dy), max=r.width/2-20;
+        const cx=r.left+r.width/2,cy=r.top+r.height/2;
+        let dx=t.clientX-cx,dy=t.clientY-cy;
+        const dist=Math.hypot(dx,dy),max=r.width/2-20;
         if(dist>max){dx=dx/dist*max;dy=dy/dist*max;}
         alavanca.style.left=`calc(50% + ${dx}px)`;
         alavanca.style.top=`calc(50% + ${dy}px)`;
         alavanca.style.transform='translate(-50%,-50%)';
-        this.mover.x=dx/max; this.mover.y=dy/max;
-        this.frente=this.mover.y<-0.3; this.tras=this.mover.y>0.3;
-        this.esquerda=this.mover.x<-0.3; this.direita=this.mover.x>0.3;
+        this.mover.x=dx/max;this.mover.y=dy/max;
+        this.frente=this.mover.y<-0.25;this.tras=this.mover.y>0.25;
+        this.esquerda=this.mover.x<-0.25;this.direita=this.mover.x>0.25;
     }
 };
 
-// ==============================================
-// FUNÇÕES DE UI E TELAS
-// ==============================================
 function atualizarHUD(){
     const j=Mundo.jogador;
     document.getElementById('barraVida').style.width=(j.vida/j.vidaMax*100)+'%';
     document.getElementById('barraColete').style.width=(j.colete/j.coleteMax*100)+'%';
     document.getElementById('barraEnergia').style.width=(j.energia/j.energiaMax*100)+'%';
     document.getElementById('valorDinheiro').textContent=j.dinheiro.toLocaleString('pt-BR');
-    document.getElementById('armaAtual').textContent=ARMAS[j.armaAtual].nome+
-        (j.armaAtual!=='punho'?' ('+j.inv.mun[j.armaAtual]+')':'');
-    const estrelas=document.querySelectorAll('.estrela');
-    estrelas.forEach((e,i)=>e.classList.toggle('ativa',i<j.procurado));
+    const arma=ARMAS[j.armaAtual];
+    document.getElementById('armaAtual').textContent=arma.icone+' '+arma.nome+(j.armaAtual!=='punho'?' ('+j.inv.mun[j.armaAtual]+')':'');
+    document.querySelectorAll('.estrela').forEach((e,i)=>e.classList.toggle('ativa',i<j.procurado));
 }
 
 function atualizarMissaoHUD(){
@@ -883,146 +1117,105 @@ function mostrarTela(id){
 }
 
 function fecharTela(){mostrarTela('telaPausa');}
-
 function pausarJogo(){jogoPausado=true;mostrarTela('telaPausa');}
 function resumirJogo(){jogoPausado=false;document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));}
-function sairParaInicio(){jogoPausado=true;mostrarTela('telaInicio');}
+function sairParaInicio(){jogoPausado=true;document.getElementById('hud').style.display='none';document.getElementById('controles').style.display='none';mostrarTela('telaInicio');}
 
 function abrirLojaArmas(){
-    const lista=document.getElementById('listaArmas'); lista.innerHTML='';
+    const lista=document.getElementById('listaArmas');lista.innerHTML='';
     for(const [id,arma] of Object.entries(ARMAS)){
         const tem=Mundo.jogador.inv.armas.includes(id);
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<div><span class="nome">${arma.nome}</span><br><small>Dano: ${arma.dano} | Alcance: ${arma.alcance}</small></div>
-            <div style="text-align:right">
-                <div class="preco">${tem?'ADQUIRIDO':'R$ '+arma.preco.toLocaleString('pt-BR')}</div>
-                ${tem?`<button class="btn-comprar" onclick="equiparArma('${id}')">Usar</button>`:
-                `<button class="btn-comprar" onclick="comprarArma('${id}')">Comprar</button>`}
-            </div>`;
+        const div=document.createElement('div');div.className='item';
+        div.innerHTML=`<div><span class="nome">${arma.icone} ${arma.nome}</span><br><small style="color:#aaa">Dano: ${arma.dano} | Alcance: ${arma.alcance}</small></div>
+            <div style="text-align:right"><div class="preco">${tem?'✓ ADQUIRIDO':'R$ '+arma.preco.toLocaleString('pt-BR')}</div>
+            ${tem?`<button class="btn-c" onclick="equiparArma('${id}')">Usar</button>`:`<button class="btn-c" onclick="comprarArma('${id}')">Comprar</button>`}</div>`;
         lista.appendChild(div);
     }
     mostrarTela('lojaArmas');
 }
 
 function comprarArma(id){
-    const arma=ARMAS[id], j=Mundo.jogador;
+    const arma=ARMAS[id],j=Mundo.jogador;
     if(j.dinheiro>=arma.preco){
-        j.dinheiro-=arma.preco; j.inv.armas.push(id);
+        j.dinheiro-=arma.preco;j.inv.armas.push(id);
         if(id!=='punho')j.inv.mun[id]=(j.inv.mun[id]||0)+arma.mun;
-        Som.dinheiro(); abrirLojaArmas();
+        Som.dinheiro();abrirLojaArmas();
     }else alert('Dinheiro insuficiente!');
 }
 
 function equiparArma(id){Mundo.jogador.armaAtual=id;Som.sucesso();abrirLojaArmas();}
 
 function abrirLojaRoupas(){
-    const lista=document.getElementById('listaRoupas'); lista.innerHTML='';
+    const lista=document.getElementById('listaRoupas');lista.innerHTML='';
     for(const [id,roupa] of Object.entries(ROUPAS)){
         const tem=Mundo.jogador.inv.roupas.includes(id);
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<div><span class="nome">${roupa.nome}</span><br><small>Cor: <span style="display:inline-block;width:15px;height:15px;background:${roupa.cor};vertical-align:middle;border-radius:3px;"></span></small></div>
-            <div style="text-align:right">
-                <div class="preco">${tem?'ADQUIRIDO':'R$ '+roupa.preco.toLocaleString('pt-BR')}</div>
-                ${tem?`<button class="btn-comprar" onclick="equiparRoupa('${id}')">Usar</button>`:
-                `<button class="btn-comprar" onclick="comprarRoupa('${id}')">Comprar</button>`}
-            </div>`;
+        const div=document.createElement('div');div.className='item';
+        div.innerHTML=`<div><span class="nome">${roupa.nome}</span><br><small style="display:inline-block;width:14px;height:14px;background:${roupa.cor};vertical-align:middle;border-radius:3px;margin-right:5px;border:1px solid rgba(255,255,255,.2)"></small></div>
+            <div style="text-align:right"><div class="preco">${tem?'✓ ADQUIRIDO':'R$ '+roupa.preco.toLocaleString('pt-BR')}</div>
+            ${tem?`<button class="btn-c" onclick="equiparRoupa('${id}')">Usar</button>`:`<button class="btn-c" onclick="comprarRoupa('${id}')">Comprar</button>`}</div>`;
         lista.appendChild(div);
     }
     mostrarTela('lojaRoupas');
 }
 
 function comprarRoupa(id){
-    const roupa=ROUPAS[id], j=Mundo.jogador;
-    if(j.dinheiro>=roupa.preco){j.dinheiro-=roupa.preco;j.inv.roupas.push(id);Som.dinheiro();abrirLojaRoupas();}
+    const r=ROUPAS[id],j=Mundo.jogador;
+    if(j.dinheiro>=r.preco){j.dinheiro-=r.preco;j.inv.roupas.push(id);Som.dinheiro();abrirLojaRoupas();}
     else alert('Dinheiro insuficiente!');
 }
 
 function equiparRoupa(id){Mundo.jogador.roupa=id;Som.sucesso();abrirLojaRoupas();}
 
 function abrirOficina(){
-    const lista=document.getElementById('listaVeiculos'); lista.innerHTML='';
+    const lista=document.getElementById('listaVeiculos');lista.innerHTML='';
     for(const [id,v] of Object.entries(VEICULOS)){
-        if(id==='policia')continue;
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<div><span class="nome">${v.nome}</span><br><small>Velocidade: ${v.velMax.toFixed(1)}</small></div>
-            <div style="text-align:right">
-                <div class="preco">R$ ${v.preco.toLocaleString('pt-BR')}</div>
-                <button class="btn-comprar" onclick="comprarVeiculo('${id}')">Comprar</button>
-            </div>`;
+        const div=document.createElement('div');div.className='item';
+        div.innerHTML=`<div><span class="nome">🚗 ${v.nome}</span><br><small style="color:#aaa">Velocidade: ${v.velMax.toFixed(1)}</small></div>
+            <div style="text-align:right"><div class="preco">R$ ${v.preco.toLocaleString('pt-BR')}</div>
+            <button class="btn-c" onclick="comprarVeiculo('${id}')">Comprar</button></div>`;
         lista.appendChild(div);
     }
-    const meus=document.getElementById('meusVeiculos'); meus.innerHTML='';
-    if(Mundo.jogador.inv.veiculos.length===0)meus.innerHTML='<p style="color:#888;text-align:center;">Nenhum veículo próprio</p>';
+    const meus=document.getElementById('meusVeiculos');meus.innerHTML='';
+    if(Mundo.jogador.inv.veiculos.length===0)meus.innerHTML='<p style="color:#888;text-align:center;font-size:.85em;padding:15px;">Nenhum veículo próprio</p>';
     else Mundo.jogador.inv.veiculos.forEach((v,i)=>{
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<span class="nome">${VEICULOS[v.tipo].nome}</span>
-            <button class="btn-comprar" onclick="chamarVeiculo(${i})">Chamar</button>`;
+        const div=document.createElement('div');div.className='item';
+        div.innerHTML=`<span class="nome">🚗 ${VEICULOS[v.tipo].nome}</span>
+            <button class="btn-c" onclick="chamarVeiculo(${i})">📍 Chamar</button>`;
         meus.appendChild(div);
     });
     mostrarTela('oficina');
 }
 
 function comprarVeiculo(id){
-    const v=VEICULOS[id], j=Mundo.jogador;
+    const v=VEICULOS[id],j=Mundo.jogador;
     if(j.dinheiro>=v.preco){
         j.dinheiro-=v.preco;
-        const nv=new Veiculo(j.x+50,j.y+50,id);
-        nv.proprietario=j; j.inv.veiculos.push(nv);
-        Som.dinheiro(); abrirOficina();
+        const nv=new Veiculo(j.x+50,j.y,id);nv.ocupante=null;j.inv.veiculos.push(nv);
+        Som.dinheiro();abrirOficina();
     }else alert('Dinheiro insuficiente!');
 }
 
 function chamarVeiculo(i){
     const v=Mundo.jogador.inv.veiculos[i];
-    v.x=Mundo.jogador.x+60; v.y=Mundo.jogador.y; Som.sucesso(); abrirOficina();
+    v.x=Mundo.jogador.x+50;v.y=Mundo.jogador.y;Som.sucesso();abrirOficina();
 }
 
 function abrirMissoes(){
-    const mp=document.getElementById('missoesPrincipais'); mp.innerHTML='';
+    const mp=document.getElementById('missoesPrincipais');mp.innerHTML='';
     Mundo.jogador.missoes.principais.forEach(m=>{
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<div><strong>${m.nome}</strong><br><small>${m.desc}</small></div>
-            <span style="color:${m.concluida?'#4caf50':'#ff9800'}">${m.concluida?'✅ Concluída':'🔄 Em andamento'}</span>`;
+        const div=document.createElement('div');div.className='item';
+        div.innerHTML=`<div><strong>${m.nome}</strong><br><small style="color:#aaa">${m.desc}</small></div>
+            <span style="color:${m.concluida?'#4caf50':'#ff9800'};font-size:1.3em;">${m.concluida?'✅':'⏳'}</span>`;
         mp.appendChild(div);
     });
-    const ms=document.getElementById('missoesSecundarias'); ms.innerHTML='';
+    const ms=document.getElementById('missoesSecundarias');ms.innerHTML='';
     Mundo.jogador.missoes.secundarias.forEach(m=>{
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<div><strong>${m.nome}</strong><br><small>${m.desc}</small></div>
-            <span style="color:${m.concluida?'#4caf50':'#ff9800'}">${m.concluida?'✅ Concluída':'🔄 Em andamento'}</span>`;
+        const div=document.createElement('div');div.className='item';
+        div.innerHTML=`<div><strong>${m.nome}</strong><br><small style="color:#aaa">${m.desc}</small></div>
+            <span style="color:${m.concluida?'#4caf50':'#ff9800'};font-size:1.3em;">${m.concluida?'✅':'⏳'}</span>`;
         ms.appendChild(div);
     });
-    const mc=document.getElementById('listaCorridas'); mc.innerHTML='';
-    Mundo.jogador.missoes.corridas.forEach(m=>{
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<div><strong>${m.nome}</strong><br><small>${m.desc}</small><br><small>Prêmio: R$ ${m.premio.toLocaleString('pt-BR')}</small></div>
-            <button class="btn-comprar" onclick="iniciarCorrida('${m.id}')">${m.concluida?'🏁 Repetir':'▶ Iniciar'}</button>`;
-        mc.appendChild(div);
-    });
     mostrarTela('telaMissoes');
-}
-
-function iniciarCorrida(id){
-    const c=Mundo.jogador.missoes.corridas.find(x=>x.id===id);
-    if(!Mundo.jogador.emVeiculo){alert('Você precisa estar em um veículo!');return;}
-    resumirJogo();
-    const inicio=Date.now();
-    const distOriginal=3000;
-    let dist=distOriginal;
-    const intervalo=setInterval(()=>{
-        if(jogoPausado)return;
-        const v=Math.abs(Mundo.jogador.veiculo.vel);
-        dist-=v*10;
-        if(dist<=0){
-            clearInterval(intervalo);
-            const tempo=((Date.now()-inicio)/1000).toFixed(1);
-            Mundo.jogador.dinheiro+=c.premio;
-            c.concluida=true;
-            Som.sucesso(); Som.dinheiro();
-            alert(`🏁 Corrida concluída!\nTempo: ${tempo}s\nPrêmio: R$ ${c.premio.toLocaleString('pt-BR')}`);
-        }
-    },100);
-    alert(`🏁 Corrida iniciada!\nPercorra ${distOriginal/1000}km o mais rápido possível!`);
 }
 
 function abrirInventario(){
@@ -1034,15 +1227,6 @@ function abrirInventario(){
     document.getElementById('invArma').textContent=ARMAS[j.armaAtual].nome;
     document.getElementById('invRoupa').textContent=ROUPAS[j.roupa].nome;
     document.getElementById('invProcurado').textContent=j.procurado;
-    const lista=document.getElementById('invListaArmas'); lista.innerHTML='';
-    j.inv.armas.forEach(id=>{
-        const a=ARMAS[id];
-        const div=document.createElement('div'); div.className='item';
-        div.innerHTML=`<span class="nome">${a.nome}</span>
-            <span>${id==='punho'?'—':j.inv.mun[id]+' munições'}</span>
-            <button class="btn-comprar" onclick="equiparArma('${id}')">${j.armaAtual===id?'⚔️ Em uso':'Usar'}</button>`;
-        lista.appendChild(div);
-    });
     mostrarTela('telaInventario');
 }
 
@@ -1050,15 +1234,15 @@ function abrirHospital(){mostrarTela('telaHospital');}
 
 function pagarHospital(){
     if(Mundo.jogador.dinheiro>=500){
-        Mundo.jogador.dinheiro-=500; Mundo.jogador.vida=100;
-        Som.sucesso(); Som.dinheiro();
+        Mundo.jogador.dinheiro-=500;Mundo.jogador.vida=100;
+        Som.sucesso();Som.dinheiro();
     }else alert('Dinheiro insuficiente!');
 }
 
 function comprarColete(){
     if(Mundo.jogador.dinheiro>=800){
-        Mundo.jogador.dinheiro-=800; Mundo.jogador.colete=100;
-        Som.sucesso(); Som.dinheiro();
+        Mundo.jogador.dinheiro-=800;Mundo.jogador.colete=100;
+        Som.sucesso();Som.dinheiro();
     }else alert('Dinheiro insuficiente!');
 }
 
@@ -1070,79 +1254,66 @@ function abrirDelegacia(){
 
 function pagarMulta(){
     const custo=Mundo.jogador.procurado*1000;
-    if(custo===0){alert('Você não tem multas!');return;}
+    if(custo===0){alert('Você está limpo! Sem multas para pagar.');return;}
     if(Mundo.jogador.dinheiro>=custo){
-        Mundo.jogador.dinheiro-=custo; Mundo.jogador.procurado=0; Mundo.jogador.tempoProcurado=0;
-        Som.sucesso(); Som.dinheiro();
+        Mundo.jogador.dinheiro-=custo;Mundo.jogador.procurado=0;Mundo.jogador.tempoProcurado=0;
+        Som.sucesso();Som.dinheiro();
         Mundo.jogador.atualizarMissoes('delegacia');
         abrirDelegacia();
     }else alert('Dinheiro insuficiente!');
 }
 
-// ==============================================
-// SALVAR E CARREGAR
-// ==============================================
 function salvarJogo(){
     try{
-        const dados={
-            jogador:{
-                x:Mundo.jogador.x, y:Mundo.jogador.y, angulo:Mundo.jogador.angulo,
-                vida:Mundo.jogador.vida, colete:Mundo.jogador.colete, energia:Mundo.jogador.energia,
-                dinheiro:Mundo.jogador.dinheiro, procurado:Mundo.jogador.procurado,
-                tempoProcurado:Mundo.jogador.tempoProcurado, armaAtual:Mundo.jogador.armaAtual,
-                roupa:Mundo.jogador.roupa, inv:Mundo.jogador.inv, missoes:Mundo.jogador.missoes
-            },
+        const d={
+            jogador:{x:Mundo.jogador.x,y:Mundo.jogador.y,angulo:Mundo.jogador.angulo,
+                vida:Mundo.jogador.vida,colete:Mundo.jogador.colete,energia:Mundo.jogador.energia,
+                dinheiro:Mundo.jogador.dinheiro,procurado:Mundo.jogador.procurado,
+                tempoProcurado:Mundo.jogador.tempoProcurado,armaAtual:Mundo.jogador.armaAtual,
+                roupa:Mundo.jogador.roupa,inv:Mundo.jogador.inv,missoes:Mundo.jogador.missoes},
             veiculos:Mundo.jogador.inv.veiculos.map(v=>({x:v.x,y:v.y,tipo:v.tipo})),
             hora:Relogio.hora
         };
-        localStorage.setItem('cidadeDoSol_save',JSON.stringify(dados));
-        Som.sucesso();
-        alert('✅ Jogo salvo com sucesso!');
+        localStorage.setItem('cidadeDoSol_save',JSON.stringify(d));
+        Som.sucesso();alert('✅ Jogo salvo com sucesso!');
     }catch(e){alert('Erro ao salvar: '+e.message);}
-}
-
-function carregarJogo(){
-    try{
-        const dados=localStorage.getItem('cidadeDoSol_save');
-        if(!dados){alert('Nenhum salvamento encontrado!');return;}
-        const d=JSON.parse(dados);
-        Som.iniciar();
-        Mapa.inicializar();
-        Mundo.inicializar(false);
-        Object.assign(Mundo.jogador,d.jogador);
-        Mundo.jogador.inv.veiculos=d.veiculos.map(v=>{
-            const nv=new Veiculo(v.x,v.y,v.tipo);
-            nv.proprietario=Mundo.jogador; return nv;
-        });
-        Relogio.hora=d.hora||10;
-        iniciarLoop();
-        atualizarMissaoHUD();
-        resumirJogo();
-    }catch(e){alert('Erro ao carregar: '+e.message);}
 }
 
 function salvarAutomatico(){
     try{
-        const dados={
-            jogador:{
-                x:Mundo.jogador.x, y:Mundo.jogador.y, angulo:Mundo.jogador.angulo,
-                vida:Mundo.jogador.vida, colete:Mundo.jogador.colete, energia:Mundo.jogador.energia,
-                dinheiro:Mundo.jogador.dinheiro, procurado:Mundo.jogador.procurado,
-                tempoProcurado:Mundo.jogador.tempoProcurado, armaAtual:Mundo.jogador.armaAtual,
-                roupa:Mundo.jogador.roupa, inv:Mundo.jogador.inv, missoes:Mundo.jogador.missoes
-            },
+        const d={
+            jogador:{x:Mundo.jogador.x,y:Mundo.jogador.y,angulo:Mundo.jogador.angulo,
+                vida:Mundo.jogador.vida,colete:Mundo.jogador.colete,energia:Mundo.jogador.energia,
+                dinheiro:Mundo.jogador.dinheiro,procurado:Mundo.jogador.procurado,
+                tempoProcurado:Mundo.jogador.tempoProcurado,armaAtual:Mundo.jogador.armaAtual,
+                roupa:Mundo.jogador.roupa,inv:Mundo.jogador.inv,missoes:Mundo.jogador.missoes},
             veiculos:Mundo.jogador.inv.veiculos.map(v=>({x:v.x,y:v.y,tipo:v.tipo})),
             hora:Relogio.hora
         };
-        localStorage.setItem('cidadeDoSol_save',JSON.stringify(dados));
+        localStorage.setItem('cidadeDoSol_save',JSON.stringify(d));
     }catch(e){}
 }
 
-// ==============================================
-// LOOP PRINCIPAL
-// ==============================================
+function carregarJogo(){
+    try{
+        const d=localStorage.getItem('cidadeDoSol_save');
+        if(!d){alert('Nenhum salvamento encontrado!');return;}
+        const dados=JSON.parse(d);
+        Som.iniciar();Mapa.inicializar();Mundo.inicializar(false);
+        Object.assign(Mundo.jogador,dados.jogador);
+        Mundo.jogador.inv.veiculos=dados.veiculos.map(v=>{const nv=new Veiculo(v.x,v.y,v.tipo);nv.ocupante=null;return nv;});
+        Relogio.hora=dados.hora||10;
+        Controles.inicializar();iniciarLoop();atualizarMissaoHUD();
+        document.getElementById('hud').style.display='block';
+        document.getElementById('controles').style.display='block';
+        resumirJogo();
+    }catch(e){alert('Erro ao carregar: '+e.message);}
+}
+
 function loop(tempo){
-    const delta=tempo-ultimoTempo; ultimoTempo=tempo;
+    const delta=tempo-ultimoTempo;ultimoTempo=tempo;tempoGlobal=tempo;
+    frameCount++;fpsTimer+=delta;
+    if(fpsTimer>=1000){fps=frameCount;frameCount=0;fpsTimer=0;log('FPS: '+fps);}
     if(!jogoPausado){
         Mundo.atualizar(Controles,delta);
         Mundo.desenhar();
@@ -1155,12 +1326,11 @@ function loop(tempo){
 function iniciarLoop(){
     ultimoTempo=performance.now();
     requestAnimationFrame(loop);
+    log('Loop OK');
 }
 
-// ==============================================
-// INICIALIZAÇÃO
-// ==============================================
 function iniciarNovoJogo(){
+    log('Iniciando...');
     Som.iniciar();
     Mapa.inicializar();
     Mundo.inicializar(true);
@@ -1168,12 +1338,35 @@ function iniciarNovoJogo(){
     Controles.inicializar();
     iniciarLoop();
     atualizarMissaoHUD();
+    document.getElementById('hud').style.display='block';
+    document.getElementById('controles').style.display='block';
+    debug.style.display='block';
     resumirJogo();
+    log('PRONTO! Spawn na Praia 🏖️');
 }
 
 window.addEventListener('resize',()=>{
-    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
 });
+
+if(!ctx.roundRect){
+    CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+        this.beginPath();
+        this.moveTo(x+r,y);
+        this.lineTo(x+w-r,y);
+        this.quadraticCurveTo(x+w,y,x+w,y+r);
+        this.lineTo(x+w,y+h-r);
+        this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        this.lineTo(x+r,y+h);
+        this.quadraticCurveTo(x,y+h,x,y+h-r);
+        this.lineTo(x,y+r);
+        this.quadraticCurveTo(x,y,x+r,y);
+        this.closePath();
+    };
+}
+
+log('Página pronta');
 </script>
 </body>
 </html>
