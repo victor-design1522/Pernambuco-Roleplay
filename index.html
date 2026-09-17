@@ -1,687 +1,476 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <script type="module" src="/@vite/client"></script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Rio Tropical: Cidade Aberta</title>
-  <meta name="description" content="Jogo original de ação em mundo aberto 2D inspirado no estilo clássico mobile, ambientado em uma metrópole tropical com missões, trânsito, polícia, lojas e veículos dirigíveis.">
-  <meta property="og:title" content="Rio Tropical: Cidade Aberta">
-  <meta property="og:description" content="Jogo original de ação em mundo aberto 2D inspirado no estilo clássico mobile, ambientado em uma metrópole tropical com missões, trânsito, polícia, lojas e veículos dirigíveis.">
-  <meta property="og:type" content="website">
+  <title>Rio Tropical: Cidade Aberta - Edition 2.0</title>
   <style>
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #0c121e;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  touch-action: none;
-  position: fixed;
-}
-
-#gameCanvas {
-  display: block;
-  width: 100vw;
-  height: 100vh;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  background: #2b3a4a;
-}
-
-/* HUD LAYER */
-#hudLayer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10;
-}
-
-/* TOP BAR */
-.hud-top-left {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  pointer-events: auto;
-}
-
-.radar-wrapper {
-  position: relative;
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: rgba(10, 20, 30, 0.85);
-  border: 3px solid #1abc9c;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-}
-
-#minimapCanvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.district-label {
-  background: rgba(15, 23, 42, 0.88);
-  color: #38bdf8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  max-width: 130px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-}
-
-.hud-clock {
-  background: rgba(15, 23, 42, 0.8);
-  color: #f1f5f9;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 8px;
-  text-align: center;
-}
-
-/* TOP RIGHT STATS */
-.hud-top-right {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.status-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  background: rgba(15, 23, 42, 0.85);
-  padding: 8px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
-
-.stat-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.stat-icon {
-  font-size: 11px;
-  font-weight: 900;
-  width: 16px;
-  text-align: center;
-}
-
-.stat-bar-container {
-  width: 90px;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-}
-
-.stat-bar-fill {
-  height: 100%;
-  transition: width 0.15s ease-out;
-}
-
-.stat-hp .stat-bar-fill { background: linear-gradient(90deg, #ef4444, #22c55e); }
-.stat-armor .stat-bar-fill { background: linear-gradient(90deg, #38bdf8, #0284c7); }
-.stat-stamina .stat-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-
-.cash-badge {
-  background: rgba(15, 23, 42, 0.9);
-  color: #4ade80;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  padding: 4px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(74, 222, 128, 0.4);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-/* WANTED STARS */
-.wanted-stars {
-  display: flex;
-  gap: 3px;
-}
-
-.star {
-  font-size: 16px;
-  color: #475569;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
-  transition: transform 0.2s;
-}
-
-.star.active {
-  color: #fbbf24;
-  animation: starPulse 0.8s infinite alternate;
-}
-
-@keyframes starPulse {
-  0% { transform: scale(1); filter: drop-shadow(0 0 2px #f59e0b); }
-  100% { transform: scale(1.15); filter: drop-shadow(0 0 6px #fbbf24); }
-}
-
-/* WEAPON SELECTOR */
-.weapon-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(15, 23, 42, 0.9);
-  padding: 6px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  pointer-events: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
-
-.weapon-icon-art {
-  font-size: 20px;
-}
-
-.weapon-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.weapon-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: #e2e8f0;
-}
-
-.weapon-ammo {
-  font-size: 12px;
-  font-weight: 800;
-  color: #38bdf8;
-}
-
-/* MISSION BANNER */
-.mission-banner {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.92);
-  padding: 6px 16px;
-  border-radius: 20px;
-  border: 1px solid #f59e0b;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 85%;
-  pointer-events: auto;
-  text-align: center;
-}
-
-.mission-title {
-  color: #f59e0b;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.mission-desc {
-  color: #f8fafc;
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 2px;
-}
-
-/* VEHICLE SPEEDOMETER */
-.vehicle-hud {
-  position: absolute;
-  bottom: 120px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.9);
-  padding: 6px 16px;
-  border-radius: 24px;
-  border: 1px solid rgba(56, 189, 248, 0.5);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #f1f5f9;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-  pointer-events: auto;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.vehicle-hud.active {
-  opacity: 1;
-}
-
-.speed-gauge {
-  font-size: 18px;
-  font-weight: 900;
-  color: #38bdf8;
-  font-variant-numeric: tabular-nums;
-}
-
-.speed-unit {
-  font-size: 9px;
-  color: #94a3b8;
-  font-weight: 700;
-}
-
-/* VIRTUAL CONTROLS FOR TOUCH */
-.touch-zone {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 50%;
-  pointer-events: none;
-  z-index: 20;
-}
-
-/* JOYSTICK */
-.joystick-base {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(15, 23, 42, 0.6) 70%);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  pointer-events: auto;
-  touch-action: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-}
-
-.joystick-thumb {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 52px;
-  height: 52px;
-  margin-top: -26px;
-  margin-left: -26px;
-  background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  transition: transform 0.05s ease-out;
-}
-
-/* ACTION BUTTONS */
-.action-buttons-group {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(2, 56px);
-  gap: 10px;
-  pointer-events: auto;
-}
-
-.action-btn {
-  background: rgba(15, 23, 42, 0.85);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  color: #ffffff;
-  font-weight: 800;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  touch-action: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  user-select: none;
-  transition: transform 0.1s, background 0.1s;
-}
-
-.action-btn:active {
-  transform: scale(0.92);
-  background: rgba(56, 189, 248, 0.4);
-}
-
-.btn-attack {
-  grid-column: 3;
-  grid-row: 2;
-  width: 66px;
-  height: 66px;
-  background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%);
-  border-color: #fca5a5;
-}
-
-.btn-attack:active {
-  background: radial-gradient(circle, #dc2626 0%, #991b1b 100%);
-}
-
-.btn-sprint {
-  grid-column: 2;
-  grid-row: 2;
-  background: radial-gradient(circle, #f59e0b 0%, #d97706 100%);
-  border-color: #fde68a;
-}
-
-.btn-vehicle {
-  grid-column: 3;
-  grid-row: 1;
-  background: radial-gradient(circle, #10b981 0%, #047857 100%);
-  border-color: #a7f3d0;
-}
-
-.btn-horn {
-  grid-column: 2;
-  grid-row: 1;
-  background: radial-gradient(circle, #6366f1 0%, #4338ca 100%);
-  border-color: #c7d2fe;
-}
-
-.btn-switch {
-  grid-column: 1;
-  grid-row: 2;
-  background: radial-gradient(circle, #64748b 0%, #334155 100%);
-  border-color: #cbd5e1;
-}
-
-.btn-label {
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 1px;
-}
-
-.btn-icon {
-  font-size: 18px;
-}
-
-/* TOP CONTROLS */
-.btn-top-menu {
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #f1f5f9;
-  font-size: 14px;
-  font-weight: bold;
-  padding: 6px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* MODALS & SCREENS */
-.modal-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
-}
-
-.modal-backdrop.open {
-  display: flex;
-}
-
-.modal-card {
-  background: #0f172a;
-  border: 2px solid #38bdf8;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 420px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-  color: #f8fafc;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 10px;
-}
-
-.modal-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #38bdf8;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-close {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 22px;
-  cursor: pointer;
-  padding: 4px 8px;
-}
-
-.shop-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.shop-item {
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: border-color 0.2s, transform 0.15s;
-}
-
-.shop-item:hover, .shop-item:active {
-  border-color: #38bdf8;
-  transform: translateY(-2px);
-}
-
-.shop-item-icon {
-  font-size: 26px;
-}
-
-.shop-item-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #f1f5f9;
-}
-
-.shop-item-price {
-  font-size: 13px;
-  font-weight: 800;
-  color: #4ade80;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #0284c7, #0369a1);
-  border: 1px solid #38bdf8;
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 10px 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  width: 100%;
-  text-align: center;
-}
-
-/* WASTED / BUSTED SPLASH */
-.splash-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  pointer-events: auto;
-}
-
-.splash-overlay.show {
-  display: flex;
-  animation: fadeIn 0.4s ease-out;
-}
-
-.splash-title {
-  font-size: 42px;
-  font-weight: 900;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.9);
-}
-
-.splash-wasted .splash-title {
-  color: #ef4444;
-}
-
-.splash-busted .splash-title {
-  color: #3b82f6;
-}
-
-.splash-subtitle {
-  font-size: 15px;
-  color: #e2e8f0;
-  margin-bottom: 24px;
-  text-align: center;
-  max-width: 80%;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* DESKTOP HINT */
-.desktop-keys-hint {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.7);
-  color: #94a3b8;
-  font-size: 10px;
-  padding: 4px 12px;
-  border-radius: 12px;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-@media (max-width: 600px) {
-  .desktop-keys-hint { display: none; }
-}
-
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0c121e;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: none;
+      position: fixed;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      background: #1e293b;
+    }
+
+    #hudLayer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .hud-top-left {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .radar-wrapper {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: rgba(10, 20, 30, 0.85);
+      border: 3px solid #1abc9c;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+    }
+
+    #minimapCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .district-label {
+      background: rgba(15, 23, 42, 0.88);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      text-align: center;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .hud-clock {
+      background: rgba(15, 23, 42, 0.8);
+      color: #f1f5f9;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .hud-top-right {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .status-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-icon {
+      font-size: 11px;
+      font-weight: 900;
+      width: 16px;
+      text-align: center;
+    }
+
+    .stat-bar-container {
+      width: 90px;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      transition: width 0.15s ease-out;
+    }
+
+    .stat-hp .stat-bar-fill { background: linear-gradient(90deg, #ef4444, #22c55e); }
+    .stat-armor .stat-bar-fill { background: linear-gradient(90deg, #38bdf8, #0284c7); }
+    .stat-stamina .stat-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+
+    .cash-badge {
+      background: rgba(15, 23, 42, 0.9);
+      color: #4ade80;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(74, 222, 128, 0.4);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .wanted-stars {
+      display: flex;
+      gap: 3px;
+    }
+
+    .star {
+      font-size: 16px;
+      color: #475569;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+    }
+
+    .star.active {
+      color: #fbbf24;
+      animation: starPulse 0.8s infinite alternate;
+    }
+
+    @keyframes starPulse {
+      0% { transform: scale(1); filter: drop-shadow(0 0 2px #f59e0b); }
+      100% { transform: scale(1.15); filter: drop-shadow(0 0 6px #fbbf24); }
+    }
+
+    .weapon-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 6px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .weapon-icon-art { font-size: 20px; }
+    .weapon-info { display: flex; flex-direction: column; }
+    .weapon-name { font-size: 11px; font-weight: 700; color: #e2e8f0; }
+    .weapon-ammo { font-size: 12px; font-weight: 800; color: #38bdf8; }
+
+    .mission-banner {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid #f59e0b;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 85%;
+      pointer-events: auto;
+      text-align: center;
+    }
+
+    .mission-title { color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+    .mission-desc { color: #f8fafc; font-size: 12px; font-weight: 600; margin-top: 2px; }
+
+    .vehicle-hud {
+      position: absolute;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 6px 16px;
+      border-radius: 24px;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #f1f5f9;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .vehicle-hud.active { opacity: 1; }
+    .speed-gauge { font-size: 18px; font-weight: 900; color: #38bdf8; }
+    .speed-unit { font-size: 9px; color: #94a3b8; font-weight: 700; }
+
+    .touch-zone {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 50%;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .joystick-base {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(15, 23, 42, 0.6) 70%);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .joystick-thumb {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 52px;
+      height: 52px;
+      margin-top: -26px;
+      margin-left: -26px;
+      background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      pointer-events: none;
+      transition: transform 0.05s ease-out;
+    }
+
+    .action-buttons-group {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(2, 56px);
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .action-btn {
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      color: #ffffff;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .action-btn:active { transform: scale(0.92); background: rgba(56, 189, 248, 0.4); }
+    .btn-attack { grid-column: 3; grid-row: 2; width: 66px; height: 66px; background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5; }
+    .btn-sprint { grid-column: 2; grid-row: 2; background: radial-gradient(circle, #f59e0b 0%, #d97706 100%); border-color: #fde68a; }
+    .btn-vehicle { grid-column: 3; grid-row: 1; background: radial-gradient(circle, #10b981 0%, #047857 100%); border-color: #a7f3d0; }
+    .btn-horn { grid-column: 2; grid-row: 1; background: radial-gradient(circle, #6366f1 0%, #4338ca 100%); border-color: #c7d2fe; }
+    .btn-switch { grid-column: 1; grid-row: 2; background: radial-gradient(circle, #64748b 0%, #334155 100%); border-color: #cbd5e1; }
+    .btn-label { font-size: 8px; text-transform: uppercase; margin-top: 1px; }
+    .btn-icon { font-size: 18px; }
+
+    .btn-top-menu {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #f1f5f9;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #0f172a;
+      border: 2px solid #38bdf8;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      color: #f8fafc;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+
+    .modal-title { font-size: 18px; font-weight: 800; color: #38bdf8; }
+    .modal-close { background: transparent; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; }
+
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .shop-item {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .shop-item:hover { border-color: #38bdf8; }
+    .shop-item-icon { font-size: 26px; }
+    .shop-item-name { font-size: 12px; font-weight: 700; color: #f1f5f9; }
+    .shop-item-price { font-size: 13px; font-weight: 800; color: #4ade80; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border: 1px solid #38bdf8;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+
+    .splash-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .splash-overlay.show { display: flex; animation: fadeIn 0.4s ease-out; }
+    .splash-title { font-size: 42px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px; }
+    .splash-wasted .splash-title { color: #ef4444; }
+    .splash-busted .splash-title { color: #3b82f6; }
+    .splash-subtitle { font-size: 15px; color: #e2e8f0; margin-bottom: 24px; text-align: center; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .desktop-keys-hint {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.7);
+      color: #94a3b8;
+      font-size: 10px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 600px) { .desktop-keys-hint { display: none; } }
   </style>
-<script src="/_aistudio-iframe.js?v=2c34bde1"></script></head>
+</head>
 <body>
-  <!-- Canvas principal do jogo -->
   <canvas id="gameCanvas"></canvas>
 
-  <!-- HUD Interface Superior e Inferior -->
   <div id="hudLayer">
-    <!-- Canto Superior Esquerdo: Mini-mapa radar, Distrito e Relógio -->
     <div class="hud-top-left">
       <div class="radar-wrapper">
         <canvas id="minimapCanvas" width="110" height="110"></canvas>
       </div>
       <div class="district-label" id="districtBanner">Centro</div>
-      <div class="hud-clock" id="hudClock">14:00</div>
+      <div class="hud-clock" id="hudClock">12:00</div>
     </div>
 
-    <!-- Faixa Central: Notificação de Missão Ativa -->
     <div class="mission-banner" id="missionBanner">
-      <div class="mission-title" id="missionTitle">CIDADE DE GUANABARA</div>
-      <div class="mission-desc" id="missionDesc">Explore a metrópole ou vá até o Bar do Zeca no Centro.</div>
+      <div class="mission-title" id="missionTitle">RIO TROPICAL</div>
+      <div class="mission-desc" id="missionDesc">Explore a cidade ou vá até o Bar do Zeca no Centro.</div>
     </div>
 
-    <!-- Canto Superior Direito: Barras de Status, Dinheiro, Estrelas e Arma -->
     <div class="hud-top-right">
       <div class="status-bars">
         <div class="stat-row stat-hp">
           <span class="stat-icon" style="color:#ef4444;">✚</span>
-          <div class="stat-bar-container">
-            <div class="stat-bar-fill" id="hpBarFill" style="width:100%;"></div>
-          </div>
+          <div class="stat-bar-container"><div class="stat-bar-fill" id="hpBarFill" style="width:100%;"></div></div>
         </div>
         <div class="stat-row stat-armor">
           <span class="stat-icon" style="color:#38bdf8;">🛡</span>
-          <div class="stat-bar-container">
-            <div class="stat-bar-fill" id="armorBarFill" style="width:100%;"></div>
-          </div>
+          <div class="stat-bar-container"><div class="stat-bar-fill" id="armorBarFill" style="width:100%;"></div></div>
         </div>
         <div class="stat-row stat-stamina">
           <span class="stat-icon" style="color:#fbbf24;">⚡</span>
-          <div class="stat-bar-container">
-            <div class="stat-bar-fill" id="staminaBarFill" style="width:100%;"></div>
-          </div>
+          <div class="stat-bar-container"><div class="stat-bar-fill" id="staminaBarFill" style="width:100%;"></div></div>
         </div>
       </div>
 
-      <div class="cash-badge" id="hudCash">R$ 650</div>
+      <div class="cash-badge" id="hudCash">R$ 500</div>
 
-      <div class="wanted-stars">
+      <div class="wanted-stars" id="wantedStars">
         <span class="star">★</span>
         <span class="star">★</span>
         <span class="star">★</span>
@@ -689,7 +478,7 @@ html, body {
         <span class="star">★</span>
       </div>
 
-      <div class="weapon-card" id="hudWeapon" title="Toque para trocar de arma">
+      <div class="weapon-card" id="hudWeapon">
         <span class="weapon-icon-art" id="hudWeaponIcon">👊</span>
         <div class="weapon-info">
           <span class="weapon-name" id="hudWeaponName">Punhos</span>
@@ -697,177 +486,660 @@ html, body {
         </div>
       </div>
 
-      <button class="btn-top-menu" id="btnPause">⏸ PAUSAR</button>
+      <button class="btn-top-menu" id="btnPause">⏸ PAUSA</button>
     </div>
 
-    <!-- Velocímetro Digital e Indicador de Veículo -->
     <div class="vehicle-hud" id="vehicleHud">
       <div>
-        <div style="font-size:10px; color:#94a3b8;" id="vehicleName">Veloce GT</div>
+        <div style="font-size:10px; color:#94a3b8;" id="vehicleName">Carro</div>
         <div class="speed-gauge"><span id="speedValue">0</span> <span class="speed-unit">KM/H</span></div>
       </div>
     </div>
 
-    <!-- Dica de Teclado no PC -->
     <div class="desktop-keys-hint">
-      PC: [W,A,S,D] Mover/Dirigir | [Espaço/Mouse] Atacar | [Shift] Correr/Freio | [F/Enter] Entrar/Sair | [Q/E] Arma | [C] Clima | [U] Destravar | [H] Buzina
+      PC: [WASD] Mover | [Espaço] Atacar | [Shift] Correr | [F/Enter] Veículo | [Q/E] Arma | [H] Buzina
     </div>
   </div>
 
-  <!-- Controles Virtuais de Toque para Mobile Android -->
   <div class="touch-zone">
-    <!-- Joystick Analógico Flutuante -->
     <div class="joystick-base" id="joystickBase">
       <div class="joystick-thumb" id="joystickThumb"></div>
     </div>
 
-    <!-- Botões de Ação Virtuais -->
     <div class="action-buttons-group">
-      <button class="action-btn btn-horn" id="btnHorn">
-        <span class="btn-icon">📢</span>
-        <span class="btn-label">Buzina</span>
-      </button>
-
-      <button class="action-btn btn-vehicle" id="btnVehicle">
-        <span class="btn-icon">🚗</span>
-        <span class="btn-label">Entrar</span>
-      </button>
-
-      <button class="action-btn btn-switch" id="btnSwitchWeapon">
-        <span class="btn-icon">🔄</span>
-        <span class="btn-label">Arma</span>
-      </button>
-
-      <button class="action-btn btn-sprint" id="btnSprint">
-        <span class="btn-icon">⚡</span>
-        <span class="btn-label">Correr</span>
-      </button>
-
-      <button class="action-btn btn-attack" id="btnAttack">
-        <span class="btn-icon">💥</span>
-        <span class="btn-label">Atacar</span>
-      </button>
+      <button class="action-btn btn-horn" id="btnHorn"><span class="btn-icon">📢</span><span class="btn-label">Buzina</span></button>
+      <button class="action-btn btn-vehicle" id="btnVehicle"><span class="btn-icon">🚗</span><span class="btn-label">Entrar</span></button>
+      <button class="action-btn btn-switch" id="btnSwitchWeapon"><span class="btn-icon">🔄</span><span class="btn-label">Arma</span></button>
+      <button class="action-btn btn-sprint" id="btnSprint"><span class="btn-icon">⚡</span><span class="btn-label">Correr</span></button>
+      <button class="action-btn btn-attack" id="btnAttack"><span class="btn-icon">💥</span><span class="btn-label">Atacar</span></button>
     </div>
   </div>
 
-  <!-- MODAL: Loja de Armas (Armaria Tropical) -->
   <div class="modal-backdrop" id="gunShopModal">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title">⚔ ARMARIA TROPICAL</div>
-        <button class="modal-close">✕</button>
+        <button class="modal-close" onclick="closeModals()">✕</button>
       </div>
       <div class="shop-grid" id="gunShopList"></div>
     </div>
   </div>
 
-  <!-- MODAL: Loja de Roupas (Boutique Carioca) -->
-  <div class="modal-backdrop" id="clothesShopModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">👕 BOUTIQUE CARIOCA</div>
-        <button class="modal-close">✕</button>
-      </div>
-      <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Escolha seu visual:</div>
-      <div class="shop-grid">
-        <div class="shop-item" onclick="window.game.player.outfit.shirt='#ef4444'; window.game.sound.playCash();">
-          <div class="shop-item-icon">🎽</div>
-          <div class="shop-item-name">Regata Vermelha Carioca</div>
-          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
-        </div>
-        <div class="shop-item" onclick="window.game.player.outfit.shirt='#0284c7'; window.game.sound.playCash();">
-          <div class="shop-item-icon">👕</div>
-          <div class="shop-item-name">Camisa Bossa Nova Azul</div>
-          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
-        </div>
-        <div class="shop-item" onclick="window.game.player.outfit.shirt='#1e293b'; window.game.sound.playCash();">
-          <div class="shop-item-icon">👔</div>
-          <div class="shop-item-name">Terno Executivo Preto</div>
-          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
-        </div>
-        <div class="shop-item" onclick="window.game.player.outfit.shirt='#059669'; window.game.sound.playCash();">
-          <div class="shop-item-icon">🌺</div>
-          <div class="shop-item-name">Camisa Havaiana Tropical</div>
-          <button class="btn-primary" style="margin-top:6px; font-size:11px; padding:6px;">Equipar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Oficina Mecânica (Oficina do Zé) -->
-  <div class="modal-backdrop" id="garageShopModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">🔧 OFICINA DO ZÉ</div>
-        <button class="modal-close">✕</button>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <button class="btn-primary" id="btnRepairCar">🛠️ Reparar Funilaria e Motor (R$ 150)</button>
-        <button class="btn-primary" id="btnRepaintCar" style="background:#475569;">🎨 Repintar Veículo com Nova Cor (R$ 80)</button>
-        <button class="btn-primary" id="btnTurboCar" style="background:#7c3aed;">⚡ Instalar Turbo Supercharger (R$ 1.200)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Celular de Missão / Diálogo de História -->
-  <div class="modal-backdrop" id="storyDialogModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title" id="dialogModalTitle">📱 CELULAR</div>
-      </div>
-      <p style="font-size:14px; line-height:1.6; color:#f1f5f9;" id="dialogModalText"></p>
-      <button class="btn-primary" id="btnDialogConfirm" style="margin-top:10px;">ACEITAR MISSÃO</button>
-    </div>
-  </div>
-
-  <!-- MODAL: Menu de Pausa & Estatísticas -->
   <div class="modal-backdrop" id="pauseMenuModal">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title">⏸ JOGO PAUSADO</div>
-        <button class="modal-close">✕</button>
+        <button class="modal-close" onclick="closeModals()">✕</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:12px;">
-        <button class="btn-primary" onclick="window.game.togglePause();">CONTINUAR JOGO</button>
-        <button class="btn-primary" style="background:#f59e0b;" onclick="window.game.unstuckPlayer(); window.game.togglePause();">🚀 DESTRAVAR PERSONAGEM (REPOSICIONAR NA RUA)</button>
-        <button class="btn-primary" style="background:#0284c7;" onclick="window.game.toggleWeather(); window.game.togglePause();">🌦️ ALTERNAR CLIMA (SOL / CHUVA)</button>
-        <button class="btn-primary" style="background:#059669;" onclick="window.game.saveGame(); alert('Progresso salvo com sucesso no navegador!');">💾 SALVAR JOGO (LOCALSTORAGE)</button>
-        <button class="btn-primary" style="background:#0284c7;" onclick="window.game.sound.toggleRadio(); alert('Rádio do carro alternada!');">📻 LIGAR/DESLIGAR RÁDIO</button>
-        <button class="btn-primary" style="background:#e11d48;" id="btnDownloadIndexHtml" onclick="window.downloadGameFile();">📥 BAIXAR ARQUIVO INDEX.HTML</button>
-        <div style="font-size:12px; color:#94a3b8; text-align:center; margin-top:10px;">
-          Rio Tropical: Cidade Aberta v1.0<br>
-          Criado em arquivo único sem dependências externas.
-        </div>
+        <button class="btn-primary" onclick="game.togglePause()">CONTINUAR JOGO</button>
+        <button class="btn-primary" style="background:#f59e0b;" onclick="game.unstuckPlayer(); game.togglePause();">🚀 DESTRAVAR PERSONAGEM</button>
+        <button class="btn-primary" style="background:#0284c7;" onclick="game.toggleWeather(); game.togglePause();">🌦️ ALTERNAR CLIMA</button>
+        <button class="btn-primary" style="background:#059669;" onclick="game.saveGame(); game.togglePause();">💾 SALVAR PROGRESSO</button>
       </div>
     </div>
   </div>
 
-  <!-- Tela de Derrota / Prisão (Wasted / Busted) -->
   <div class="splash-overlay" id="splashOverlay">
     <div class="splash-title" id="splashTitle">DESPERDIÇADO</div>
-    <div class="splash-subtitle" id="splashSubtitle">Você foi derrotado.</div>
+    <div class="splash-subtitle" id="splashSubtitle">Você se deu mal!</div>
   </div>
 
-  <!-- TELA INICIAL: Toque para começar (desbloqueia áudio web) -->
   <div id="startScreenOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:radial-gradient(circle, #0f172a 0%, #020617 100%); z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
-    <div style="font-size:32px; font-weight:900; color:#38bdf8; letter-spacing:2px; text-shadow:0 4px 16px rgba(56,189,248,0.4); margin-bottom:6px;">
-      RIO TROPICAL
-    </div>
-    <div style="font-size:16px; font-weight:700; color:#f59e0b; letter-spacing:4px; margin-bottom:28px;">
-      CIDADE ABERTA
-    </div>
-    <div style="background:rgba(255,255,255,0.06); padding:16px 20px; border-radius:16px; border:1px solid rgba(255,255,255,0.15); max-width:380px; margin-bottom:28px; font-size:13px; line-height:1.5; color:#cbd5e1;">
-      Mundo aberto inspirado no clássico mobile estilo Java. Pilote carros e motos, explore a praia, favela, centro e porto, enfrente a polícia, compre armas e cumpra missões!
-    </div>
+    <div style="font-size:32px; font-weight:900; color:#38bdf8; letter-spacing:2px; margin-bottom:6px;">RIO TROPICAL</div>
+    <div style="font-size:16px; font-weight:700; color:#f59e0b; letter-spacing:4px; margin-bottom:28px;">CIDADE ABERTA 2.0</div>
     <button id="btnStartGame" style="background:linear-gradient(135deg, #0284c7, #0369a1); border:2px solid #38bdf8; color:#ffffff; font-size:16px; font-weight:800; padding:14px 36px; border-radius:30px; cursor:pointer; box-shadow:0 4px 20px rgba(2,132,199,0.6);">
       ▶ TOQUE PARA JOGAR
     </button>
-    <button onclick="window.downloadGameFile();" style="margin-top:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); color:#94a3b8; font-size:13px; font-weight:600; padding:10px 20px; border-radius:20px; cursor:pointer;">
-      📥 Baixar index.html (Jogo Offline)
-    </button>
   </div>
 
-  <!-- CÓDIGO DO JOGO EM JAVASCRIPT PURO -->
-  <script type="module" src="/index.html?html-proxy&index=0.js"></script>
+  <script>
+    // --- SINTETIZADOR DE ÁUDIO WEB ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      playShoot() {
+        if (!this.ctx) return;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+      }
+      playExplosion() {
+        if (!this.ctx) return;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.5);
+        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.5);
+      }
+      playHorn() {
+        if (!this.ctx) return;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+      }
+      playCash() {
+        if (!this.ctx) return;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(1200, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // --- ARMAS ---
+    const WEAPONS = [
+      { name: 'Punhos', icon: '👊', ammo: Infinity, maxAmmo: Infinity, damage: 15, range: 40, rate: 350 },
+      { name: 'Pistola 9mm', icon: '🔫', ammo: 60, maxAmmo: 120, damage: 30, range: 300, rate: 250, price: 200 },
+      { name: 'MP5 Sub', icon: '🔫', ammo: 120, maxAmmo: 240, damage: 25, range: 350, rate: 100, price: 600 },
+      { name: 'Fuzil IA2', icon: '', ammo: 90, maxAmmo: 180, damage: 45, range: 450, rate: 140, price: 1200 },
+      { name: 'RPG-7', icon: '🚀', ammo: 5, maxAmmo: 15, damage: 200, range: 500, rate: 1000, price: 3000, explosive: true }
+    ];
+
+    // --- GAME ENGINE PRINCIPAL ---
+    class Game {
+      constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.minimapCanvas = document.getElementById('minimapCanvas');
+        this.minimapCtx = this.minimapCanvas.getContext('2d');
+
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+
+        this.worldSize = 3000;
+        this.paused = false;
+        this.weather = 'sunny'; // sunny | rainy
+        this.lastTime = performance.now();
+
+        this.keys = {};
+        this.touchVector = { x: 0, y: 0 };
+        this.isSprinting = false;
+        this.isAttacking = false;
+
+        this.bullets = [];
+        this.particles = [];
+        this.pedestrians = [];
+        this.vehicles = [];
+        this.buildings = [];
+
+        this.player = {
+          x: 1500,
+          y: 1500,
+          radius: 14,
+          angle: 0,
+          speed: 0,
+          maxSpeed: 3.2,
+          hp: 100,
+          armor: 50,
+          stamina: 100,
+          cash: 500,
+          wantedLevel: 0,
+          weaponIdx: 0,
+          inVehicle: null,
+          lastShot: 0
+        };
+
+        this.initWorld();
+        this.bindEvents();
+        this.bindTouchControls();
+      }
+
+      initWorld() {
+        // Criar Edifícios e Blocos de Cidade
+        for (let x = 300; x < this.worldSize - 300; x += 400) {
+          for (let y = 300; y < this.worldSize - 300; y += 400) {
+            this.buildings.push({
+              x: x,
+              y: y,
+              w: 220,
+              h: 220,
+              color: '#334155'
+            });
+          }
+        }
+
+        // Spawn inicial de Pedestres
+        for (let i = 0; i < 40; i++) {
+          this.pedestrians.push({
+            x: Math.random() * (this.worldSize - 400) + 200,
+            y: Math.random() * (this.worldSize - 400) + 200,
+            angle: Math.random() * Math.PI * 2,
+            speed: 1,
+            hp: 30,
+            isCop: i < 5
+          });
+        }
+
+        // Spawn de Veículos
+        let carColors = ['#ef4444', '#38bdf8', '#fbbf24', '#10b981', '#a855f7'];
+        for (let i = 0; i < 15; i++) {
+          this.vehicles.push({
+            x: 200 + i * 180,
+            y: 260,
+            w: 36,
+            h: 68,
+            angle: Math.PI / 2,
+            speed: 0,
+            maxSpeed: 7.5,
+            hp: 200,
+            color: carColors[i % carColors.length],
+            isCop: i === 0
+          });
+        }
+      }
+
+      bindEvents() {
+        window.addEventListener('resize', () => {
+          this.width = window.innerWidth;
+          this.height = window.innerHeight;
+          this.canvas.width = this.width;
+          this.canvas.height = this.height;
+        });
+
+        window.addEventListener('keydown', (e) => {
+          this.keys[e.key.toLowerCase()] = true;
+          if (e.key.toLowerCase() === 'f' || e.key === 'Enter') this.toggleVehicle();
+          if (e.key.toLowerCase() === 'q') this.switchWeapon(-1);
+          if (e.key.toLowerCase() === 'e') this.switchWeapon(1);
+          if (e.key.toLowerCase() === 'h') this.honk();
+        });
+
+        window.addEventListener('keyup', (e) => {
+          this.keys[e.key.toLowerCase()] = false;
+        });
+
+        document.getElementById('btnStartGame').addEventListener('click', () => {
+          sound.init();
+          document.getElementById('startScreenOverlay').style.display = 'none';
+          this.startLoop();
+        });
+
+        document.getElementById('btnPause').addEventListener('click', () => this.togglePause());
+        document.getElementById('hudWeapon').addEventListener('click', () => this.switchWeapon(1));
+      }
+
+      bindTouchControls() {
+        const base = document.getElementById('joystickBase');
+        const thumb = document.getElementById('joystickThumb');
+
+        let activeTouchId = null;
+        let baseRect = null;
+
+        base.addEventListener('touchstart', (e) => {
+          sound.init();
+          let touch = e.changedTouches[0];
+          activeTouchId = touch.identifier;
+          baseRect = base.getBoundingClientRect();
+          this.updateJoystick(touch, baseRect, thumb);
+        });
+
+        base.addEventListener('touchmove', (e) => {
+          for (let touch of e.changedTouches) {
+            if (touch.identifier === activeTouchId) {
+              this.updateJoystick(touch, baseRect, thumb);
+            }
+          }
+        });
+
+        const resetJoystick = () => {
+          activeTouchId = null;
+          thumb.style.transform = `translate(0px, 0px)`;
+          this.touchVector = { x: 0, y: 0 };
+        };
+
+        base.addEventListener('touchend', resetJoystick);
+        base.addEventListener('touchcancel', resetJoystick);
+
+        document.getElementById('btnAttack').addEventListener('touchstart', (e) => { e.preventDefault(); this.isAttacking = true; });
+        document.getElementById('btnAttack').addEventListener('touchend', () => { this.isAttacking = false; });
+        document.getElementById('btnSprint').addEventListener('touchstart', (e) => { e.preventDefault(); this.isSprinting = true; });
+        document.getElementById('btnSprint').addEventListener('touchend', () => { this.isSprinting = false; });
+        document.getElementById('btnVehicle').addEventListener('click', () => this.toggleVehicle());
+        document.getElementById('btnSwitchWeapon').addEventListener('click', () => this.switchWeapon(1));
+        document.getElementById('btnHorn').addEventListener('click', () => this.honk());
+      }
+
+      updateJoystick(touch, rect, thumb) {
+        let centerX = rect.left + rect.width / 2;
+        let centerY = rect.top + rect.height / 2;
+        let dx = touch.clientX - centerX;
+        let dy = touch.clientY - centerY;
+        let dist = Math.hypot(dx, dy);
+        let maxRadius = rect.width / 2;
+
+        if (dist > maxRadius) {
+          dx = (dx / dist) * maxRadius;
+          dy = (dy / dist) * maxRadius;
+        }
+
+        thumb.style.transform = `translate(${dx}px, ${dy}px)`;
+        this.touchVector = { x: dx / maxRadius, y: dy / maxRadius };
+      }
+
+      switchWeapon(dir = 1) {
+        this.player.weaponIdx = (this.player.weaponIdx + dir + WEAPONS.length) % WEAPONS.length;
+        let w = WEAPONS[this.player.weaponIdx];
+        document.getElementById('hudWeaponIcon').innerText = w.icon;
+        document.getElementById('hudWeaponName').innerText = w.name;
+        document.getElementById('hudWeaponAmmo').innerText = w.ammo === Infinity ? '∞' : w.ammo;
+      }
+
+      honk() {
+        sound.playHorn();
+      }
+
+      toggleVehicle() {
+        if (this.player.inVehicle) {
+          this.player.x = this.player.inVehicle.x + 40;
+          this.player.y = this.player.inVehicle.y;
+          this.player.inVehicle = null;
+          document.getElementById('vehicleHud').classList.remove('active');
+        } else {
+          for (let v of this.vehicles) {
+            if (Math.hypot(this.player.x - v.x, this.player.y - v.y) < 50) {
+              this.player.inVehicle = v;
+              document.getElementById('vehicleHud').classList.add('active');
+              document.getElementById('vehicleName').innerText = v.isCop ? "Viatura Policial" : "Carro Esporte";
+              break;
+            }
+          }
+        }
+      }
+
+      togglePause() {
+        this.paused = !this.paused;
+        let modal = document.getElementById('pauseMenuModal');
+        if (this.paused) modal.classList.add('open');
+        else modal.classList.remove('open');
+      }
+
+      toggleWeather() {
+        this.weather = this.weather === 'sunny' ? 'rainy' : 'sunny';
+      }
+
+      unstuckPlayer() {
+        this.player.x = 1500;
+        this.player.y = 1500;
+      }
+
+      saveGame() {
+        localStorage.setItem('rio_tropical_save', JSON.stringify({
+          cash: this.player.cash,
+          hp: this.player.hp,
+          armor: this.player.armor
+        }));
+        alert("Jogo salvo localmente!");
+      }
+
+      startLoop() {
+        const loop = (time) => {
+          let dt = (time - this.lastTime) / 1000;
+          this.lastTime = time;
+
+          if (!this.paused) {
+            this.update(dt);
+            this.render();
+          }
+          requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+      }
+
+      update(dt) {
+        // --- MOVIMENTO DO JOGADOR / VEÍCULO ---
+        let moveX = 0;
+        let moveY = 0;
+
+        if (this.keys['w'] || this.keys['arrowup']) moveY -= 1;
+        if (this.keys['s'] || this.keys['arrowdown']) moveY += 1;
+        if (this.keys['a'] || this.keys['arrowleft']) moveX -= 1;
+        if (this.keys['d'] || this.keys['arrowright']) moveX += 1;
+
+        if (this.touchVector.x !== 0 || this.touchVector.y !== 0) {
+          moveX = this.touchVector.x;
+          moveY = this.touchVector.y;
+        }
+
+        let isSprinting = this.isSprinting || this.keys['shift'];
+
+        if (this.player.inVehicle) {
+          let v = this.player.inVehicle;
+          if (moveY < 0) v.speed = Math.min(v.speed + 0.2, v.maxSpeed);
+          else if (moveY > 0) v.speed = Math.max(v.speed - 0.15, -v.maxSpeed * 0.4);
+          else v.speed *= 0.96;
+
+          if (Math.abs(v.speed) > 0.2) {
+            let steer = (moveX * 0.05) * (v.speed > 0 ? 1 : -1);
+            v.angle += steer;
+          }
+
+          v.x += Math.cos(v.angle) * v.speed;
+          v.y += Math.sin(v.angle) * v.speed;
+
+          this.player.x = v.x;
+          this.player.y = v.y;
+          this.player.angle = v.angle;
+
+          document.getElementById('speedValue').innerText = Math.round(Math.abs(v.speed) * 18);
+        } else {
+          let speed = isSprinting ? this.player.maxSpeed * 1.6 : this.player.maxSpeed;
+          let len = Math.hypot(moveX, moveY);
+
+          if (len > 0.1) {
+            let normX = moveX / (len > 1 ? len : 1);
+            let normY = moveY / (len > 1 ? len : 1);
+
+            this.player.x += normX * speed;
+            this.player.y += normY * speed;
+            this.player.angle = Math.atan2(normY, normX);
+          }
+        }
+
+        // Limites de mundo
+        this.player.x = Math.max(50, Math.min(this.worldSize - 50, this.player.x));
+        this.player.y = Math.max(50, Math.min(this.worldSize - 50, this.player.y));
+
+        // --- ATAQUE / TIRO ---
+        if ((this.isAttacking || this.keys[' ']) && performance.now() - this.player.lastShot > WEAPONS[this.player.weaponIdx].rate) {
+          this.shootWeapon();
+          this.player.lastShot = performance.now();
+        }
+
+        // --- ATUALIZAR BALAS ---
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+          let b = this.bullets[i];
+          b.x += b.vx;
+          b.y += b.vy;
+          b.life--;
+
+          // Colisão de projétil com Pedestres
+          for (let p of this.pedestrians) {
+            if (Math.hypot(b.x - p.x, b.y - p.y) < 16) {
+              p.hp -= b.damage;
+              b.life = 0;
+              if (p.hp <= 0) {
+                this.player.cash += 50;
+                this.player.wantedLevel = Math.min(5, this.player.wantedLevel + 1);
+                this.updateWantedUI();
+              }
+            }
+          }
+
+          if (b.life <= 0) this.bullets.splice(i, 1);
+        }
+
+        // Atualizar Pedestres
+        for (let p of this.pedestrians) {
+          if (p.hp > 0) {
+            p.x += Math.cos(p.angle) * p.speed;
+            p.y += Math.sin(p.angle) * p.speed;
+            if (Math.random() < 0.02) p.angle += (Math.random() - 0.5);
+          }
+        }
+
+        // Atualizar HUD Status
+        document.getElementById('hpBarFill').style.width = `${this.player.hp}%`;
+        document.getElementById('armorBarFill').style.width = `${this.player.armor}%`;
+        document.getElementById('hudCash').innerText = `R$ ${this.player.cash}`;
+      }
+
+      shootWeapon() {
+        let w = WEAPONS[this.player.weaponIdx];
+        if (w.ammo <= 0) return;
+
+        if (w.ammo !== Infinity) {
+          w.ammo--;
+          document.getElementById('hudWeaponAmmo').innerText = w.ammo;
+        }
+
+        sound.playShoot();
+
+        let speed = 12;
+        this.bullets.push({
+          x: this.player.x,
+          y: this.player.y,
+          vx: Math.cos(this.player.angle) * speed,
+          vy: Math.sin(this.player.angle) * speed,
+          damage: w.damage,
+          life: 40
+        });
+      }
+
+      updateWantedUI() {
+        let stars = document.getElementById('wantedStars').children;
+        for (let i = 0; i < 5; i++) {
+          if (i < this.player.wantedLevel) stars[i].classList.add('active');
+          else stars[i].classList.remove('active');
+        }
+      }
+
+      render() {
+        // Câmera Centralizada
+        let camX = this.player.x - this.width / 2;
+        let camY = this.player.y - this.height / 2;
+
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.save();
+        this.ctx.translate(-camX, -camY);
+
+        // Ground / Asfalto
+        this.ctx.fillStyle = '#1e293b';
+        this.ctx.fillRect(0, 0, this.worldSize, this.worldSize);
+
+        // Desenhar Edifícios
+        for (let b of this.buildings) {
+          this.ctx.fillStyle = b.color;
+          this.ctx.fillRect(b.x, b.y, b.w, b.h);
+          this.ctx.strokeStyle = '#475569';
+          this.ctx.lineWidth = 4;
+          this.ctx.strokeRect(b.x, b.y, b.w, b.h);
+        }
+
+        // Desenhar Veículos
+        for (let v of this.vehicles) {
+          this.ctx.save();
+          this.ctx.translate(v.x, v.y);
+          this.ctx.rotate(v.angle);
+          this.ctx.fillStyle = v.color;
+          this.ctx.fillRect(-v.h / 2, -v.w / 2, v.h, v.w);
+          this.ctx.fillStyle = '#0f172a';
+          this.ctx.fillRect(-v.h / 4, -v.w / 2 + 2, 12, v.w - 4);
+          this.ctx.restore();
+        }
+
+        // Desenhar Pedestres
+        for (let p of this.pedestrians) {
+          if (p.hp <= 0) continue;
+          this.ctx.beginPath();
+          this.ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+          this.ctx.fillStyle = p.isCop ? '#3b82f6' : '#e2e8f0';
+          this.ctx.fill();
+        }
+
+        // Desenhar Projéteis
+        this.ctx.fillStyle = '#fbbf24';
+        for (let b of this.bullets) {
+          this.ctx.beginPath();
+          this.ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+
+        // Desenhar Jogador (se fora do veículo)
+        if (!this.player.inVehicle) {
+          this.ctx.save();
+          this.ctx.translate(this.player.x, this.player.y);
+          this.ctx.rotate(this.player.angle);
+
+          // Corpo
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, this.player.radius, 0, Math.PI * 2);
+          this.ctx.fillStyle = '#0284c7';
+          this.ctx.fill();
+          this.ctx.strokeStyle = '#ffffff';
+          this.ctx.lineWidth = 2;
+          this.ctx.stroke();
+
+          // Arma / Direção
+          this.ctx.beginPath();
+          this.ctx.moveTo(0, 0);
+          this.ctx.lineTo(20, 0);
+          this.ctx.strokeStyle = '#fbbf24';
+          this.ctx.lineWidth = 4;
+          this.ctx.stroke();
+
+          this.ctx.restore();
+        }
+
+        // Efeito de Chuva
+        if (this.weather === 'rainy') {
+          this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+          this.ctx.lineWidth = 1;
+          for (let i = 0; i < 60; i++) {
+            let rx = camX + Math.random() * this.width;
+            let ry = camY + Math.random() * this.height;
+            this.ctx.beginPath();
+            this.ctx.moveTo(rx, ry);
+            this.ctx.lineTo(rx - 5, ry + 15);
+            this.ctx.stroke();
+          }
+        }
+
+        this.ctx.restore();
+
+        // Renderizar Radar / Mini-mapa
+        this.renderMinimap();
+      }
+
+      renderMinimap() {
+        let mctx = this.minimapCtx;
+        mctx.clearRect(0, 0, 110, 110);
+        mctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        mctx.fillRect(0, 0, 110, 110);
+
+        let scale = 110 / this.worldSize;
+
+        // Player no minimapa
+        mctx.fillStyle = '#38bdf8';
+        mctx.beginPath();
+        mctx.arc(this.player.x * scale, this.player.y * scale, 3, 0, Math.PI * 2);
+        mctx.fill();
+
+        // Veículos no minimapa
+        mctx.fillStyle = '#ef4444';
+        for (let v of this.vehicles) {
+          mctx.fillRect(v.x * scale, v.y * scale, 2, 2);
+        }
+      }
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
+    }
+
+    let game;
+    window.addEventListener('load', () => {
+      game = new Game();
+      window.game = game;
+    });
+  </script>
 </body>
 </html>
